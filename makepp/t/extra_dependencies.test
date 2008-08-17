@@ -1,0 +1,48 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	30	644	1164352699	1179177721	Makeppfile
+#
+# This is a test of lines that specify extra dependencies but no rules.
+#
+
+.PHONY: all
+
+all: a
+
+a: b
+	&echo a -o $@
+	&cat $^ -o>>$@
+
+a: c d
+
+#
+# Test out this obfuscated idiom for changing two files at once with
+# one command:
+#
+b: c
+
+c:
+	&echo c -o c
+	&echo b -o b
+	&cat d -o>>c
+
+c: $((				# Multiline list with comment, after rule.
+	d))
+
+d:
+	&echo $@ -o $@
+###	D	755	1067451875	965751450	answers
+###	5	644	1067451875	965751410	answers/a
+a
+b
+c
+d
+d
+###	1	644	1067451875	965751410	answers/b
+b
+###	2	644	1067451875	965751410	answers/c
+c
+d
+###	1	644	1067451875	965751410	answers/d
+d
+###	1	644	1067451875	1190053836	answers/n_files
+3 1 0

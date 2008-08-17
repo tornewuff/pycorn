@@ -1,0 +1,56 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	21	644	1067451879	965508654	Makeppfile
+#
+# Test of static pattern rules.
+#
+
+.PHONY: all
+
+all: $( a b c d e f).out
+
+#
+# The old GNU makefile syntax:
+#
+a.out b.out c.out : %.out: %.in
+	&echo $< -o $@
+	&cat $< -o>>$@
+
+#
+# The :foreach syntax:
+#
+%.out: %.in : foreach d.in e.in f.in
+	&echo $< -o $@
+	&cat $< -o >>$@
+###	1	644	1067451879	965508501	a.in
+a
+###	1	644	1067451879	965508503	b.in
+b
+###	1	644	1067451879	965508505	c.in
+c
+###	1	644	1067451879	965508762	d.in
+d
+###	1	644	1067451879	965508764	e.in
+e
+###	1	644	1067451879	965508766	f.in
+f
+###	D	755	1067451879	965508995	answers
+###	2	644	1067451879	965508968	answers/a.out
+a.in
+a
+###	2	644	1067451879	965508968	answers/b.out
+b.in
+b
+###	2	644	1067451879	965508968	answers/c.out
+c.in
+c
+###	2	644	1067451879	965508769	answers/d.out
+d.in
+d
+###	2	644	1067451879	965508769	answers/e.out
+e.in
+e
+###	2	644	1067451879	965508769	answers/f.out
+f.in
+f
+###	1	644	1067451879	1190053943	answers/n_files
+6 1 0

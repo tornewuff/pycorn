@@ -1,0 +1,42 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	3	755	1119218920	1078367492	makepp_test_script.pl
+eval { makepp '-k' } and die;
+
+1;
+###	27	644	1078366452	1189018730	RootMakeppfile
+$(phony all): a f g
+
+a: b d
+	&echo "NOK" -o e
+	&cat b d -o $@
+
+b: c
+	&echo "NOK" -o e
+	&cp $< $@
+
+c:
+	&echo "OK" -o $@
+	perl { die }
+
+d:
+	perl { -f 'e' or do { open my $fh, '>', 'e'; print $fh "OK\n" }}
+	&echo "OK" -o $@
+
+# This tests that an inexistent file marked for dont-build (because outside of
+# ROOT) will cause an error if it doesn't exist (verified through n_files):
+f: $(mktemp /a)
+	&touch f
+
+# This tests that we can prevent a target from being implicitly phony:
+makepp_require_phony = 1
+g:
+	&echo
+###	D	755	1078366417	1078366377	answers
+###	1	644	1078366417	1078366377	answers/c
+OK
+###	1	644	1078366417	1078366377	answers/d
+OK
+###	1	644	1078366417	1078366377	answers/e
+OK
+###	1	644	1119218920	1190055629	answers/n_files
+1 1 2

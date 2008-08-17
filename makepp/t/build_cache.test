@@ -1,0 +1,245 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	59	755	1103935704	1210345644	makepp_test_script.pl
+makepp \'builtin', qw(-MBuildCacheControl create --subdir-chars= ./build_cache);
+
+#
+# Now build some junk with makepp.
+#
+makepp 'two_letter_files';	# Make a bunch of files with the name [ab]?.
+
+#
+# Now check whether makepp can automatically add files to the build cache
+# if we let it.
+#
+unlink 'mt';
+makepp qw(--build-cache build_cache derived_files);
+
+#
+# Now verify that rebuilding the file with different contents does not wipe
+# out the value in the build cache, but it can be brought back without
+# difficulty.
+#
+unlink <*_build_record>;
+makepp qw(--build-cache build_cache derived_files EXTRA_WORD=test2);
+# Rebuild the files.
+-e $_.'_build_record' or die $_ for <c_??>;
+				# This should rebuild everything.
+
+unlink <*_build_record>;	# Get rid of the build record from the last build.
+makepp qw(--build-cache build_cache derived_files);
+				# Rebuild the files.  This should bring back
+				# the old ones from the cache, and they should
+				# not have been overwritten by the new ones.
+-e $_.'_build_record' and die $_ for <subdir1/c_??>;
+
+#
+# Test copying the build files into a different subdirectory than they
+# were created in.
+#
+makepp qw(--build-cache build_cache -F subdir1 derived_files);
+-e $_.'_build_record' and die $_ for <subdir1/c_??>;
+
+                                    # Do it again with the altered files.
+makepp qw(--build-cache build_cache -F subdir2 derived_files EXTRA_WORD=test2);
+-e $_.'_build_record' and die $_ for <subdir2/c_??>;
+
+#
+# Corrupt one file in the build cache, and verify that the file is
+# correctly rejected.
+#
+for( <build_cache/*_aa> ) {
+  print "<$_>\n";chmod 0755, $_;
+  open my $fh, '>>', $_;
+  print $fh "an improper modification\n";
+  close $fh;
+  cp $_, \*STDOUT;
+  print "====\n";
+}
+
+makepp qw(--build-cache build_cache -F subdir3 aa);
+
+1;                          # No error.
+###	34	644	1103934641	1103934641	Makeppfile
+#
+# Test of the build cache.
+#
+$(phony two_letter_files): ba bb bc bd
+
+aa ab ac ad: : signature md5
+	&echo $@ $(EXTRA_WORD) -o $@
+	&echo $@ -o $@_build_record
+				# Side effect that makepp should not know
+				# about enables us to test whether they come
+				# out of the build cache.
+
+b% : a% : signature md5
+	&cat $< -o $@
+	&echo $@ -o>>$@
+	&echo $@ -o $@_build_record
+				# Side effect that makepp should not know
+				# about enables us to test whether they come
+				# out of the build cache.
+
+mt :
+	&touch $@
+
+
+$(phony derived_files): $(wildcard c_[ab]?)
+
+c_%: % : signature md5
+	&echo This file is derived from $<. -o $@
+	&cat $< -o>>$@
+	&echo $@ -o $@_build_record
+
+SUBDIRS = $(dir_noslash $(wildcard */Makeppfile))
+
+include mt
+###	D	755	1103935490	1103936160	subdir1/
+###	L	H	0	0	subdir1/Makeppfile
+Makeppfile
+###	D	755	1103935490	1103936160	subdir2/
+###	L	H	0	0	subdir2/Makeppfile
+Makeppfile
+###	D	755	1103935620	1103936160	subdir3/
+###	L	H	0	0	subdir3/Makeppfile
+Makeppfile
+###	D	755	1103936101	1103936159	answers/
+###	2	644	1103936084	1103936090	answers/aa
+aa
+an improper modification
+###	1	444	1103936084	1103936084	answers/ab
+ab
+###	1	444	1103936084	1103936084	answers/ac
+ac
+###	1	444	1103936084	1103936084	answers/ad
+ad
+###	2	444	1103936084	1103936084	answers/ba
+aa
+ba
+###	2	444	1103936084	1103936084	answers/bb
+ab
+bb
+###	2	444	1103936084	1103936084	answers/bc
+ac
+bc
+###	2	444	1103936085	1103936085	answers/bd
+ad
+bd
+###	3	644	1103936086	1103936090	answers/c_aa
+This file is derived from aa.
+aa
+an improper modification
+###	2	444	1103936086	1103936086	answers/c_ab
+This file is derived from ab.
+ab
+###	2	444	1103936086	1103936086	answers/c_ac
+This file is derived from ac.
+ac
+###	2	444	1103936086	1103936086	answers/c_ad
+This file is derived from ad.
+ad
+###	3	444	1103936086	1103936086	answers/c_ba
+This file is derived from ba.
+aa
+ba
+###	3	444	1103936086	1103936086	answers/c_bb
+This file is derived from bb.
+ab
+bb
+###	3	444	1103936086	1103936086	answers/c_bc
+This file is derived from bc.
+ac
+bc
+###	3	444	1103936086	1103936086	answers/c_bd
+This file is derived from bd.
+ad
+bd
+###	D	755	1103936123	1103936143	answers/subdir1/
+###	L	H	0	0	answers/subdir1/aa
+answers/aa
+###	L	H	0	0	answers/subdir1/ab
+answers/ab
+###	L	H	0	0	answers/subdir1/ac
+answers/ac
+###	L	H	0	0	answers/subdir1/ad
+answers/ad
+###	L	H	0	0	answers/subdir1/ba
+answers/ba
+###	L	H	0	0	answers/subdir1/bb
+answers/bb
+###	L	H	0	0	answers/subdir1/bc
+answers/bc
+###	L	H	0	0	answers/subdir1/bd
+answers/bd
+###	L	H	0	0	answers/subdir1/c_aa
+answers/c_aa
+###	L	H	0	0	answers/subdir1/c_ab
+answers/c_ab
+###	L	H	0	0	answers/subdir1/c_ac
+answers/c_ac
+###	L	H	0	0	answers/subdir1/c_ad
+answers/c_ad
+###	L	H	0	0	answers/subdir1/c_ba
+answers/c_ba
+###	L	H	0	0	answers/subdir1/c_bb
+answers/c_bb
+###	L	H	0	0	answers/subdir1/c_bc
+answers/c_bc
+###	L	H	0	0	answers/subdir1/c_bd
+answers/c_bd
+###	D	755	1103936123	1103936147	answers/subdir2/
+###	2	644	1103936087	1103936090	answers/subdir2/aa
+aa test2
+an improper modification
+###	1	444	1103936087	1103936087	answers/subdir2/ab
+ab test2
+###	1	444	1103936087	1103936087	answers/subdir2/ac
+ac test2
+###	1	444	1103936087	1103936087	answers/subdir2/ad
+ad test2
+###	2	444	1103936087	1103936087	answers/subdir2/ba
+aa test2
+ba
+###	2	444	1103936087	1103936087	answers/subdir2/bb
+ab test2
+bb
+###	2	444	1103936087	1103936087	answers/subdir2/bc
+ac test2
+bc
+###	2	444	1103936087	1103936087	answers/subdir2/bd
+ad test2
+bd
+###	3	644	1103936087	1103936090	answers/subdir2/c_aa
+This file is derived from aa.
+aa test2
+an improper modification
+###	2	444	1103936087	1103936087	answers/subdir2/c_ab
+This file is derived from ab.
+ab test2
+###	2	444	1103936087	1103936087	answers/subdir2/c_ac
+This file is derived from ac.
+ac test2
+###	2	444	1103936087	1103936087	answers/subdir2/c_ad
+This file is derived from ad.
+ad test2
+###	3	444	1103936087	1103936087	answers/subdir2/c_ba
+This file is derived from ba.
+aa test2
+ba
+###	3	444	1103936087	1103936087	answers/subdir2/c_bb
+This file is derived from bb.
+ab test2
+bb
+###	3	444	1103936087	1103936087	answers/subdir2/c_bc
+This file is derived from bc.
+ac test2
+bc
+###	3	444	1103936087	1103936087	answers/subdir2/c_bd
+This file is derived from bd.
+ad test2
+bd
+###	D	755	1103936123	1103936150	answers/subdir3/
+###	1	444	1103936091	1103936091	answers/subdir3/aa
+aa
+###	1	644	1103936091	1103936091	answers/subdir3/aa_build_record
+aa

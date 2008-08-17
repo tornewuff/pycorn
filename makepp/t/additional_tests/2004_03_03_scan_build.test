@@ -1,0 +1,23 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	1	644	1103317920	1208344763	is_relevant.pl
+is_windows < 2
+###	3	755	1119218920	1078367492	makepp_test_script.pl
+eval { makepp '-k' } and die;
+
+1;
+###	8	644	1078366902	1186228198	Makeppfile
+%: %.o
+	&echo "NOK" -o x
+%: %.obj			# Alternate rule for Windows native compilers
+	&echo "NOK" -o x
+
+a.h:
+	if [ ! -f a ]; then echo "OK" >a; fi
+	perl { die }
+###	3	644	1078366655	1078366653	a.c
+#if 0
+# include "a.h"
+#endif
+###	D	755	1078366735	1078366724	answers
+###	1	644	1078366735	1078366724	answers/a
+OK

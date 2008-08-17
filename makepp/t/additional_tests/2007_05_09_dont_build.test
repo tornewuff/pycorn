@@ -1,0 +1,18 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	6	644	1103567918	1103567911	Makeppfile
+$(phony test):
+	&echo OK
+
+prebuild d/foo
+
+load_makefile d
+###	D	755	1164209909	1103567781	d
+###	2	755	1164209909	1103567781	d/Makeppfile
+foo:
+	&touch $@
+###	5	755	1164209909	1103567781	makepp_test_script.pl
+makepp qw(d/foo);
+makepp qw(--dont-build d);
+open(my $fh, '<.makepp/log') or die;
+die "warnings: $_" for grep /warning/, <$fh>;
+1;

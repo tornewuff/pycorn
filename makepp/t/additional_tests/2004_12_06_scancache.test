@@ -1,0 +1,60 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	31	755	1154546812	1209997183	makepp_test_script.pl
+my $x = is_windows > 0 ? '.\\x' : './x';
+makepp;
+system $x or die 1;
+
+# Make sure error status propagates if we need something that failed to build
+# on behalf of cached scanner info earlier.
+eval { makepp 'ERROR=1' } and die 2;
+
+wait_timestamp 'x.o';
+makepp;
+system $x or die 3;
+
+# Make sure that we can fail to build on behalf of cached scanner info, and
+# still succeed if we didn't actually need the target that failed to build.
+wait_timestamp 'x.o';
+makepp 'ERROR=1', 'NOINC=1';
+ system $x and die 4;
+
+# Make sure we rescan (not just rebuild) if x.c changes.
+{
+  local $/ = undef;
+  open my $fh, '+<x.c' or die 5;
+  local $_ = <$fh>;
+  s/^$/#include "z.h"/m;
+  seek $fh, 0, 0;
+  print $fh $_;
+  close $fh;
+}
+wait_timestamp 'x.o';
+makepp 'ERROR=1', 'NOINC=1';
+system $x or die 6;
+###	21	644	1113579093	1102389344	Makeppfile
+$(phony default): x
+
+x.h:
+ifdef ERROR
+	perl { die }
+else
+	&echo '#undef X\n#define X 1' -o $@
+endif
+
+y.h:
+ifdef NOINC
+	&echo -o $@
+else
+	&echo '#include "x.h"' -o $@
+endif
+
+z.h:
+	&echo '#undef X\n#define X 1' -o $@
+
+x.o: x.c : smartscan
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $(input) -o $(output)
+###	4	644	1102389274	1102389240	x.c
+#define X 0
+#include "y.h"
+
+int main() { return X; }

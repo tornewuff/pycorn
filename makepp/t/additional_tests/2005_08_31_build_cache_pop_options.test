@@ -1,0 +1,85 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	61	664	1164313904	1125528381	makepp_test_script.pl
+# Create the build cache:
+makepp \'builtin', qw{-MBuildCacheControl create ./build_cache};
+
+sub clean {			# Utility to save calling makepp
+  unlink qw(my_true sort sort.o), <sort*_build_record .makepp/*>;
+  rmdir '.makepp';
+}
+
+#----- Test 1
+# Now build targets, but don't populate BC
+makepp qw{--build-cache build_cache --nopopulate-bc};
+
+clean;
+
+# This should run the rule again
+makepp qw{--build-cache build_cache --nopopulate-bc};
+
+-f 'sort_build_record' || die 1;
+-f 'sort.o_build_record' || die 2;
+
+#----- Test 2
+clean;
+
+# Now build targets normally
+makepp qw{--build-cache build_cache};
+
+clean;
+
+# This should copy from BC
+makepp qw{--build-cache build_cache --nopopulate-bc --force-copy-from-bc};
+
+-f 'sort_build_record' && die 3;
+-f 'sort.o_build_record' && die 4;
+
+#----- Test 3
+clean;
+
+# This should run the rule yet again
+makepp qw{--build-cache build_cache --populate-bc-only};
+
+-f 'sort_build_record' || die 5;
+-f 'sort.o_build_record' || die 6;
+
+#----- Test 4
+clean;
+
+# Clean the BC
+makepp \'builtin', qw{-MBuildCacheControl clean --mtime +-1 ./build_cache};
+
+# This should run the rule yet again
+makepp qw{--build-cache build_cache --populate-bc-only};
+
+clean;
+
+# This should copy from BC
+makepp qw{--build-cache build_cache};
+
+-f 'sort_build_record' && die 7;
+-f 'sort.o_build_record' && die 8;
+
+1
+###	21	664	1164313913	1209736023	Makeppfile
+$(phony all): sort run
+
+sort: sort.o
+	&touch $@
+	&echo $@ -o $@_build_record
+
+sort.o:
+	&touch $@
+	&echo $@ -o $@_build_record
+
+$(phony run): my_true
+	.$/$<
+
+my_true:
+    ifperl ::is_windows < 2
+	&echo -o $@ "#!/bin/sh"
+	&chmod 755 $@
+    else
+	&touch $@
+	&echo -o $@.bat "@echo"	# Not a clean dep-chain...
+    endif

@@ -1,0 +1,33 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	7	755	1067451873	1190061330	makepp_test_script.pl
+#
+# This makefile depends on the existence of a C compiler.
+#
+
+makepp qw(--no_path_executable_dep compilation_test);
+cp 'n_files.win', 'answers/n_files' if is_windows;
+!system '.' . ($^O =~ /^MSWin/ ? '\\' : '/') . 'compilation_test >output';
+###	9	644	1120067422	1055627995	compilation_test.c
+#include <stdio.h>
+#include "x.h"
+#include "y.h"
+
+int main()
+{
+  printf("%d %d %d %d\n", __LINE__, X, X2, Y);
+  return 0;
+}
+###	1	644	1067451873	1055628127	n_files.win
+2 1 0
+###	1	644	1067451873	1055626466	x.h
+#define X 1
+###	1	644	1067451873	1055551960	x2.h
+#define X2 2
+###	2	644	1067451873	1055626463	y.h
+#include "x2.h"
+#define Y 3
+###	D	755	1067451873	1055628127	answers
+###	1	644	1067451873	1055628127	answers/n_files
+2 0 0
+###	1	644	1067451873	1055628033	answers/output
+7 1 2 3

@@ -1,0 +1,23 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	9	644	1067451878	987381821	Makefile
+$(phony all): x.gasp.gasped.s
+
+%.gasp.s: %.s
+	&echo 'Gasp!' -o $@
+	&cat $^ -o>>$@
+
+%.gasped.s: %.s
+	&echo "Already gasped." -o $@
+	&cat $^ -o>>$@
+###	1	644	1067451878	987381788	x.s
+test
+###	D	755	1067451878	987382350	answers
+###	3	644	1067451878	987382331	answers/x.gasp.gasped.s
+Already gasped.
+Gasp!
+test
+###	1	644	1067451878	1190053918	answers/n_files
+2 1 0
+###	2	644	1067451878	987382331	answers/x.gasp.s
+Gasp!
+test

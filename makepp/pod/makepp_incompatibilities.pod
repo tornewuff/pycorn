@@ -1,0 +1,463 @@
+=head1 NAME
+
+makepp_incompatibilities -- Incompatibilities between makepp and GNU make
+
+=for vc $Id: makepp_incompatibilities.pod,v 1.19 2008/06/02 20:13:34 pfeiffer Exp $
+
+=head1 DESCRIPTION
+
+Makepp was designed to be as close as possible to GNU make.  However, because
+of the difference in philosophy (see L<makepp_build_algorithm>), some of GNU
+make's features cannot be supported.  Others have not been implemented because
+we haven't had time.  Also, in order to emulate GNU make's behavior precisely,
+you may in some cases have to add additional command line options to the
+makepp command line, as noted below.  Most of the differences from GNU make
+are quite technical and only rarely cause problems.
+
+Makepp will give warning messages for many things which the traditional unix
+make accepts without flinching.  This is because there are better ways to do
+them with makepp.  If these warnings annoy you, you can turn them off with the
+C<--nowarn> command line option.
+
+=over 4
+
+=item *
+
+The C<VPATH> variable is currently ignored.  C<vpath> statements are
+unsupported and will cause errors.  Use repositories (see
+L<makepp_repositories>) instead.
+
+=item *
+
+Pattern rules only match files in the directory (or if you set
+C<makepp_percent_subdirs=1>, in its subdirectories).  This means that a rule
+like this:
+
+    %.o: %.c
+    	$(CC) $(CFLAGS) -c $(input) -o $(output)
+
+will not be applied to files like C<../shared/xyz.c>.
+
+=item *
+
+A pattern rule present later in a makefile overrides one that is present
+earlier.  This is backwards from GNU make.
+
+=item *
+
+Default rules (pattern rules with no pattern dependencies) are only supported
+with last_chance.
+
+=item *
+
+The set of builtin implicit rules (see L<makepp_builtin>) is somewhat
+different from those for GNU make, though the variable names are largely
+compatible.  The builtin rules should successfully compile C/C++/Fortran
+programs, and in fact may be able to guess the proper libraries in some cases
+too.  Support for Modula-2 and RatFor and other rare languages is deliberately
+not present, because I kept running into problems with GNU make's rules when I
+accidently reused the extensions for those languages.
+
+=item *
+
+Archive members are not supported, and neither are the associated automatic
+variables C<$%>, C<$(%D)>, and C<$(%F)>.
+
+=item *
+
+Leading and trailing whitespace in variable assignments is ignored (even if
+the whitespace is followed by a comment).  For more details on whitespace
+handling incompatibilities, see L<makepp_variables/Whitespace in variables>.
+
+=item *
+
+Whitespace in variable names is not supported.  Neither is beginning a
+variable name with a numeral.  Words with spaces after them (and no colon on
+the line) are pre- or user-defined statements like
+
+    export VAR := value		# Not a rule colon
+    override global VAR = value
+    repository dir=otherdir
+
+and spaces in expressions delimit a pre- or user-defined function like
+
+    $(basename filenames)
+    $(dir filenames)
+    $(firstword words)
+
+=item *
+
+Makepp does not attempt to rebuild files included with the C<include>
+statement unless the makefile contains a rule for building them before the
+include statement is seen.  (It will attempt to rebuild the makefile itself,
+however.)  This is normally used for handling include file dependencies, and
+is not as useful with makepp since you don't need to do that anyway.
+
+=item *
+
+The C<SHELL> variable is currently partially ignored.  Makepp always uses
+F</bin/sh> unless C</usr/xpg4/bin/sh> or C</sbin/xpg4/sh> is found or unless
+you export the C<SHELL> variable in your makefile.  But if you do, the command
+parser might not fully understand what your shell command does.  On Windows
+ActiveState Perl you must instead set your SHELL variable before calling
+makepp.
+
+=item *
+
+Dependencies of anything on the Makefile still work, but are usually
+unnecessary.  This is usually used to force a rebuild when compilation options
+change.  makepp knows when build commands have changed without anything
+special in the makefile; it stores this on a file-by-file basis.  If you
+change the makefile, it knows exactly which files need recompilation.
+
+=item *
+
+Intermediate files are not deleted.  (Because makepp insists on having all of
+the file dates be the same as they were on the last build, intermediate files
+must all be present or else rebuilds will occur.)  There is no special status
+accorded to intermediate files.  This means that the special targets
+C<.INTERMEDIATE>, C<.SECONDARY>, and C<.PRECIOUS> are ignored.
+
+=item *
+
+The only special target that is supported is C<.PHONY>.  The remaining are
+simply ingored.
+
+Specifically, GNU make has the following special targets:
+
+=over 4
+
+=item .SUFFIXES
+
+Makepp ignores C<.SUFFIXES> except for the special case of C<.SUFFIXES> with
+no dependencies, like this:
+
+    .SUFFIXES:
+
+which tells it not to load any of its default rules.
+
+=item .INTERMEDIATE, .SECONDARY, .PRECIOUS
+
+No special status is accorded to intermediate files and so these targets are
+not meaningful.
+
+=item .IGNORE
+
+This target is ignored.  If you want to ignore errors, put the word
+C<ignore_error> (or a minus sign) in front of the command whose exit status is
+to be ignored.
+
+=item .SILENT
+
+This target is ignored.  If you want commands not to echo, put the word
+C<noecho> (or the C<@> character) in front of the command which is not
+supposed to be echoed, or use the C<--silent> option to makepp.
+
+=item .DELETE_ON_ERROR
+
+=item .EXPORT_ALL_VARIABLES
+
+=item .NOEXPORT
+
+=item .POSIX
+
+=item .DEFAULT
+
+These targets are not supported and are simply ignored.
+
+=back
+
+=item *
+
+Three GNU make functions (C<eval> and C<value>) are not currently
+supported.
+
+=item *
+
+Double colon rules are not fully supported.  (They cannot be: in
+makepp's paradigm, there cannot be more than one way to update a
+target.)  Currently, each successive double colon rule for a given
+target simply appends its command string and dependency list to the
+command string and dependency list for this target.  For example, if you
+write this:
+
+    a :: b
+    	&cat b -o a
+ 
+    # Later in your makefile:
+    a :: c
+    	&cat c -o >>a
+
+it is B<exactly> the same as if you had written
+
+    a : b c
+    	&cat b -o a
+    	&cat c -o >>a
+
+This is certainly not what double colon rules are intended for, and it
+will not always work, but it does work for targets like C<clean> or for
+all the stuff that ExtUtils::MakeMaker puts into its makefiles.  Don't
+count on it for anything other than legacy makefiles.
+
+=item *
+
+The S<C<$(wildcard )>> function matches not only files which exist, but also
+files which do not yet exist, but which have a rule which makepp has seen at
+the time the S<C<$(wildcard )>> function is evaluated.
+
+=item *
+
+C<-include> will not attempt to make the include file if it doesn't exist.
+Also, if the file exists but is out of date with respect to its dependencies,
+it will not be remade; it is not considered an implicit target.
+
+This is usually used for files containing dependency information, and since
+makepp is able to compute a lot of this without depending on additional tools,
+C<-include> is not as important as it used to be.
+
+The makefile itself is ordinarily considered an implicit target.  It will be
+rebuilt and reread if any of its dependencies have changed since the last time
+makepp rebuilt it.
+
+=item *
+
+The C<define> statement is supported, but handling of C<@> preceding it
+is done differently.  Currently in makepp, C<@> in front of a variable
+which has a multi-line value will only suppress echoing of the first
+line.  For example,
+
+    define echo-lines
+    &echo line1 -o $@
+    &echo line2 -o>>$@
+    endef
+ 
+    x:
+    	@$(echo-lines)
+
+will not suppress printing of S<C<&echo line2>> as it does in GNU make;
+it will only suppress printing of S<C<&echo line1>>.
+
+=item *
+
+Makepp does not support the following environment variables (it does not set
+them up, and it just ignores them):
+
+=over 4
+
+=item MAKEOVERRIDES
+
+=item MFLAGS
+
+=item *
+
+In makepp, rule actions are expanded before all of the dependencies are
+guaranteed to have been built.  You can work around this by changing rules
+such as this:
+
+    foo: bar
+        genfoo < $(shell cat bar)
+
+to this:
+
+    foo: bar
+        genfoo < `cat bar`
+
+=back
+
+=back
+
+=head2 Incompatibilities without the variable C<makepp_percent_subdirs=1>
+
+By default, C<%> in a pattern rule does not match directories.  Thus C<%.c>
+matches only C<.c> files in the current directory.  If you want it to match
+files in subdirectories too, then set the variable C<makepp_percent_subdirs=1>
+on the command line or near the beginning of a makefile.
+
+=head2 Incompatibilities without the C<-m> option
+
+By default, makepp will attempt to rebuild all targets if any of the
+dependencies have changed since the last build, or if the command has changed
+(see L<makepp_signatures> for details).  This is normally what you want.
+Sometimes, however, you don't want the target to be rebuilt if it has been
+modified apart from the control of makepp (e.g., by editing it, or by running
+a program manually to make the file).  You can force makepp to use the
+traditional make algorithm, which only rebuilds if any of the targets are
+newer than the dependencies, by adding the option S<C<-m target_newer>> to the
+command line.
+
+As a special exception, any targets which are built while rebuilding the
+makefile are automatically checked using the C<target_newer> method in order
+to avoid problems with configure procedures.
+
+=head2 Incompatibilities without the C<--traditional-recursion> option
+
+Recursive invocations of make are often considered to be an unsafe practice
+(see L<makepp/Better system for hierarchical builds> for details), but they
+are extremely common in existing makefiles.  Makepp supports recursive make
+for backward compatibility; for new makefiles, it is much better to use the
+C<load_makefile> statement, or makepp's implicit makefile loading mechanism.
+
+In order to be able to use repositories for variant builds, and to help make
+recursive invocations of make safer, makepp normally does not actually invoke
+itself recursively even if you tell it to.  Instead, a subprocess communicates
+with the parent process, and the actual build is done by the parent process.
+
+This works in most cases, but there are a few incompatibilities.  (All of
+these incompatibilities are removed by adding the
+C<--traditional-recursive-make> option to the command line.)
+
+=over 4
+
+=item *
+
+You may not invoke several makefiles from the same directory, e.g., the
+following will not work:
+
+    target: dependencies
+    	$(MAKE) -f other_makefile targets
+
+However, this will work:
+
+    target: dependencies
+    	cd subdir && $(MAKE) -f other_makefile targets
+
+=item *
+
+Changes in environment variables are not passed to the
+recursive make process; the environment of the parent is used
+instead.
+
+=item *
+
+The C<MAKEFLAGS> variable is not set up, and altering it has no effect.
+
+=back
+
+This may seem like a long list of restrictions, but many makefiles obey them.
+For example, as far as I know, all makefiles produced by C<automake> follow
+these restrictions.
+
+All of these restrictions go away if you add the
+C<--traditional-recursive-make> option to the command line, but that has the
+following undesirable side effects:
+
+=over 4
+
+=item *
+
+Recursive makes do not execute in parallel, even if the parent
+does.
+
+=item *
+
+Recursive make processes do not know anything about repositories.
+
+=item *
+
+Each recursive make process produces its own log file, in the directory it is
+invoked in, instead of producing one log file for the entire build.
+
+=back
+
+Even with the C<--traditional-recursive-make> option, the environment
+variables C<MAKEOVERRIDES> and C<MFLAGS> not set up, and are ignored, so
+makefiles that depend on those will not work.
+
+=head2 Incompatibilities without the C<makepp_simple_concatenation> variable
+
+L<Rc-style substitution|makepp_variables/rc-style substitution> is the default
+way makepp performs variable substitution into text strings because it very
+rarely breaks legacy makefiles and is often useful in new makefiles.  However,
+it does introduce occasional incompatibilities in the substitution of
+variables not surrounded by spaces.  For example,
+
+    INCLUDE_PREFIX := -I/some/include/dir -I
+    INCLUDES := $(INCLUDE_PREFIX)/other/include/dir
+
+will set C<INCLUDES> to
+S<C<-I/some/include/dir/other/include/dir -I/other/include/dir>>
+if rc-style substitution is enabled, whereas GNU make would set it
+to S<C<-I/some/include/dir -I/other/include/dir>>.
+
+There is also an incompatibility in the handling of whitespace in a variable:
+
+    null :=
+    T := -o $(null)		# T contains -o followed by one space.
+    OUTFILE = $(T)outfile
+
+
+will set C<OUTFILE> to C<-ooutfile> if rc-style substitution is enabled,
+whereas GNU make would set it to S<C<-o outfile>>.
+
+Both of these incompatibilities are removed by setting the
+C<makepp_simple_concatenation> variable.  Note, however, that even with
+C<makepp_simple_concatenation>, makepp still treats whitespace incompatibly in
+some situations:
+
+    T := -o # Don't delete this comment.
+
+GNU make sets C<T> to contain C<-o> followed by a space, whereas makepp strips
+out the trailing space anyway.  If you want the trailing space, you must set
+C<makepp_simple_concatenation> and also set C<T> using the technique involving
+a dummy variable such as C<null>, as shown above.
+
+=head2 Command line incompatibilities
+
+Makepp supports a few of make's more useful command line options.  The
+following, however, are not supported, and are ignored after a warning message
+is printed:
+
+=over 4
+
+=item -d or --debug
+
+=item -i
+
+=item -l or --load-average or --max-load
+
+=item -m
+
+Makepp's C<-m> option has to do with signature method selection, whereas GNU
+make ignores -m.
+
+=item -p or --print-data-base
+
+=item -q or --question
+
+Makepp's C<-q> option suppresses makepp's chatty informational messages, which
+is different from -q in GNU make.
+
+=item -R or --no-builtin-variables
+
+Makepp's C<-R> option actually does something completely different.
+
+=item -S --no-keep-going or --stop
+
+The C<--stop> option stops (puts to sleep) makepp after learning all the
+rules, so you can continue editing.
+
+=item -t or --touch
+
+=item -w or --print-directory
+
+This happens automatically.
+
+=item --no-print-directory
+
+=item --warn-undefined-variables
+
+=back
+
+Some of these can be easily supported if anyone cares.
+
+=head2 Incompatibilities in order of expression expansion
+
+Though I have not seen this used, GNU make allows the following:
+
+    colon = :
+    a$(colon) b
+ 	echo $^
+
+Makepp expands C<$(colon)> too late for this to work.  However it offers the
+alternative C<$[colon]> syntax, which can do much more than GNU make, because
+it is expanded very early.

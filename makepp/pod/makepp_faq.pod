@@ -1,0 +1,93 @@
+=head1 NAME
+
+makepp_faq -- Frequently asked questions about makepp
+
+=for vc $Id: makepp_faq.pod,v 1.5 2007/10/22 19:19:22 pfeiffer Exp $
+
+=head1 DESCRIPTION
+
+Here you may find some points which are not obvious from the rest of the
+documentation.
+
+=head2 Build Questions
+
+=head3 How can I build one part differently just once?
+
+Makepp makes this hard to do because the result is inconsistent with regard to
+the rules.  But there are situations where you may need this, e.g. to compile
+just one module with heavy debugging information.  You can achieve this in two
+steps by first building the dependency separately, and then excluding it from
+the link phase:
+
+    makepp DEBUG=3 buggy.o
+    makepp --dont-build=buggy.o buggy # Retain, despite wrong build option.
+
+=head3 Why does it complain that a created file is phony?
+
+If you have a command that continues working asynchronously, after it came
+back with a success return code, makepp will notice the promised file as
+missing and complain.  This can typically happen on some network file systems,
+which may physically write only several seconds later.
+
+If you cannot evite such an unsatisfactory situation, you can ask makepp to be
+sloppy about this check with the C<--gullible> option.  But then the next
+command which depends on the produced file might still fail.
+
+=head3 Why does it recreate files unnecessarily?
+
+I have observed this on NFS, where due to file attribute caching the timestamp
+of the produced file was not yet the one the it finally had.  On the next run
+makepp noticed the difference and considered the file unduly modified.  This
+got resolved with a mount option of C<acregmin=0>, making attributes visible
+immediately.
+
+This can also happen with repositories, e.g. if someone else has built in the
+repository with C<umask 066> or using a compiler that bars others from reading
+the produced file.  This will also happen if either the repository or your
+build tree shares a common path prefix with some dependencies
+(e.g. F</opt/repository> and F</opt/sometool>, in which case makepp will
+remember the path once as relative, and once as absolute, looking like changed
+dependencies.
+
+=head2 Miscellaneous
+
+=head3 How can I debug makepp?
+
+You can put C<$(print )> around a suspicious expression.  This returns the
+unchanged expression, while printing it as a side effect.
+
+You can dump the current directory's (multiply after C<-C> if you want)
+makefile with the C<--dump-makefile=file> option, to see how makepp sees it.
+
+Makepp writes a log of everything it does and why.  You can look at that with
+L<makepplog, mppl|makepplog> or L<makeppgraph, mppg|makeppgraph>.
+
+Makepp records all it knows about a file, for reuse on the next run.  Though
+it takes some understanding of makepp's internals, dumping it with
+C<makeppinfo, mppi> for one or more files, usually gives a clue what is wrong.
+
+=head2 External tools
+
+=head3 Can I use cc -M or gcc -MM?
+
+The short answer is yes.  The long answer is that they have the advantage of
+knowing the effect of even the last weird compiler option, where makepp only
+comes pretty close.  The disadvantage is that they have no idea of the build
+rules, so they can not reliably depend on yet to be built files, which
+includes files to be fetched from a L<repository|makepp_repositories>.  And
+they are not extensible to other languages, as makepp's
+L<scanner|makepp_scanning> is.  Usually you are at least as well off, not
+resorting to these tools.
+
+=head3 Can I use CCache, Compilercache or cachecc1?
+
+The short answer is yes.  The long answer is that these programs need to
+repeat the work makepp does, to get a reliable fingerprint of files.  With
+traditional makes this even comes too late, because those miss many situations
+calling for a recompilation.  With makepp it is just easier to use the built
+in L<build cache|makepp_build_cache>, which has the added advantage that it
+can handle all kinds of files.
+
+=head1 AUTHOR
+
+Daniel Pfeiffer (occitan@esperanto.org)

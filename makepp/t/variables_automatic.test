@@ -1,0 +1,50 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	28	644	1164353427	971566648	Makefile
+#
+# A test of all the automatic variables:
+#
+
+.PHONY: all
+
+all: a b
+
+%: subdir/%
+	&cp $(inputs) $(outputs)
+
+$(foreach): : foreach c d
+	&echo $@ -o $@
+
+subdir/a subdir/b : d c c e
+	&echo $@ $(@D) $(@F) -o $@
+	&echo $< $(<D) $(<F) -o>>$@
+	&echo $^ $(^D) $(^F) -o>>$@
+	&cat $+ -o >>$@
+	&echo  "$(outputs) : $(inputs)" -o>>subdir/b
+	&echo  "$(output 2) | $(outputs -1 1) : $(input -1) | $(inputs 2 1)" -o>>subdir/b
+
+%: subdir/%.x
+	&echo $* $(*D) $(*F) -o $@
+	&cp $(dependencies) $(targets)
+
+subdir/e.x:
+	&echo $@ -o $@
+###	D	755	1067451880	971566798	subdir
+###	D	755	1067451880	965616562	answers
+###	6	644	1067451880	965616517	answers/a
+subdir/a subdir a
+d . d
+d c c e . . . . d c c e
+c
+d
+subdir/e.x
+###	2	644	1154465131	965616517	answers/b
+subdir/a subdir/b : d c c e
+subdir/b | subdir/b subdir/a : e | c d
+###	1	644	1067451880	965616209	answers/c
+c
+###	1	644	1067451880	965616034	answers/d
+d
+###	1	644	1067451880	965616209	answers/e
+subdir/e.x
+###	1	644	1067451880	1190053955	answers/n_files
+8 1 0

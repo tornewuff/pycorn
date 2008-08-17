@@ -1,0 +1,49 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	16	644	1161580578	1211985600	makepp_test_script.pl
+open my $x, '>x';
+
+sub reptest {
+  makepp @_;
+  print $x "-\n";
+  -f and print $x $_ . (stat _)[7] . "\n" for qw'a b c dir/d';
+}
+
+reptest '-Rrep';
+unlink 'rep/a';
+reptest qw(--dont-read=rep1/a --dont-read=rep1/dir -Rrep1 -Rrep);
+unlink 'rep/c';
+reptest '-Rrep';
+reptest;
+
+close $x;
+###	1	644	1159480520	1080844956	Makeppfile
+$(phony default): ? dir/*
+###	D	755	1080844589	1080844382	rep
+###	0	644	1080844382	1080844382	rep/a
+###	0	644	1080844382	1080844382	rep/b
+###	0	644	1211984169	1211984169	rep/c
+###	D	755	1211984169	1211984169	rep/dir
+###	0	644	1211984169	1211984169	rep/dir/d
+###	D	755	1211984169	1211984169	rep1
+###	-1	644	1211984169	1211984169	rep1/a
+x
+###	-1	644	1211984169	1211984169	rep1/b
+x
+###	D	755	1211984169	1211984169	rep1/dir
+###	-1	644	1211984169	1211984169	rep1/dir/d
+x
+###	D	755	1080845081	1080844879	answers
+###	13	644	1161580578	1212097882	answers/x
+-
+a0
+b0
+c0
+dir/d0
+-
+b1
+c0
+dir/d0
+-
+b0
+dir/d0
+-

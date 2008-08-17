@@ -1,0 +1,31 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	D	775	1132010765	1132010763	answers/
+###	6	664	1132010446	1132010446	answers/newsort
+#include <stdio.h>
+int A[] = { 99, 43, 22, 17, 57, 32, 43, 19, 26, 48, 87, 12, 75, 0 };
+const int numEntries = sizeof(A)/sizeof(int);
+#include <stdio.h>
+int 345[] = { 99, 43, 22, 17, 57, 32, 43, 19, 26, 48, 87, 12, 75, 0 };
+const int numEntries = sizeof(345)/sizeof(int);
+###	3	664	1152637082	1132010425	Makeppfile
+newsort: sort.c
+	&cat sort.c -o $@
+	&sed 's/A/345/' sort.c -o >>$@
+###	13	755	1152637069	1125360871	makepp_test_script.pl
+#
+# Test a build cache that md5s while copying
+#
+
+# Create the build cache:
+makepp \'builtin', qw{-MBuildCacheControl create ./build_cache};
+
+# Now build targets
+makepp qw{--build-cache build_cache --md5check-bc};
+
+unlink 'newsort';
+
+makepp qw{--build-cache build_cache --md5check-bc};
+###	3	644	1132010446	1125361510	sort.c
+#include <stdio.h>
+int A[] = { 99, 43, 22, 17, 57, 32, 43, 19, 26, 48, 87, 12, 75, 0 };
+const int numEntries = sizeof(A)/sizeof(int);

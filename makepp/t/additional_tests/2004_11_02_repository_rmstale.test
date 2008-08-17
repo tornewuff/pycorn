@@ -1,0 +1,93 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	25	644	1099447411	1099447387	Makeppfile
+repository repos
+
+CFLAGS := -I inc
+
+ifdef BUILD
+$(phony default): stale1 stale2 repos/stale x targlist frail2
+	perl {}
+else
+$(phony default): x targlist
+	./x
+endif
+
+ifdef BUILD
+stale$(foreach): : foreach 1 2
+	&echo "/* $@ */" -o $@
+endif
+
+frail%: stale%
+	&cp $< $@
+
+targlist:
+	&echo $(wildcard frail* stale*) -o $@
+
+oldlist:
+	&echo $(only_stale frail* stale*) -o $@
+###	D	755	1099447412	1099447366	answers
+###	1	644	1099447355	1099447280	answers/oldlist
+frail2 stale1
+###	1	644	1099447358	1099447329	answers/targlist-1
+frail1 frail2 stale1 stale2
+###	1	644	1099447360	1099447330	answers/targlist-2
+frail frail1 frail2 stale stale1 stale2
+###	1	644	1099447362	1099447333	answers/targlist-3
+
+###	1	644	1099447362	1099447333	answers/stale1
+/* Repos */
+###	D	755	1099447412	1099447412	inc
+###	2	644	1099422496	1099422491	inc/stale2
+#undef RETURN
+#define RETURN return 0
+###	34	644	1099447329	1099448425	makepp_test_script.pl
+makepp 'BUILD=1';
+
+print "Checking that ./x exits nonzero...\n";
+-x 'x' or die;
+system './x' or die;
+
+cp qw(targlist targlist-1);
+
+makepp 'BUILD=1';
+
+cp qw(targlist targlist-2);
+
+# The x.o timestamp has to change, or else we might not rebuild x
+wait_timestamp 'x.o';
+
+makepp '--rm_stale';
+
+cp qw(targlist targlist-3);
+
+# Scanner removed the stale include file:
+-f 'stale2' and die;
+
+print "Checking that building a stale file results in an error...\n";
+eval { makepp qw(--rm_stale stale) } and die;
+
+makepp qw(--rm_stale oldlist);
+
+open(STALE1, '>repos/stale1') or die;
+print STALE1 "/* Repos */\n";
+close(STALE1) or die;
+
+makepp qw(--rm_stale stale1);
+
+1;
+###	D	755	1099447412	1099447412	repos
+###	7	644	1099421311	1099421301	repos/Makeppfile
+$(phony default):
+	perl {}
+
+ifdef BUILD
+stale:
+	&echo $@ -o $@
+endif
+###	6	644	1099422033	1099421990	x.c
+#define RETURN return 1
+#include "stale2"
+
+int main() {
+    RETURN;
+}

@@ -1,0 +1,221 @@
+#!/usr/bin/perl -w
+use strict;
+
+# $Id: makeppclean,v 1.12 2008/05/17 14:08:36 pfeiffer Exp $
+
+our $VERSION = '@VERSION@';
+use POSIX ();
+
+#
+# Exiting
+#
+# Do this early, because the END block defined below shall be the first seen
+# by perl, such that it is the last executed.  It leaves the process via
+# POSIX::_exit, so that no expensive garbage collection of FileInfos occurs.
+# All other places can use die or normal exit.  If you define additional END
+# blocks in any module, you must take care to not reset $?.
+#
+END {
+  close STDOUT; close STDERR;
+  POSIX::_exit $?;
+}
+
+our $datadir;
+BEGIN {
+#@@setdatadir
+#
+# Find the location of our data directory that contains the auxiliary files.
+# This is normally built into the program by install.pl, but if makepp hasn't
+# been installed, then we look in the directory we were run from.
+#
+  $datadir = $0;		# Assume it's running from the same place that
+				# we're running from.
+  unless( $datadir =~ s@/[^/]+$@@ ) { # No path specified?
+				# See if we can find ourselves in the path.
+    foreach( split( /:/, $ENV{'PATH'} ), '.' ) {
+				# Add '.' to the path in case the user is
+				# running it with "perl makepp" even if
+				# . is not in his path.
+      if( -f "$_/Glob.pm" ) {	# Found something we need?
+	$datadir = $_;
+	last;
+      }
+    }
+  }
+  $datadir or die "makepp: can't find library files\n";
+
+  $datadir = eval "use Cwd; cwd . '/$datadir'"
+    if $datadir =~ /^\./;	# Make it absolute, if it's a relative path.
+#@@
+  unshift @INC, $datadir;
+}
+
+use Utils;
+use File::Path qw(rmtree);
+use FileInfo qw(file_info relative_filename);
+use FileInfo_makepp;
+use TextSubs ();
+
+
+my $verbose;
+
+sub print_msg {
+  foreach my $str (@_, ($_[-1] =~ /\n\z/) ? () : "\n") {
+    my $str_to_print = $str;
+    ref($str_to_print) and $str_to_print = FileInfo::absolute_filename $str;
+    print STDERR $str_to_print;
+  }
+}
+sub print_error {
+  print STDERR "$::progname: error: ";
+  &print_msg;
+}
+
+sub print_warning {
+  print STDERR "$::progname: warning: ";
+  &print_msg;
+}
+sub print_log {
+  &print_msg if $verbose;
+}
+
+my $n_files_removed = 0;
+my $recurse;
+
+sub perform(&) {
+  my $code = $_[0];
+  eval { &$code; };
+
+  if ($@) {			# Did we die() somehow?
+    print_error $@;		# Print the error message.
+    close STDOUT; close STDERR;	# Flush these too, or else we'll have problems.
+    exit 1;
+  }
+
+  print_log "$n_files_removed files removed";
+  $n_files_removed or print "$::progname: no files removed\n";
+
+  exit 0;
+}
+
+my @info_strings;		# Our deletion criteria.
+my @deletable;			# Files must be first remembered for deletion,
+				# because if we deleted them right away, and
+				# then later found a symlink to one, that might
+				# no longer have a checkable build info.
+my @deletable_dirs;
+sub deletable {
+  my $build_info = &FileInfo::build_info_fname;
+  return 1 if -l $build_info && !-e _; # Stale inter-build-cache symlink?
+  defined and return 1
+    for FileInfo::build_info_string $_[0], @info_strings;
+  if( $_[0]->{TEMP_BUILD_INFO} ) { # Stale symlink?
+    defined and return 1
+      for @{$_[0]->{TEMP_BUILD_INFO} }{@info_strings};
+  }
+  $_[0]->{NAME} =~ /^\.makepp_(?:log|testfile)/; # Always clean leftovers.
+}
+
+sub remove_if_built_file {
+  if( &deletable ) {
+    if( &FileInfo::is_dir ) {
+      unshift @deletable_dirs, $_[0];
+    } else {
+      print_log "Removing ", $_[0];
+      push @deletable, &relative_filename, &FileInfo::build_info_fname;
+      $n_files_removed++;
+    }
+    if( !$_[0]{'..'}{MAKEPP_DELETABLE} ) { # Remember to check .makepp later.
+      $_[0]{'..'}{MAKEPP_DELETABLE} = 1;
+      my $makepp = file_info $FileInfo::build_info_subdir, $_[0]{'..'};
+      unshift @deletable_dirs, $makepp if FileInfo::is_dir $makepp;
+    }
+  }
+}
+
+my $leave_src_info;
+sub remove_contents_if_built {
+  my( $finfo ) = @_;
+  &FileInfo::read_directory;
+  for my $name (keys %{$finfo->{DIRCONTENTS}}) {
+    next if $name eq $FileInfo::build_info_subdir;
+    my $file = $finfo->{DIRCONTENTS}{$name};
+    remove_if_built_file $file;
+    remove_contents_if_built( $file ) if $recurse and FileInfo::is_dir $file;
+  }
+  if( !$leave_src_info ) { # Remember to check .makepp later.
+    my $makepp = file_info $FileInfo::build_info_subdir, $finfo;
+    if( FileInfo::is_dir $makepp ) {
+      if( !$finfo->{MAKEPP_DELETABLE} ) {
+	$finfo->{MAKEPP_DELETABLE} = 1;
+	unshift @deletable_dirs, $makepp;
+      }
+      $makepp->{DELETABLE} = 1; # Delete unconditionally.
+    }
+  }
+}
+
+perform {
+  TextSubs::getopts
+    ['b', qr/(?:only[-_]?)?(?:build[-_]?)?cache[-_]?(?:link|file)s/, undef, 0,
+     sub { push @info_strings, 'LINKED_TO_CACHE' }],
+    ['l', qr/leave[-_]?src[-_]?info/, \$leave_src_info],
+    ['R', qr/(?:only[-_]?)?repository[-_]?links/, undef, 0,
+     sub {push @info_strings, 'FROM_REPOSITORY' }],
+    ['r', qr/recurs(?:iv)?e/, \$recurse],
+    [qw(v verbose), \$verbose],
+    [0, 'version', undef, 0, \&FileInfo::version],
+    [qr/[h?]/, 'help', undef, 0, \&usage];
+
+  @ARGV = ('.') unless @ARGV;
+  if( @info_strings ) {
+    $leave_src_info = 1;	# Actually leave all other infos.
+  } else {
+    @info_strings = qw(BUILD_SIGNATURE FROM_REPOSITORY);
+  }
+  for my $arg (@ARGV) {
+    my $finfo = file_info($arg);
+    remove_if_built_file $finfo;
+    remove_contents_if_built $finfo if FileInfo::is_dir $finfo;
+  }
+  unlink @deletable;		# Perform the bulk of the work.
+  for( @deletable_dirs ) {
+    if( !$_->{DELETABLE} ) {	# Must check if empty.
+      $_->{DIRCONTENTS} = {};	# Maybe lots deleted w/o telling FileInfo.
+      FileInfo::read_directory $_; # Take note of all that is gone by now.
+      delete $_->{DIRCONTENTS}{$FileInfo::build_info_subdir};
+      next if keys %{$_->{DIRCONTENTS}}; # There are other files left.
+    }
+    print_log "Removing ", $_, '/' if $_->{NAME} ne $FileInfo::build_info_subdir;
+    rmtree relative_filename $_;
+  }
+};
+
+sub usage {
+  print << 'END_OF_USAGE';
+Usage: makeppclean [options] [path ...]
+
+All named files, and all files in named directories, that were generated by
+makepp are removed.  'path ...' defaults to '.'.  Options may be:
+
+-b, --build-cache-files or --only-build-cache-files
+	Removes only files fetched from a build cache.  Symlinks pointing to these
+	will thereby become stale (but reusable with another `makepp -b').
+-l or --leave-src-info
+	Leaves behind build info for files in named directories that aren't removed.
+-r, --recurse or --recursive
+	Descends named directories recursively.
+-R, --repository-links or --only-repository-links
+	Removes only links created by the repository meachanism.  Symlinks pointing
+	to these will thereby become stale (but reusable with another `makepp -R').
+-v or --verbose
+	Prints log information to STDERR.
+--version
+	Print out the current version.
+
+Look at @htmldir@/makeppclean.html for more details,
+or at http://makepp.sourceforge.net/@BASEVERSION@/makeppclean.html
+or type "man makeppclean".
+END_OF_USAGE
+  exit 0;
+}

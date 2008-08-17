@@ -1,0 +1,35 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	13	644	1113847363	1113847363	Makeppfile
+# This tests that scanner c_compilation finds an #include in an IDL file.
+# And that this happens from a C compiler including the output without
+# an undefined value being returned from Scanner::include.
+
+%.h %.c: %.idl
+	: scanner c_compilation
+	.$/idlcompiler -Iinclude $(input)
+
+include/%.idl: from/%.idl
+	&ln $(input) $(output)
+
+test.i: test.c	# AIX compiler doesn't like -o here
+	$(CC) -E $(input) >$(output)
+###	4	755	1113847363	1113847363	idlcompiler
+#! /bin/sh
+# Never mind real IDL compiler functionality.
+echo a >try.h	# AIX compiler would warn about empty file
+>try.c
+###	2	755	1113847363	1208539694	idlcompiler.bat
+@echo a >try.h
+@echo >try.c
+###	1	644	1113847363	1113847363	test.c
+#include "try.h"
+###	1	644	1105301400	1105300333	try.idl
+#include "more.idl"
+###	D	755	1105301531	1105301438	from/
+###	1	644	1105301400	1105300066	from/more.idl
+/* to be found automatically */
+###	D	755	1105301531	1105301524	include/
+###	D	755	1105301531	1105301438	answers/
+###	D	755	1105301531	1105301438	answers/include/
+###	1	644	1105301400	1105300066	answers/include/more.idl
+/* to be found automatically */

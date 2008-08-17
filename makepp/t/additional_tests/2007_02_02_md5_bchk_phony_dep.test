@@ -1,0 +1,18 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	5	755	1164209909	1103567781	makepp_test_script.pl
+makepp;
+# It apears that signature statement is causing makepp to think that all targets
+# including phony targets should be checked before rebuilding.
+# this generates warning about uninitialized variables
+makepp;
+###	7	644	1103567918	1103567911	Makeppfile
+signature md5
+
+default : x
+        &touch $@
+
+$(phony x):
+	@&echo "nothing to build"
+###	D	755	1079988067	1079987490	answers/
+###	1	644	1079987495	1190056018	answers/n_files
+0 1 0

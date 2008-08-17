@@ -1,0 +1,66 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	13	644	1169469581	1169504947	makepp_test_script.pl
+#
+# This test checks that 2nd level includes are correctly found and that a
+# symlink is not rebuilt just because the linkee is.
+#
+
+makepp;
+n_files 'n_files_1';
+unlink 'answers/n_files'	# This file system emulates symlinks by copying.  Thus
+  if !-l 'include/a.h';		# makepp will recreate the "links", so count is wrong.
+
+{ open my $fh, '>a/a1.h'; print $fh "int i;\n" }
+unlink 'a/a2.h';
+makepp;
+###	24	644	1165597567	1186006155	RootMakeppfile
+makepp_percent_subdirs = 1
+
+$(phony all): a/a.i c.i
+
+ifeq $(filter %cl %cl.exe %bcc32 %bcc32.exe, $(CC))
+  LN = &ln -fr
+else
+  LN = &cp			# These don't understand Cygwin symlinks
+endif
+
+include/%.h: a/%.h
+	$(LN) $(input) include
+
+include/%.h: b/%.h
+	$(LN) $(input) include
+
+d.h a/a2.h:
+	&touch $@
+
+%.i: %.c
+	$(CC) -E -I$(ROOT)/include $(input) >$(output)
+
+c.i: c.c :smartscan
+	$(CC) -E -I$(ROOT)/include $(input) >$(output)
+###	D	755	1165597598	1165597598	a/
+###	2	644	1165597567	1165595737	a/a.c
+#include "b.h"
+#include "a.h"
+###	1	644	1165597567	1165597311	a/a.h
+#include "a1.h"
+###	0	644	1165597567	1165597200	a/a1.h
+###	D	755	1165597598	1165597517	b/
+###	2	644	1165597567	1169470101	b/b.h
+#include "a.h"
+#include "a2.h"
+###	D	755	1165597598	1165597598	include/
+###	1	644	1165597567	1165597311	c.h
+#define X
+###	6	644	1165597567	1165597311	c.c
+#include "c.h"
+#undef X
+#include "c.h"
+#ifdef X
+#include "d.h"
+#endif
+###	D	755	1169470547	1169470547	answers/
+###	1	644	1169470547	1190056014	answers/n_files_1
+8 1 0
+###	1	644	1169470587	1190056004	answers/n_files
+2 1 0

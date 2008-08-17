@@ -1,0 +1,23 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	17	644	1164353368	982624814	Makeppfile
+#
+# Test of signature checking.
+#
+$(phony all): file_made_outside_makepp
+
+build_check target_newer
+
+#
+# This rule should not be executed if the file already exists, but if
+# makepp is using exact_match or any of its other signature checking
+# methods, it will try to make it anyway because it doesn't know how
+# it was made.
+#
+file_made_outside_makepp:
+	perl { die }
+
+signature default
+###	0	644	1067451879	982624844	file_made_outside_makepp
+###	D	755	1067451879	982624972	answers
+###	1	644	1067451879	1190053928	answers/n_files
+0 1 0

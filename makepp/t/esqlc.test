@@ -1,0 +1,60 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	6	755	1103317920	1208540784	makepp_test_script.pl
+makepp;
+{
+  open my $fh, '>>inc/foo.h';
+  print $fh "more\n";
+}
+makepp;
+###	10	644	1103319650	1103319650	Makeppfile
+%.c: %.ec
+	bin$/esqlc -Iinc $(input)
+
+%: %.ec
+	bin$/yardpc -YIinc $(input) -O2 -Wall
+
+%.c: %.pc
+	bin$/proc config=proc.cfg MODE=ANSI $(input)
+
+$(phony all): t1.c t1 t2.c
+###	D	755	1103319665	1103319153	bin/
+###	2	755	1103318869	1103318853	bin/esqlc
+#! /bin/sh
+echo ok >t1.c
+###	1	755	1103318869	1208540810	bin/esqlc.bat
+@echo ok >t1.c
+###	2	755	1103318990	1103318990	bin/proc
+#! /bin/sh
+echo ok >t2.c
+###	1	755	1103318990	1208540829	bin/proc.bat
+@echo ok >t2.c
+###	2	755	1103319896	1103319583	bin/yardpc
+#! /bin/sh
+echo ok >t1
+###	1	755	1103319896	1208540846	bin/yardpc.bat
+@echo ok >t1
+###	D	755	1103319665	1103319471	inc/
+###	1	644	1103319234	1103319234	inc/bar.h
+foo
+###	1	644	1103319222	1103319222	inc/foo.h
+bar
+###	1	644	1103319471	1103319471	inc/more.h
+more
+###	D	755	1103319665	1103319471	empty/
+###	D	755	1103319665	1103319471	sysinc/
+###	1	644	1103319471	1103319471	sysinc/smore.h
+smore
+###	3	644	1103319458	1103319458	t1.ec
+#include <bar.h>
+EXEC SQL INCLUDE 'more.h';
+$include foo;
+###	3	644	1103319429	1103319429	t2.pc
+EXEC SQL INCLUDE FOO;
+#include <smore.h>
+$INCLUDE 'bar.h';
+###	2	644	1132207121	1132201731	proc.cfg
+include=(empty,inc)
+sys_include=sysinc
+###	D	755	1103319665	1103319662	answers/
+###	1	644	1067451878	1190053833	answers/n_files
+3 1 0

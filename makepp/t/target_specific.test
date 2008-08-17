@@ -1,0 +1,75 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	36	644	1164353390	1058051904	Makeppfile
+#
+# Test target-specific variables.
+#
+VAR1	:= v1
+VAR2	= v2 $(VAR3)
+VAR3	:= v3
+
+$(phony all): $( a b c d e f).derived all.test
+
+%.derived: %
+	&cat $(input) -o $(output)
+	&echo $(VAR1) $(VAR2) -o>>$(output)
+
+
+a b c d e f:
+	&echo $@ $(VAR1) $(VAR2) -o $@
+
+e.derived: VAR1 = v1_modified
+f.derived: VAR3 = v3_modified
+
+a: VAR1 = v1a $(VAR3)		# Change the type of VAR1 to a = var.
+b: VAR2 := v2a $(VAR3)		# Change the type of VAR2 to a := var.
+c: VAR1 += $(VAR3)		# Append text, keep type the same (:=).
+c: VAR1 += 2nd_append		# Append to target-specific value.
+d: VAR2 += $(VAR3)		# Append text, keep type the same (=).
+
+VAR2	= v2_later $(VAR3)
+VAR3	= v3_later
+
+all.test: x.test y.test z.test
+	&cat $(inputs) -o $(output)
+
+[xy].test : VAR1 := v1_modified
+
+$(foreach): : foreach x.test y.test z.test
+	&echo $(VAR1) $(VAR2) -o $(output)
+###	D	755	1067451879	1058051933	answers
+###	1	644	1067451879	1055985004	answers/a
+a v1a v3_later v2_later v3_later
+###	1	644	1067451879	1055985004	answers/b
+b v1 v2a v3
+###	1	644	1067451879	1055985004	answers/c
+c v1 v3 2nd_append v2_later v3_later
+###	1	644	1067451879	1055985004	answers/d
+d v1 v2 v3_later v3_later
+###	1	644	1067451879	1055985005	answers/e
+e v1 v2_later v3_later
+###	1	644	1067451879	1055985005	answers/f
+f v1 v2_later v3_later
+###	2	644	1067451879	1055985004	answers/d.derived
+d v1 v2 v3_later v3_later
+v1 v2_later v3_later
+###	2	644	1067451879	1055985005	answers/f.derived
+f v1 v2_later v3_later
+v1 v2_later v3_modified
+###	1	644	1067451879	1190053945	answers/n_files
+16 1 0
+###	2	644	1067451879	1055985004	answers/a.derived
+a v1a v3_later v2_later v3_later
+v1 v2_later v3_later
+###	2	644	1067451879	1055985004	answers/c.derived
+c v1 v3 2nd_append v2_later v3_later
+v1 v2_later v3_later
+###	2	644	1067451879	1055985005	answers/e.derived
+e v1 v2_later v3_later
+v1_modified v2_later v3_later
+###	3	644	1067451879	1058051921	answers/all.test
+v1_modified v2_later v3_later
+v1_modified v2_later v3_later
+v1 v2_later v3_later
+###	2	644	1067451879	1055985004	answers/b.derived
+b v1 v2a v3
+v1 v2_later v3_later

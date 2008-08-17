@@ -1,0 +1,28 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	17	644	1074727871	1074727839	Makeppfile
+FOO := $(wildcard */x)
+
+repository rep
+
+BAR := $(wildcard ./*x)
+
+# At this point, we think that we can build ./x by grabbing it from the
+# repository, but we can't because it hasn't been built there.
+
+y: $(BAR)
+	&echo $^ -o $@
+
+# This is needed to invoke the ADDITIONAL_DEPENDENCIES clause for the
+# DefaultRule class. Otherwise, makepp dies because it can't build ./x
+# when it needs to, even though it thought that it could when it computed
+# $(BAR).
+x: xx
+###	D	755	1074727871	1074727871	answers
+###	1	644	1074727886	1074727854	answers/y
+xx
+###	D	755	1074727871	1074727871	rep
+###	2	644	1074724642	1074724550	rep/Makeppfile
+x:
+	&echo X -o $@
+###	1	644	1074727515	1074727482	xx
+XX

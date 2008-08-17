@@ -1,0 +1,892 @@
+=head1 NAME
+
+makepp_variables -- How to use variables in makepp
+
+=for vc $Id: makepp_variables.pod,v 1.28 2008/05/10 09:17:23 pfeiffer Exp $
+
+=head1 DESCRIPTION
+
+L<B<A>R|/AR>, L</ARFLAGS>, L</AS>,E<nbsp>
+L<B<C>C|/CC>, L</CFLAGS>, L</changed_dependencies>, L</changed_inputs>, L</CURDIR>,
+  L</CXX>, L</CXXFLAGS>,E<nbsp>
+L<B<d>efine|/define>, L</dependencies>, L</dependency>,E<nbsp>
+L<B<e>xport|/export>,E<nbsp>
+L<B<F>77|/F77>, L</FC>, L</foreach>,E<nbsp>
+L<B<g>lobal|/global>,E<nbsp>
+L<B<i>nput|/input>, L</inputs>,E<nbsp>
+L<B<L>D|/LD>, L</LEX>, L</LIBTOOL>,E<nbsp>
+L<B<M>AKE|/MAKE>, L</MAKECMDGOALS>, L</MAKEINFO>, L</makepp_percent_subdirs>,
+  L</makepp_require_phony>, L</makepp_simple_concatenation>,E<nbsp>
+L<B<o>utput|/output>, L</outputs>,E<nbsp>
+L<B<P>WD|/PWD>,E<nbsp>
+L<B<R>M|/RM>, L</ROOT>,E<nbsp>
+L<B<S>HELL|SHELL>, L</sorted_dependencies>, L</sorted_inputs>, L</stem>,E<nbsp>
+L<B<t>arget|/target>, L</targets>,E<nbsp>
+L<B<Y>ACC|/YACC>,E<nbsp>
+C<=>,
+C<:=>,
+C<+=>,
+C<?=>,
+C<!=>,
+C<$@>,
+C<$^>,
+C<$*>,
+C<$+>,
+C<$?>,
+C<$/>,
+C<$E<lt>>
+
+Makefiles typically use variables in many places.  One important reason for
+using variables is to ensure that information is contained in only one place
+in the makefile, so that if it changes, there is no danger of the two copies
+of the information getting out of sync.
+
+Variable names are case sensitive.  In theory, variable names can be made of
+many characters, but you will probably confuse the makefile parser if you do
+anything other than alphanumeric characters, C<_>, and C<->.
+
+Each makefile has its own set of variables, and setting a variable in one
+makefile will have no effect on its value in any other makefile.  If you want
+to have variables set in many makefiles, the best way to do it is to have each
+of them include a common definitions file (see the
+L<include statement|makepp_statements/include>) or use C<global> variables.
+
+
+=head2 Variable Assignment
+
+A variable can assume a value in several different ways:
+
+=over 4
+
+=item *
+
+A variable may be set inside a makefile.  There are a number of different ways
+to do this; see below.
+
+=item *
+
+A variable's value may be specified on the command line, like this:
+
+    makepp CFLAGS=-O2 my_program
+
+If more than one makefile is loaded, the CFLAGS variable is propagated to all
+of the makefiles.  Variables set on the command line automatically override
+any setting of the variable in any of the makefiles.
+
+If ever needed, the makefile must in turn explicitly override command line
+settings.  The intention is not to ignore what the user requests, but rather a
+way to modify it.  The C<override> modifier may precede any assignment
+statement.  But in the case of keyword statements, the order is important,
+which is why the override variant is always shown below.  The C<override>
+modifier applies only to any assignments where it is present, and does not
+influence later assignments to the variable.
+
+=item *
+
+If a variable is set in the environment, it can be referenced as a makepp
+variable.  Ordinarily assignments to variables inside a makefile override
+settings from the environment, but you can change this by using the C<-e> or
+C<--environment-overrides> command line option.
+
+=back
+
+Variables are assigned with one of several assignment expressions, like this
+
+    X = 1
+    MODULES := a b c d
+    CC ?= gcc
+    CFLAGS += -Wall
+    define VAR
+      var line 1
+      var line 2
+    enddef
+    export PATH := $(PWD):$(PATH)
+    global MYPROJECT.INFO = info to be seen in all makefiles
+
+Leading and trailing whitespace around values is always stripped off.
+
+The different assignment operators have somewhat different meanings.
+
+=head3 Simple assignment operators
+
+=over 4
+
+=item =
+
+    VARIABLE = text string
+    override VARIABLE = text string
+
+This is the usual assignment statement that all implementations of make
+support.  The expression on the right hand side is not evaluated until the
+value of C<$(VARIABLE)> is actually used somewhere.  Thus, if you do the
+following:
+
+    X = 1
+    Y = $(X)
+    X = 2
+
+Then C<$(Y)> later in the makefile will evaluate to "2".
+
+In general, you usually want to use C<:=> (see below) instead of C<=>
+because it provides more predictable variable evaluation.  However,
+there are times when you need to defer the variable evaluation.  Also,
+if you're writing a makefile that must be backwards-compatible with some
+version of make other than GNU make, then you have no choice: you may
+only use C<=>.
+
+=item :=
+
+    VARIABLE := expr
+    override VARIABLE := expr
+
+This is the same as C<VARIABLE = expr> except that the right hand side is
+evaluated once and for all at the time of the assignment.  Thus if
+
+    X := 1
+    Y := $(X)
+    X := 2
+
+then C<$(Y)> later in the makefile will evaluate to "1" since that's what
+C<$(X)> was when C<$(Y)> was defined.
+
+=item ;=
+
+    VARIABLE ;= expr
+    override VARIABLE ;= expr
+
+This is the same as C<VARIABLE := expr> except that the right hand side is
+evaluated only at the time of the first use and then remembered.  This is
+useful for expensive commands, which always return the same value, but which
+you don't want to perform when building unrelated targets:
+
+    VAR1 ;= $(perl expensive calculations)
+    VAR2 ;= $(shell external command)
+
+Note that old makefiles will usually use C<:=> here, to at least do this only
+once.  But with this operator you can even additionally not do it, if you
+currently don't need the value.  For values which are identical in several
+directories, you can optimize this further with C<global>, discussed below.
+
+=item +=
+
+    VARIABLE += expr
+    override VARIABLE += expr
+
+Appends the string to the previous contents of the variable, separated by a
+space.  If the variable was previously assigned with C<:=>, then the right
+hand side is evaluated before appending.
+
+=item &=
+
+    VARIABLE &= expr
+    override VARIABLE &= expr
+
+Prepends the string to the previous contents of the variable, separated by a
+space.  If the variable was previously assigned with C<:=>, then the right
+hand side is evaluated before appending.
+
+For example one way of guaranteeing that C<CFLAGS>, whatever else the user may
+put in, always starts with C<-Wall> are these two lines:
+
+    CFLAGS = -O2		# Possibly overridden on the command line
+    override CFLAGS &= -Wall	# Unconditionally prepended
+
+In old makefiles you typically had to do something like this, which had the
+side effect of forcing the type to C<:=> to prevent endless recursion:
+
+    VARIABLE := expr $(VARIABLE)
+
+=item ?=
+
+    VARIABLE ?= expr
+    override VARIABLE ?= expr	# Useless, but legal
+
+Sets the value of the variable, but only if the variable is not
+specified earlier in the makefile, on the command line, or in
+the environment.  The above assignment is exactly equivalent to
+
+    ifndef VARIABLE
+      VARIABLE = expr
+    endif
+
+=item !=
+
+    VARIABLE != shell command
+    override VARIABLE != shell command
+
+Runs the shell command and sets the variable to contain the command's
+standard output.  This is exactly equivalent to
+
+    VARIABLE := $(shell command)
+
+=back
+
+=head3 Multiline variables
+
+The C<define> statement is the multiline equivalent of the simple statements
+above.  The operator after the variable is optional.  If missing, it is
+equivalent to C<define VARIABLE =>.  The C<&=> and C<+=> operators are
+slightly different here, in that they glue this to the old value with a
+newline, rather than a space.  There must not be anything except a comment
+after the statement, i.e. the value starts on the next line.
+
+    define VARIABLE :=
+    first line of variable's value
+    second line of variable's value
+    third line of variable's value
+    endef
+
+    override define VARIABLE +=	# Operator is not optional with override
+    ...
+    enddef
+
+If you need a variable's value to contain newlines, you must use the C<define>
+statement as shown (or you can assign the value directly in perl).  (C<endef>
+was chosen for compatibility with GNU make.  You may also use C<enddef>.)
+This is primarily useful for "canned command sequences", e.g., something like
+this:
+
+    define COMPILE_C_PROGRAM
+ 	@&echo "Compiling $(input)"
+ 	@$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -c $(input) -o $(output)
+    endef
+
+Then you can use this multi-line variable in several rules, like this:
+
+    %.o : %.c
+ 	$(COMPILE_C_PROGRAM)
+
+    $(ARCH)/%.o : $(ARCH)/%.c
+ 	$(COMPILE_C_PROGRAM)
+
+Note that you can often achieve the same effect by using a semicolon
+instead of a newline, because the shell interprets that as a command
+delimeter too.  For example,
+
+    COMPILE_C_PROGRAM = @echo "Compiling $(input)"; \
+ 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -c $(input) -o $(output)
+
+will have the same effect, except that the semicolon forces perl to pass it to
+the shell, instead of executing the command directly and more efficiently.
+You also have to put each builtin on a line of its own, meaning that you have
+to switch to the external echo in the semicolon case.
+
+There is one speciality when expanding within C<define>, i.e. C<define X :=>
+or on a variable that was already C<:=>, C<define X &=> and C<define X +=>.
+In this case the C<$(shell command ...)> or builtin C<$(&command ...)> do not
+get newlines transformed into spaces.
+
+=head3 Exporting variables to subprocesses
+
+    export VAR ...
+    export VAR = value
+    override export VAR += value
+
+The first form marks the given variables for export to subprocesses, with
+whatever value the variable then has.  The second form, which applies only to
+one variable, additionally assigns a value right away.  All the variants of
+assignment are allowed.
+
+=head3 Sharing variables across makefiles
+
+    global VAR ...
+    global VAR = value
+    override global VAR &= value
+
+The first form marks the given variables as global to all makefiles.  If any
+of them already had a value, that value is moved from the makefile local
+variable to the global one.  However if, at the time this statement is seen,
+any other makefiles already had a value for any of them, then those makefiles
+will not see the global one.
+
+The second form, which applies only to one variable, additionally assigns a
+value right away.  All the variants of assignment are allowed.  Note that
+C<:=> will expand right away to the values in the local makefile.  On the
+contrary C<=> variables will expand to the values at the point of use.
+
+Global variables can be tricky to deal with, because makepp may load makefiles
+in any order, as the need arises to build some target for which no rule or
+makefiles is loaded.  For this reason it is recommended to have a
+F<RootMakeppfile> and to explicitly load all others which modify or use the
+variable with C<load-makefile>.
+
+    global GLIBLIBS ;= $(shell pkg-config --libs glib-2.0)
+
+Also note that your project may some day be built together with other
+projects.  For this reason it is recommended to always make the project name
+part of any global variable name.
+
+=head3 Target-specific assignments
+
+    target: VARIABLE = string
+    target: VARIABLE := string
+    target: override VARIABLE += string
+
+Sets a target-specific value of the variable.  A target-specific value
+is in effect I<only> in an action which produces the given target.  This
+is primarily used for things like this:
+
+    CFLAGS := -O2
+ 
+    my_prog: file1.o file2.o special_file.o
+ 
+    special_file.o : CFLAGS := -g
+ 
+    %.o: %.c
+ 	  $(CC) $(CFLAGS) -c $(input) -o $(output)
+
+
+What happens here is that all C<.c> files will be compiled with
+optimization (C<-O2>) I<except> C<special_file.c>, which is compiled
+in debug mode (C<-g>).  This is a convenient way to specify different
+compilation options for only a few files.
+
+Target-specific variable assignments like this apply only to the actions
+of the rule; they are not in effect when evaluating the targets or the
+dependencies of a rule.  If a rule has more than one target,
+target-specific variable assignents are taken only from the I<first>
+target.  Also note that makepp's target-specific variables are slightly
+different from GNU make's in that they only apply to the rule for the
+one file mentioned, and not to any of its predecessors; see
+L<makepp_incompatibilities|makepp_incompatibilities/Target Specific Variables> for
+details.
+
+Wildcard expansion is performed on the target, so you can do something
+like this:
+
+    test_*.o : CFLAGS += -DTEST
+
+For compatibility with GNU make, C<%> may be used in place of C<*>.
+
+=head2 Variable Substitution
+
+Makepp's variable substitution rules are similar to those of other
+makes, but somewhat more powerful.  As in all makes, C<$(CC)> or
+C<${CC}> both represent the value of the variable CC.  If you need a
+literal dollar sign, put in a double dollar sign (C<$$>), like this:
+
+    target: dep1 dep2 dep3 dep4
+ 	&rm -f $(output)
+ 	for file in $(inputs); do cat $$file >> $(output); done
+
+Additionally makepp has a C<$[VARIABLE]> syntax, which does the same thing as
+the other two, but before any other parsing happens.  This allows using it for
+complete rules and/or conditionals:
+
+    define bracket_rule =
+      ifdef SOME_VAR
+ 	bracket:
+ 	    &echo this is a rule -o $(output)
+      endif
+    enddef
+
+    $[bracket_rule]
+
+
+=head3 rc-style substitution
+
+By default, makepp uses rc-style substitution (so called because it was
+pioneered by the rc shell).  This is best illustrated by an example:
+
+    MODULES = a b c d
+ 
+    mylib.a : module_dir/$(MODULES).o $(OTHER_OBJECTS)
+ 	$(CXX) $(dependencies) -o $(target)
+
+
+The prefix C<module_dir/> is prepended to each word in MODULES, and the suffix
+C<.o> is appended to each word.
+
+You can also use rc-style substitution without even putting the list of words
+into a variable; the syntax is S<C<$( word1 word2)>>.  Note the space between
+the parenthesis and the first word.  So the above example could have been
+written as:
+
+    mylib.a : module_dir/$( a b c d).o $(OTHER_OBJECTS)
+ 	$(CXX) $(dependencies) -o $(target)
+
+A variable will give rc-style substitution only when there is more than one
+word in it.  With one word it is like traditional make.  Alas, when the
+variable is empty, there is a conflict.  Traditional makes simply expand it to
+the empty string.  But when you think of it as a list, you'd want
+C<-I$(DIRLIST)> to dissapear, not to give a lonely C<-I>.  The solution is to
+wrap it into a list that starts with a space: C<-I$( $(DIRLIST))> gives you
+exactly as many options, as there are words in the list.
+
+If you put several variables in the same word which expand to arrays of
+words, rc-style substitution actually takes the cartesian product, so
+you can do something like this if you want:
+
+    DIRS = s1 s2
+    MODULES = a b c
+    SUFFIXES = .o .c
+    FILES := $(DIRS)/$(MODULES)$(SUFFIXES)
+
+and FILES will contain the string
+
+    s1/a.o s1/a.c s1/b.o s1/b.c s1/c.o s1/c.c s2/a.o s2/a.c s2/b.o s2/b.c s2/c.o s2/c.c
+
+If rc-style substitution gets in the way, or if you need to have leading or
+trailing whitespace in your make variables, then you can turn off rc-style
+substitution by setting the variable C<makepp_simple_concatenation=1>.  You
+can turn it off globally on the command line or as an environment variable.
+Or on a per-makefile basis by setting the variable in your makefile.  You
+should do this near the top of the makefile, or else you may run into funny
+situations where rc-style substitution is used for some evaluations and not
+others.  (All expressions evaluated before the assignment will use rc-style
+substitutions, and all expressions evaluated after will not.  Since the time
+of evaluation of expressions in makefiles is complicated and not always
+obvious from the order of statements in the makefile, it's best to set
+C<makepp_simple_concatenation> as early as possible.)  You can even set it
+just for one target:
+
+    target: makepp_simple_concatenation = 1
+    target:
+	&echo before_first$(LIST)after_last -o $(output)
+
+Because C<$[VARIABLE]> is evaluated earlier than C<$(VARIABLE)>, combining the
+two in rc-substitution will not give the result you may expect:
+
+    A = a b
+    N = 1 2
+    X := $(A)$[N]
+
+The last line gets read as
+
+    X := $(A)1 2
+
+which gives C<X> a value of C<a1 b1 2>.
+
+=head3 Substitution References
+
+A substitution reference has the form C<$(VAR:A=B)>, where A is a pattern to
+match and B is a pattern to replace it with.  For example:
+
+    source_files = a.c b.c c.c d.c
+    object_files = $(source_files:%.c=%.o)
+
+
+will set C<$(object_files)> to S<C<a.o b.o c.o d.o>>.  The C<%> is a special
+character matches any arbitrary string.  Substitution references are an
+abbreviation fot the C<patsubst> function.
+
+=head3 Whitespace in variables
+
+If you need to control the whitespace in a variable, you must (currently)
+disable rc-style substitution (by setting C<makepp_simple_concatenation=1>)
+and then use a syntax like this:
+
+    null =
+    T = -o $(null)
+
+or, with an empty evaluation:
+
+    T = -o $()
+
+When you do this, the variable C<T> contains C<-o> followed by a space.
+
+This kind of a technique to handle whitespace is not recommended.  If
+you need variables in your makefile to contain spaces, you should think
+seriously about what you're doing.  If you need to handle spaces, it is
+usually much better to put perl code into your makefile to take care of
+it (using the C<perl_begin> or C<sub> statements), or to handle it in
+shell statements in the actions of rules.
+
+These cases typically come up when people attempt to use the same rules
+for different architectures which do not use typical unix command
+syntax.  E.g., sometimes one sees things like this in makefiles:
+
+    ifeq ($(ARCH),weirdarch)
+      O := /OUTPUT=
+    else
+      null :=
+      O := -o $(null)
+    endif
+ 
+    %.o : %.c
+ 	$(COMPILER) $(input) $(O)$(output)
+
+You can do this with makepp if you really want to, but you will probably
+find that your makefiles are substantially more readable if you have
+less complicated variable stubstitution, e.g.,
+
+    ifeq ($(ARCH),weirdarch)
+      %.o : %.c
+ 	$(WEIRD_COMPILER) $(input) /OUTPUT=$(output)
+    else
+      %.o : %.c
+ 	$(CC) -c $(input) -o $(output)
+    endif
+
+Whitespace is never allowed in variable names, only in their values.  This is
+different from some make implementations.
+
+=head2 Automatic Variables
+
+Automatic variables are variables that assume different values depending
+on which rule they are evaluated in.  Makepp supports most of the
+automatic variables that other versions of make use.  In addition, it
+has less cryptic, longer names for most of them that you can use
+instead.  (For legacy makefiles that happen to redefine these names, the
+definition in the makefile overrides the default meaning.  For example,
+if you say S<C<target = abc>> in your makefile, then C<$(target)> will
+always expand to C<abc>, and will no longer be equivalent to C<$@>.)
+
+The following is a complete list of all the automatic variables that
+makepp supports:
+
+=over 4
+
+=item target
+
+=item output
+
+=item $@
+
+The target of the current rule.  Actually, since makepp supports multiple
+targets for any rule, this is the B<first> target.  For example, in the
+following rule
+
+    y.tab.c y.tab.h : parser.y
+ 	$(YACC) $(YFLAGS) $(input)
+
+C<$(output)> will contain the value F<y.tab.c>.  Since these magic variables
+are in fact functions, you can also pass an index as argument.  This counts
+from 1 or backwards from -1.  So C<$(output 2)> or C<$(output -1)> will
+contain the value F<y.tab.h>.
+
+=item targets
+
+=item outputs
+
+All targets of the current rule.  Same as C<$(target)> unless there is more
+than one target.  In the above example, C<$(outputs)> will be S<y.tab.c
+y.tab.h>.  You can pass an index list, so C<$(outputs 2 1)> will be S<y.tab.h
+y.tab.c>.
+
+=item dependency
+
+=item input
+
+=item $E<lt>
+
+The first explicit dependency of the rule.  For example, in this rule
+
+    %.o : %.c
+ 	$(CC) $(CFLAGS) -c $(input) -o $(output)
+
+C<$(input)> will be the name of the F<.c> file, regardless of what F<.h> files
+makepp discovers.  If you specify more than one dependency, you can get them
+by passing an index: C<$(input $(INDEX))> is the INDEXth depencency.
+
+=item dependencies
+
+=item inputs
+
+=item $^
+
+All the explicit dependencies of the target, not including F<.h> files
+discovered by L<makepp_scanning> for includes.
+
+For example, in the rule
+
+    myprog.o : *.o
+ 	$(CC) $(CFLAGS) $(inputs) -o $(output)
+
+C<$(inputs)> will be all the .o files in the directory.  You can pick only the
+ones you want by passing an index list.  If you explicitly specify different
+kinds of files, you can pick them as in C<$(inputs 2 3 4)> (but with a
+wildcard this is not too promising).
+
+=item sorted_dependencies
+
+=item sorted_inputs
+
+=item $+
+
+All the dependencies of the target, in sorted order, with duplicates
+removed.  Equivalent to S<C<$(sort $(inputs))>>.
+
+=item changed_inputs
+
+=item changed_dependencies
+
+=item $?
+
+The dependencies of the target that have changed.  This includes only
+explicit dependencies (i.e., ones you list in the makefile), not
+implicitly discovered dependencies from scanning (such as .h files).
+
+This is commonly used in commands like this:
+
+    libmine.a : $(MODULES) : build_check ignore_action
+ 	$(AR) ru $@ $?
+
+i.e., F<ar> is told to replace only those modules that have changed.
+(Note the C<ignore_action> build check rule.  If you don't specify this,
+makepp will force the action to be executed whenever it changes.  If no
+dependencies have changed, the action string will be S<C<ar ru
+libmine.a>> which is probably different from what it was last time you
+ran it, so without C<ignore_action> makepp will execute it.  In this
+case, it's harmless, but with other commands, it could be a problem.
+See L<makepp_build_check> for details on C<ignore_action>.)
+
+Building archives like this is not a good idea because it will make your
+builds less reliable.  The problem with this is that if you build the
+archive, then remove one of the modules from the list of MODULES, the
+modules will still be in the archive and makepp
+
+=item stem
+
+=item $*
+
+The stem in a pattern rule (i.e., whatever the '%' matched).
+Alternatively, if this is not a pattern rule, returns the file name
+without the extension (i.e., it's equivalent to
+S<C<$(basename $(input))>>.
+
+This is mostly for backward compatibility.  For example, in old versions
+of make the only way to tell it how to compile any F<.c> file into the
+corresponding F<.o> file was like this:
+
+    .c.o:
+ 	$(CC) $(CFLAGS) -c $*.c -o $*.o
+
+This is a lousy way to write the rule.  It's much clearer to use
+GNU-make style pattern rules, like this:
+
+    %.o : %.c
+ 	$(CC) $(CFLAGS) -c $(input) -o $(output)
+
+=item foreach
+
+The current filename from the C<foreach> clause.  C<foreach> clauses are
+rarely used, but they are the most general-purpose kind of pattern rule
+that makepp supports.  For example,
+
+    #
+    # Build .c files with some sort of a special preprocessor:
+    #
+    %.c : %.k
+ 	$(preprocessor) $(input) > $(output)
+ 
+    #
+    # Compile .c files into .o files:
+    #
+    %.o : %.c
+ 	$(CC) $(CFLAGS) -c $(input) -o $(output)
+ 
+    #
+    # Special alternate compilation flags for .c files which are derived
+    # from .k files:
+    #
+    $(foreach:%.k=%.o) : $(foreach:%.k=%.c) : foreach *.k
+ 	$(CC) $(SPECIAL_K_FLAGS) -c $(input) -o $(output)
+
+See the documentation on L<the foreach clause in
+rules|makepp_rules/Foreach rules> for more details and examples.
+
+=item $/
+
+This is essentially a constant, either C</>, or on native Windows C<\>.  You
+need it, if you want to start a program portably, e.g. one you built in the
+current directory:
+
+    myoutput:
+ 	.$/myprog >$(output)
+
+For filenames passed as arguments it is not so necessary as Windows can handle
+Unix syntax there.
+
+=back
+
+=head2 Predefined Variables
+
+Makepp predefines a few variables, which you can override:
+
+=over
+
+=item AR
+
+I<Default:> C<ar>.
+
+=item ARFLAGS
+
+I<Default:> C<rv>.
+
+=item AS
+
+I<Default:> C<as>.
+
+=item CC
+
+I<Default:> The first found among C<gcc>, C<egcc>, C<pgcc>, C<c89> or C<cc>, or on
+Windows additionally C<cl> or C<bcc32>.
+
+=item CFLAGS
+
+I<Default:> If C<$(CC)> is a Gnu compiler C<-g -Wall>, if it is one of the two
+Windows compilers nothing, else C<-g>.
+
+=item CURDIR
+
+The directory in which the current Makefile resides.
+
+=item CXX
+
+I<Default:> The first found among C<g++>, C<c++>, C<pg++>, C<cxx>, C<C>C<C> or C<aCC>,
+or on Windows additionally C<cl> or C<bcc32>.
+
+=item CXXFLAGS
+
+I<Default:> If C<$(CXX)> is a Gnu compiler C<-g -Wall>, if it is one of the two
+Windows compilers nothing, else C<-g>.
+
+=item F77
+
+I<Default:> The first found among C<f77>, C<g77> or C<fort77>.
+
+=item FC
+
+I<Default:> C<$(F77)>.
+
+=item LD
+
+I<Default:> C<ld>.
+
+=item LEX
+
+I<Default:> The first found among C<lex> or C<flex>.
+
+=item LIBTOOL
+
+I<Default:> C<libtool>.
+
+=item MAKE
+
+This variable has no default value, and is not used by makepp.  It is however
+the preferred way in older makes to implement recursive make.  That's why
+makepp recognizes when this variable is used and turns off some features, even
+before the recursion actually takes place.
+
+=item MAKECMDGOALS
+
+This variable is set but not used by makepp.  You can query it to do
+something only if a certain target was requested.
+
+I<Default:> Whatever explicit targets the user (or a recursive invocation)
+provided.  Empty when implicitly building default target.
+
+    ifneq $(filter special-target, $(MAKECMDGOALS))
+ 	# special-target is one of the current explicit targets
+    else ifeq $(MAKECMDGOALS)
+ 	# no explicit targets
+    endif
+
+=item MAKEINFO
+
+I<Default:> C<makeinfo>.
+
+=item makepp_percent_subdirs
+
+Set this to some true value (like C<1>) to have C<%> in targets or
+dependencies match across more than one directory.
+
+I<Default:> undefined
+
+=item makepp_require_phony
+
+Set this to some true value (like C<1>) to prevent implicit phonyness (i.e. if
+a rule succeeds without producing its target).  This variable should be true
+by default, to prevent broken dependency chains, but that would break backward
+compatibility with sloppy makefiles.
+
+I<Default:> undefined
+
+=item makepp_simple_concatenation
+
+Set this to some true value (like C<1>) to prevent L</rc-style substitution>.
+
+I<Default:> undefined
+
+=item PWD
+
+An alias for L</CURDIR>.
+
+=item RM
+
+I<Default:> C<rm -f>.  This is meant for legacy Makefiles.  For new ones
+preferably use the builtin L<&rm|makepp_builtins/&rm> command directly.  If
+you want to write a phony clean rule, look at the C<makeppclean -r> command
+instead.
+
+=item ROOT
+
+The relative path to the root of your build system, i.e. the directory further
+up in which you have a C<RootMakeppfile(.mk)>.  If you don't have one, this
+variable is empty.
+
+=item SHELL
+
+This variable is only respected if you C<export> it.  In that case it is the
+Shell which is used to execute not-builtin actions with some special character
+in it (plain ones being execed directly).  On Windows ActiveState Perl, if you
+have a Unix-like Shell, you must instead set your SHELL variable to a value
+ending in C<sh> or C<sh.exe> before calling makepp.
+
+I<Default:> The first found among C</usr/xpg4/bin/sh> (e.g. Solaris) or
+C</sbin/xpg4/sh> (e.g. Reliant Unix) or C</bin/sh>.
+
+=item YACC
+
+I<Default:> The first found among C<bison -y> or C<yacc>.
+
+=back
+
+=head2 Variables and perl
+
+Variable values are stored as ordinary perl scalars, so you can access them
+directly from perl code if you need to do any complicated manipulations with
+them; see L<makepp_extending> for details.
+
+Accessing global variables from Perl is achieved by prefixing them with the
+C<global::> package.  In fact any variable, not yet present in the current
+makefile, and which you assign to in this package will from then on be global,
+as though you had just issued the C<global> statement for it.
+
+This direct access is however error-prone!  The user may have overriden these
+variables on the command line or through the environment.  Some other makefile
+loaded before this one may have made the variable global or target specific.
+In these cases you would not find the value of the variable, or when assigning
+it, might take away its property (equivalent to an C<override> modifier,
+except for target specifics.)
+
+With direct access you also bypass the expansion of these variables, if they
+are of type C<=> or C<;=>.  Special variables like C<$(CC)> start out as
+functions, until they are assigned to.  So in many cases you won't see their
+value.
+
+For these reasons it is better to let makepp determine the correct value.  You
+can use the C<makeperl> variant, in which the variable has been evaluated
+before the perl code gets interpreted:
+
+    makeperl { $$current_value = '$(MAKEFILE_VAR)' }
+
+If you need a variable in makefile perl blocks this is achieved via the perl
+variable C<$makefile> as follows:
+
+    perl { $current_value = $makefile->expand_variable( 'MAKE_VAR' ) }
+
+Functions always get the makefile object passed in as the second argument
+C<$_[1]>:
+
+    sub f_f { $current_value = $_[1]->expand_variable( 'MAKE_VAR' ) }
+
+Commands are supposed to be called within a rule action, where the makefile
+object is accessible via C<$Makesubs::rule->{MAKEFILE}>:
+
+    sub c_cmd { $current_value = $Makesubs::rule->{MAKEFILE}->expand_variable( 'MAKE_VAR' ) }
+
+=head1 AUTHOR
+
+Gary Holt (holt-makepp@gholt.net)

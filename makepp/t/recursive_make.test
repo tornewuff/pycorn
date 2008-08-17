@@ -1,0 +1,71 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	1	755	1067749983	1210350510	is_relevant.pl
+!is_windows || is_windows == -1
+###	10	755	1164320211	1190054144	makepp_test_script.pl
+#
+# A simple test of recursive make.
+#
+# Run the test twice.  We had some obscure bugs where recursive make
+# didn't work the second time around, which this should catch correctly.
+#
+makepp;
+n_files 'n_files_0';
+makepp;
+1;
+###	27	644	1164353230	1190054149	Makefile
+XVAR = 1			# Gets overridden on the command line.
+
+.PHONY: all
+
+all: a b
+
+%: subdir1/% : foreach subdir1/?	# foreach necessary to exclude Makefile.
+	&cp $< $@
+
+# Test passing a variable through the environment to recursive make.
+subdir1/a subdir1/b:
+	cd subdir1 && EVAR=evar $(MAKE) YVAR=2 XVAR=3 $(notdir $@)
+
+subdir1/c: d
+	&cat e -o $@
+	&echo c -o>>$@
+
+#
+# Test waiting for recursive make to finish.
+# This is a hack that will reexecute recursive make but won't change the file.
+#
+d:
+	$(MAKE) e
+	test -f d || touch d
+
+e:
+	&echo $@ $(XVAR) -o $@
+###	D	755	1067451878	1078122244	subdir1
+###	14	644	1067451878	978375202	subdir1/Makefile
+
+a:
+	&echo a $(EVAR) $(XVAR) -o $@
+
+b: c
+	&cat c -o $@
+	&echo b $(YVAR) -o >>$@
+
+#
+# This should not override a rule in the upper level makefile, because it
+# invokes recursive make.
+#
+c:
+	cd .. && $(MAKE) subdir1/$@
+###	D	755	1067451878	1078122199	answers
+###	1	644	1067451878	978378258	answers/a
+a evar 3
+###	3	644	1067451878	978378259	answers/b
+e 1
+c
+b 2
+###	1	644	1067451878	978378259	answers/e
+e 1
+###	1	644	1067451878	1190053911	answers/n_files
+2 1 0
+###	1	644	1078122192	1190052203	answers/n_files_0
+8 1 0

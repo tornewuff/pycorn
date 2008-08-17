@@ -1,0 +1,23 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	1	644	1103317920	1208344763	is_relevant.pl
+is_windows < 2
+###	13	644	1083646809	1083646829	Makeppfile
+#
+# Test bug reported by Ian Zimmerman where $$ didn't work if
+# rc_substitution := 0 (changed to makepp_simple_concatenation).
+#
+
+makepp_simple_concatenation := 1
+
+$(phony all): xyz_val
+
+XYZ_VAL := $(shell eval `./get_xyz`; echo $$XYZ)
+
+xyz_val :
+	&echo $(XYZ_VAL) -o $@
+###	2	755	1083646727	1083646727	get_xyz
+#!/bin/sh
+echo XYZ=abc
+###	D	755	1083646856	1083646858	answers/
+###	1	644	1083646851	1083646851	answers/xyz_val
+abc

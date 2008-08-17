@@ -1,0 +1,19 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	9	755	1154549128	1103069865	makepp_test_script.pl
+# Ignore child process INT (matters on AIX)
+$SIG{INT} = 'IGNORE';
+
+eval { makepp 'ERROR=1' } and die 1;
+-f 'x' and -f '.makepp/x.mk' or die 2;
+
+makepp \'clean';
+-f 'x' and die 3;
+makepp 'y';
+###	7	644	1103069835	1103069833	Makeppfile
+$(phony default): x
+
+x:
+	&touch $@
+	perl { is_windows ? die : kill 'INT', $$ }
+
+$(phony y):

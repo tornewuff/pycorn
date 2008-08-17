@@ -1,0 +1,8 @@
+#!/usr/bin/perl -w
+# $Id: makepp_build_cache_control,v 1.7 2006/06/27 02:28:51 topnerd Exp $
+
+use  File::Basename;
+
+my $makeppbuiltin = dirname($0).'/makeppbuiltin';
+exec $makeppbuiltin, -MBuildCacheControl, @ARGV;
+die "Failed to exec $makeppbuiltin: $!";

@@ -1,0 +1,31 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	11	755	1152637069	1208536507	makepp_test_script.pl
+local $ENV{SUF} = is_windows > 1 ? 'bat' : 'sh';
+# Build once
+makepp qw{ SCRIPT=test };
+# Build with different command line, should not execute command
+makepp qw{ SCRIPT=test1 };
+cp "x", "y";
+# Now change the dependencies, and check that the build info is saved with
+# virtual sandboxes (this was broken once).
+makepp qw{ --virtual-sandbox Y=Makeppfile SCRIPT=test1 };
+# Build with different command line, should not execute command
+makepp qw{ Y=Makeppfile SCRIPT=test };
+###	2	664	1152637082	1208536569	Makeppfile
+x : $(Y) : build_check ignore_action
+        .$/$(SCRIPT).$(SUF) > $@
+###	1	755	1132010446	1208536620	test.bat
+@echo OK
+###	2	755	1132010446	1125361510	test.sh
+#!/bin/sh
+echo OK
+###	1	755	1132010446	1208536617	test1.bat
+@echo NOK
+###	2	755	1132010446	1125361510	test1.sh
+#!/bin/sh
+echo NOK
+###	D	777	1079144793	1079144618	answers
+###	1	777	1079144618	1079144618	answers/x
+NOK
+###	1	777	1079144618	1079144618	answers/y
+OK

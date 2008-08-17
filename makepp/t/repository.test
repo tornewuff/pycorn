@@ -1,0 +1,57 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	30	644	1163099194	1067750108	Makeppfile
+#
+# Test getting some files from the repository.
+#
+
+# Former 2005_07_28_mkdir_wildcard.test
+perl_begin
+	FileInfo::lstat_array FileInfo::file_info 'repository';
+	mkdir 'repository/x2';
+	open(OUT, '>', 'repository/x2/f2') or die;
+	close(OUT);
+perl_end
+
+repository repository r2=repository2
+
+.PHONY: all
+
+all: c x
+
+c: a b r2/subdir/d
+	&cat $^ e -o $@
+
+#
+# This is a test of the idiom where a co-dependency is actually expressed
+# as a dependency.  In this case, b does not depend on e, but things which
+# depend on b are supposed to depend on e.  This is an ugly idiom.
+#
+b: e
+
+x: $(wildcard x*/*)
+	&echo $(inputs) -o $(output)
+###	D	755	1067451878	970329180	repository
+###	1	644	1067451878	966130046	repository/a
+a
+###	1	644	1067451878	966130048	repository/b
+b
+###	1	644	1067451878	966130051	repository/c
+c
+###	1	644	1067451878	970329180	repository/e
+e
+###	D	755	1122589423	1122589408	repository/x1
+###	D	755	1122589423	1122589408	repository/x1/f1
+###	D	755	1067451878	966315000	repository2
+###	D	755	1067451878	966314901	repository2/subdir
+###	1	644	1067451878	966314901	repository2/subdir/d
+d
+###	D	755	1067451878	966133204	answers
+###	4	644	1067451878	970329283	answers/c
+a
+b
+d
+e
+###	1	644	1067451878	1190053924	answers/n_files
+2 1 0
+###	1	644	1122590442	1122590513	answers/x
+x1/f1 x2/f2

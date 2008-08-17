@@ -1,0 +1,28 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	10	644	1164352851	1169486066	Makefile
+#
+# This is an out-of-date makefile which gets replaced.
+#
+$(phony all): a
+
+a:
+	&touch $(output)
+
+Makefile: Makefile_source
+	  &cp $< $@
+###	10	644	1164352913	1169486070	Makefile_source
+#
+# This is the real makefile, which replaces the out-of-date version
+#
+$(phony all): a b
+
+a b:
+	&touch $(outputs)
+
+Makefile: Makefile_source
+	  &cp $< $@
+###	D	755	1067451876	965613096	answers
+###	0	644	1067451876	1169482133	answers/a
+###	0	644	1067451876	1169482265	answers/b
+###	1	644	1067451876	1190053860	answers/n_files
+3 1 0

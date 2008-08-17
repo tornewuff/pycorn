@@ -1,0 +1,385 @@
+=head1 NAME
+
+makepp_extending -- How to extend makepp using perl
+
+=for vc $Id: makepp_extending.pod,v 1.13 2007/04/27 20:06:18 pfeiffer Exp $
+
+=head1 DESCRIPTION
+
+Makepp internally is flexible enough so that by writing a
+little bit of perl code, you can add functions or do a number of other
+operations.
+
+=head2 General notes on writing perl code to work with makepp
+
+Each makefile lives in its own package.  Thus definitions in one
+makefile do not affect definitions in another makefile.  A common set of
+functions including all the standard textual manipulation functions is
+imported into the package when it is created.
+
+Makefile variables are stored as perl scalars in that package.  (There are
+exceptions to this: automatic variables and the default value of variables
+like CC are actually implemented as functions with no arguments.  Target
+specific vars, command line vars and environment vars are not seen this way.)
+Thus any perl code you write has access to all makefile variables.  Global
+variables are stored in the C<global::> package.  See L<Makefile
+variables|makepp_statements/"Variables and perl"> for the deails.
+
+Each of the statements (L<ifperl / ifmakeperl|makepp_statements/ifperl>,
+L<perl / makeperl|makepp_statements/perl>, L<sub /
+makesub|makepp_statements/sub>), the functions (L<perl /
+makeperl|makepp_functions/perl>, L<map / makemap|makepp_functions/map>) and
+the rule action (L<perl / makeperl|makepp_rules/perl>) for writing Perl code
+directly in the makefile come in two flavours.  The first is absolutely normal
+Perl, meaning you have to use the C<f_> prefix as explained in the next
+section, if you want to call makepp functions.  The second variant first
+passes the statement through Make-style variable expansion, meaning you have
+to double the C<$>s you want Perl to see.
+
+End handling is special because makepp's huge (depending on your build system)
+data structures would take several seconds to garbage collect with a normal
+exit.  So we do a brute force exit.  In the main process you can still have
+C<END> blocks but if you have any global file handles they may not get
+flushed.  But you should be using the modern lexical filehandles, which get
+closed properly when going out of scope.
+
+In perl code run directly as a rule action or via a command you define, it is
+the opposite.  C<END> blocks will not be run, but global filehandles get
+flushed for you.  The C<DESTROY> of global objects will never be run.
+
+=head2 Adding new textual functions
+
+You can add a new function to makepp's repertoire by simply defining a
+perl subroutine of the same name but with a prefix of C<f_>.  For
+example:
+
+    sub f_myfunc {
+      my $argument = $_[0]; 	# Name the arguments.
+ 
+      ... do something here
+ 
+      return $return_value;
+    }
+ 
+    XYZ := $(myfunc my func arguments)
+
+The first argument to the function is the remaining text in the function
+invocation after the function name.  You'll have to split it into words
+yourself if that's what you want.  There are other arguments, but they
+are pretty specific to makepp's internals and for most applications you
+shouldn't need to use them.
+
+The function should return a scalar string (not an array) which is then
+inserted into the text at that point.
+
+If your function encounters an error, it should die using the usual perl
+die statement.  This will be trapped by makepp and an error message
+displaying the file name and the line number of the expression causing
+the error will be printed out.
+
+There are essentially no limits on what the function can do; you can
+access the file, run shell commands, etc.
+
+At present, expressions appearing in dependencies and in the rule
+actions are expanded once while expressions appearing in targets are
+expanded twice, so be careful if your function has side effects and is
+present in an expression for a target.
+
+Note that the environment (in particular, the cwd) in which the function
+evaluates will not necessarily match the environment in which the rules
+from the Makefile in which the function was evaluated are executed.
+If this is a problem for you, then your function probably ought to look
+something like this:
+
+    sub f_foo {
+      my ($arg, $makefile, $makefile_line) = @_;
+      chdir $makefile->{CWD};
+ 
+      ... etc.
+    }
+
+=head2 Putting functions into a Perl module
+
+If you put functions into an include file, you will have one copy per
+Makeppfile which uses it.  To avoid that, you can write them as a normal Perl
+module with an C<Exporter> interface, and use that.  This will load faster and
+save memory:
+
+    perl { use mymodule }
+
+If you need any of the functions normally available in a Makefile (like the
+C<f_> functions), you must put this line into your module:
+
+    use Makesubs;
+
+The drawback is that the module would be in a different package than a
+function directly appearing in a makefile.  So you need to pass in everything
+as parameters, or construct names with perl's C<caller> function.
+
+=head2 Calling external Perl scripts
+
+If you call an external Perl script via C<system>, or as a rule action, makepp
+will fork a new process (unless it's the last rule action) and fire off a
+brand new perl interpreter.  There's nothing wrong with that, except that
+there's a more efficient way:
+
+=over
+
+=item &command arguments...
+
+This can be a rule action.  It will call a function I<command> with a C<c_>
+prefix, and pass it the remaining (optionally quoted makepp style -- not
+exactly the same as Shell) arguments.  If such a function cannot be found,
+this passes all strings to C<run>.
+
+    sub c_mycmd { my @args = @_; ... }
+ 
+    $(phony callcmd):
+    	&mycmd 'arg with space' arg2 "arg3" # calls c_mycmd
+ 
+    %.out: %.in
+    	&myscript -o $(output) $(input) # calls external myscript
+
+You can write your commands within the framework of the builtins, allowing you
+to use the same standard options as they have, and the I/O handling they give.
+
+The block operator C<Makecmds::frame> is followed by a single letter option
+list of the builtins (maximally C<qw(f i I o O r s)>).  Even if you specify
+your own option overriding one of these, you still give the single letter of
+the standard option.  Note how we take one of the letter out of C<qw()>,
+because otherwise Perl 5.6 chokes.
+
+Each own option is specified as C<[qw(n name), I<\$ref>, I<arg>, I<sub>]>.
+The first two elements are short and long name, followed by the variable
+reference and optionally by a boolean for whether to take an argument.
+Without an arg, the variable is incremented each time the option is given,
+else the option value is stored in it.
+
+    sub c_my_ocmd {		# Typical output case
+      local @ARGV = @_;
+      Makecmds::frame {
+ 
+ 	... print something here with @ARGV, with options already automatically removed
+ 
+      } 'f', qw(o O);
+    }
+ 
+    sub c_my_icmd {		# Typical input case with 2 options
+      local @ARGV = @_;
+      my( $short, $long );
+      Makecmds::frame {
+ 
+ 	... do something here with <>
+ 
+      } qw(i I r s),		# s specifies only --separator, not -s
+ 	[qw(s short), \$short],	# No option arg -> $short == 1
+ 	[qw(l long), \$long, 1, sub { warn "got arg $long"}];
+    }
+
+Here comes a simple command which upcases only the first character of each
+input record (equivalent to C<&sed '$$_ = "\u\L$$_"'>):
+
+    sub c_uc {
+      local @ARGV = @_;
+      Makecmds::frame {
+ 	print "\u\L$_" while <>;
+      } 'f', qw(i I o O r s);
+    }
+
+Within the block handled by frame, you can have nested blocks for performing
+critical operations, like opening other files.
+
+    Makecmds::perform { ... } 'message';
+
+This will output message with C<--verbose> (which every command accepts) iff
+the command is successfully run.  But if the block evaluates as false, it dies
+with negated message.
+
+=item run script arguments...
+
+This is a normal Perl function you can use in any Perl context within your
+makefile.  It is similar to the multi-argument form of system, but it runs the
+Perl script within the current process.  For makepp statements, the
+L<perl|makepp_functions/perl> function or your own functions that is the
+process running makepp.  But for a rule that is the subprocess performing it.
+The script gets parsed as many times as it gets called, but you can put the
+real work into a lib, as pod2html does.  This lib can then get used in the top
+level, so that it's already present:
+
+    perl { use mylib }		# gets forked to all rules which needn't reparse it
+ 
+    %.out: %.in
+    	makeperl { run qw'myscript -o $(output) $(input)' }
+
+If the script calls C<exit>, closes standard file descriptors or relies on the
+system to clean up after it (open files, memory...), this can be a problem
+with C<run>.  If you call C<run> within statements or the
+L<perl|makepp_functions/perl> function, makepp can get disturbed or the
+cleanup only happens at the end of makepp.
+
+If you have one the aforementioned problems, run the script externally,
+i.e. as from the command line instead.  Within a rule cleanup is less of a
+problem, especially not as the last action of a rule, since the rule
+subprocess will exit afterwards anyway, except on Windows.
+
+=back
+
+=head2 Writing your own signature methods
+
+Sometimes you want makepp to compute a signature method using a
+different technique.  For example, suppose you have a binary that
+depends on a shared library.  Ordinarily, if you change the shared
+library, you don't have to relink executables that depend on it because
+the linking is done at run time.  (However, it is possible that
+relinking the executable might be necessary, which is why I did not make
+this the default.)  What you want makepp to do is to have the same
+signature for the shared library even if it changes.
+
+This can be accomplished in several ways.  The easiest way is to create
+your own new signature method (let's call it "shared_object").  You
+would use this signature method only on rules that link binaries, like
+this:
+
+    myprogram : *.o lib1/lib1.so lib2/lib2.so
+    	: signature shared_object
+    	$(CC) $(inputs) -o $(output)
+
+Now we have to create the signature method.
+
+All signature methods must be their own class, and the class must
+contain a few special items (see Signature.pm in the distribution for
+details).  The class's name must be prefixed with C<Signature::>, so in
+this case our class should be called C<Signature::shared_object>.  We
+have to create a file called F<shared_object.pm> and put it into a
+F<Signature> directory somewhere in the perl include path; the easiest
+place might be in the F<Signature> directory in the makepp installation
+(e.g., F</usr/local/share/makepp/Signature> or wherever you installed
+it).
+
+For precise details about what has to go in this class, you should look
+carefully through the file F<Signature.pm> and probably also
+F<Signature/exact_match.pm> in the makepp distribution.  But in our
+case, all we want to do is to make a very small change to an existing
+signature mechanism; if the file is a shared library, we want to have a
+constant signature, whereas if the file is anything else, we want to
+rely on makepp's normal signature mechanism.  The best way to do this is
+to inherit from C<Signature::c_compilation_md5>, which is the signature
+method that is usually chosen when makepp recognizes a link command.
+
+So the file F<Signature/shared_object.pm> might contain the following:
+
+    use strict;
+    package Signature::shared_object;
+    use Signature::c_compilation_md5;
+    our @ISA = qw(Signature::c_compilation_md5); # Indicate inheritance.
+    our $shared_object = bless \@ISA; # A piece of magic that helps makepp find
+                                # the subroutines for this method.  All
+                                # signature methods must have one of these.
+                                # The value is not used, just any object.
+    # Now here's the method that gets called when we need the signature of
+    # any target or dependency for which this signature method is active:
+    sub signature {
+      my ($self,                 # This will be the same as $shared_object.
+          $finfo) = @_;          # A special structure that contains everything
+                                 # makepp knows about this file.  See
+                                 # FileInfo.pm for details.
+ 
+      if ($finfo->{NAME} =~ /\.s[oa]$/) { # Does the file name end in .so or .sa?
+        return $finfo->file_exists ? 'exists' : '';
+                                 # Always return the same signature if the file
+                                 # exists.  In this case, the signature is the
+                                 # string "exists".
+      }
+ 
+      Signature::c_compilation_md5::signature;
+                                 # If the file didn't end in .so or .sa,
+                                 # delegate to makepp's usual signature method.
+    }
+
+This file is provided as an example in the makepp distribution, with
+some additional comments.
+
+Incidently, why don't we make this the default?  Well, there are times
+when changing a shared library will require a relinking of your program.
+If you ever change either the symbols that a shared library defines, or
+the symbols that it depends on other libraries for, a relink may
+sometimes be necessary.
+
+Suppose, for example, that the shared library invokes some subroutines
+that your program provides.  E.g., suppose you change the shared library
+so it now calls an external subroutine C<xyz()>.  Unless you use the
+C<-E> or C<--export-dynamic> option to the linker (for GNU binutils;
+other linkers have different option names), the symbol C<xyz()> may not
+be accessible to the run-time linker even if it exists in your program.
+
+Even worse, suppose you defined C<xyz()> in another library (call it
+F<libxyz>), like this:
+
+    my_program: main.o lib1/lib1.so xyz/libxyz.a
+
+Since C<libxyz> is a F<.a> file and not a F<.so> file, then C<xyz()> may
+not be pulled in correctly from F<libxyz.a> unless you relink your
+binary.
+
+Signature methods also control not only the string that is used to
+determine if a file has changed, but the algorithm that is used to
+compare the strings.  For example, the signature method C<target_newer>
+in the makepp distribution merely requires that the targets be newer
+than the dependencies, whereas the signature method C<exact_match> (and
+everything that depends on it, such as C<md5> and C<c_compilation_md5>)
+requires that the file have the same signature as on the last build.
+
+Here are some other kinds of signature methods that might be useful, to
+help you realize the possibilities.  If general purpose enough, some of
+these may eventually be incorporated into makepp:
+
+=over 4
+
+=item *
+
+A signature method for shared libraries that returns a checksum of all
+the exported symbols, and also all the symbols that it needs from other
+libraries.  This solves the problem with the example above, and
+guarantees a correct link under all circumstances.  An experimental
+attempt has been made to do this in the makepp distribution (see
+F<Signature/shared_object.pm>), but it will only work with GNU binutils
+and ELF libraries at the moment.
+
+=item *
+
+A signature method that ignores a date stamp written into a file.  E.g.,
+if you generate a F<.c> file automatically using some program that
+insists on putting a string in like this:
+
+    static char * date_stamp = "Generated automatically on 01 Apr 2004 by nobody";
+
+you could write a signature method that specifically ignores changes in
+date stamps.  Thus if the date stamp is the only thing that has changed,
+makepp will not rebuild.
+
+=item *
+
+A signature method that computes the signatures the normal way, but
+ignores the architecture dependence when deciding whether to rebuild.
+This could be useful for truly architecture-independent files; currently
+if you build on one architecture, makepp will insist on rebuilding even
+architecture-independent files when you switch to a different
+architecture.
+
+=item *
+
+A signature method that knows how to ignore comments in latex files, as
+the C<c_compilation_md5> method knows how to ignore comments in C files.
+
+=item *
+
+A signature method for automatic documentation extraction that checksums
+only to the comments that a documentation extractor needs and ignores
+other changes to the source file.
+
+=back
+
+=head2 Unfinished
+
+This document is not finished yet.  It will soon cover how to write your
+own scanners for include files and things like that.

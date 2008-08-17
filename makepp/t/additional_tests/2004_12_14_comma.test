@@ -1,0 +1,19 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	13	644	1103070911	1103070892	Makeppfile
+# This test is sort of bogus, because it verifies that wildcards *don't*
+# match filenames containing comma, because they currently get interpretted
+# as argument separators.  Once this is no longer the case, this test should
+# be modified to verify that matches can be used in function calls without
+# separating arguments.
+
+# Cygwin lowercases and thus wildcard sorts differently
+X := $(makeperl sort map lc, qw'$(wildcard *)')
+
+$(phony default): x
+
+x:
+	&echo $(X) -o $@
+###	D	755	1103070976	1103070920	answers
+###	1	644	1103070920	1103070920	answers/x
+answers makeppfile
+###	0	644	1103070741	1103070741	x,

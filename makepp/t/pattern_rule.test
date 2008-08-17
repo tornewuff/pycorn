@@ -1,0 +1,173 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	3	644	1181596243	1181903567	makepp_test_script.pl
+eval { makepp 'abc.inaa' } and die;
+eval { makepp 'a.xaa' } and die;
+makepp;
+###	92	644	1175559408	1181906278	Makeppfile
+#
+# This makeppfile tests pattern rules.
+#
+
+.PHONY: all
+
+INFILES = abc def xyz
+
+all: $(INFILES).out2 a.x b.x xyz.lc live.yoghurt abc.ina a.xa a.n
+
+# Potential endless loop shall abort both based on files already existing and
+# on ones to be discovered in the future.
+%a: %
+	&cp -l $(input) $(output)
+
+# static pattern rule
+a.x b.x : %.x : %.y
+      &cat $^ -o $@
+
+a.y b.y :
+	&echo $@ -o $@
+
+#
+# A pattern rule that builds off another pattern rule, and also has
+# two pattern dependencies:
+#
+%.out2: %.out %.in
+	&echo $@ -o $@
+	&cat $^ -o>>$@
+
+#
+# A pattern rule that overrides another pattern rule:
+#
+x%.out2: x%.out
+	&echo $@ -o $@
+	&echo "(File $@ is another exception.)" -o>>$@
+	&cat $^ -o>>$@
+
+#
+# GNU make style pattern rule.  Note that this tests using an alternate name
+# for the directory.
+#
+%.out: ./%.in
+	&echo $@ -o $@
+	&cat $^ -o>>$@
+
+#
+# Another GNU make style pattern rule. Here the pattern is in the second dependency.
+#
+%.yoghurt: bacteria ./%.cream
+	&echo $@ -o $@
+	&cat $^ -o>>$@
+
+#
+# Pattern rule overridden by a explicit rule:
+#
+xyz.out: xyz.in subdir/percent_subdirs_test
+	&echo $@ -o $@
+	&echo "(File $@ is an exception.)" -o>>$@
+	&cat $^ -o>>$@
+
+#
+# Do mixed case rules work, especially when not case sensitive?
+#
+%.Uc: %.in
+	&cp -l $(input) $(output)
+
+%.lc: %.Uc
+	&cp -l $(input) $(output)
+
+# Long chain, partially ordered forward, partially backward:
+%.q: %.r
+	&cp -l $(input) $(output)
+%.p: %.q
+	&cp -l $(input) $(output)
+%.o: %.p
+	&cp -l $(input) $(output)
+%.n: %.o
+	&cp -l $(input) $(output)
+
+%.r: %.s
+	&cp -l $(input) $(output)
+%.s: %.t
+	&cp -l $(input) $(output)
+%.t: %.u
+	&cp -l $(input) $(output)
+%.u: %.v
+	&cp -l $(input) $(output)
+%.v: %.w
+	&cp -l $(input) $(output)
+%.w: %.x
+	&cp -l $(input) $(output)
+###	1	644	1175559408	965501121	abc.in
+abc
+###	1	644	1175559408	1175558557	bacteria
+must be present for good live yoghurt
+###	1	644	1175559408	965501124	def.in
+def
+###	1	644	1175559408	1175558557	live.cream
+rich, creamy goodness
+###	1	644	1175559408	965501136	xyz.in
+xyz
+###	D	755	1175559408	990032657	subdir/
+###	12	644	1175559408	990032469	subdir/Makeppfile
+#
+# This file tests pattern rules with the percent_subdirs turned on, so
+# the same rule applies to several subdirectories.
+#
+makepp_percent_subdirs = 1		# Allow % to refer to subdirectories, too.
+
+%.out: %.in
+	&echo $@ -o $@
+	&cat $^ -o>>$@
+
+percent_subdirs_test : **/*.out
+	&cat $^ -o>>$@
+###	24	644	1175559408	990032639	subdir/percent_subdirs_test
+suba/a.out
+a
+suba/subb/b.out
+b
+subc/c.out
+c
+suba/a.out
+a
+suba/subb/b.out
+b
+subc/c.out
+c
+suba/a.out
+a
+suba/subb/b.out
+b
+subc/c.out
+c
+suba/a.out
+a
+suba/subb/b.out
+b
+subc/c.out
+c
+###	D	755	1175559408	990032657	subdir/suba/
+###	1	644	1175559408	990031804	subdir/suba/a.in
+a
+###	D	755	1175559408	990032657	subdir/suba/subb/
+###	1	644	1175559408	990031797	subdir/suba/subb/b.in
+b
+###	D	755	1175559408	990032657	subdir/subc/
+###	1	644	1175559408	990031835	subdir/subc/c.in
+c
+###	D	755	1175559459	1175559461	answers/
+###	1	444	1175559408	1104356247	answers/a.x
+a.y
+###	1	444	1175559408	1104356247	answers/a.y
+a.y
+###	1	444	1175559408	1104356247	answers/b.x
+b.y
+###	1	444	1175559408	1104356247	answers/b.y
+b.y
+###	3	644	1175559408	1175558694	answers/live.yoghurt
+live.yoghurt
+must be present for good live yoghurt
+rich, creamy goodness
+###	1	644	1175559408	1190053902	answers/n_files
+29 1 0
+###	1	444	1175559408	1104356247	answers/xyz.lc
+xyz

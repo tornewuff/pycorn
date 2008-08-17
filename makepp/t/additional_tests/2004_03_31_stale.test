@@ -1,0 +1,62 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	31	644	1151616989	1080781993	Makeppfile
+$(phony default): *
+
+perl_begin
+    # Test that command line variables are accessible in perl
+    $MY_STALE = $makefile->expand_variable( 'STALE' );
+perl_end
+
+a: d
+    &touch $@
+
+ifndef STALE
+ b:
+    &touch $@
+endif
+
+register_input_suffix echo .x
+d: d.x : scanner c_compilation
+    echo $< > $@
+
+x:
+    &echo $(MY_STALE) -o $@
+
+# Fake makepp into thinking that '0' will be a directory
+0/y:
+    &touch $@
+
+generated:
+    &echo $(only_generated *) -o $@
+
+stale:
+    &echo $(only_stale *) -o $@
+###	D	755	1080782838	1080782836	answers
+###	1	644	1080782836	1080782836	answers/stale
+b
+###	1	644	1080782836	1080782836	answers/stale-1
+
+###	1	644	1080782836	1080782836	answers/generated
+a b d generated stale x
+###	1	644	1080782836	1080782836	answers/generated-1
+
+###	1	644	1080782836	1080782836	answers/x
+1
+###	D	755	1080782838	1080782836	subdir
+###	4	644	1080782838	1080782836	subdir/Makeppfile
+bar:
+	&touch foo bar
+
+prebuild bar
+###	0	644	1080781634	1080781634	c
+###	2	644	1119219345	1080782214	d.x
+#include "subdir/foo"
+#include "0"
+###	7	755	1119219345	1080782214	makepp_test_script.pl
+makepp 'generated', 'stale';
+cp 'generated', 'generated-1';
+cp 'stale', 'stale-1';
+
+makepp '--rm-stale';
+-f 'subdir/foo' or die; # Verify that it wasn't spuriously removed by makepp
+makepp 'generated', 'stale', 'x', 'STALE=1';

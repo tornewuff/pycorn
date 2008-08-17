@@ -1,0 +1,23 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	0	644	1069811870	1069811870	TOT
+###	D	755	1069812716	1069812716	answers
+###	1	644	1069812196	1069812190	answers/x
+../../ ../../
+###	D	755	1069812716	1069812716	d1
+###	D	755	1069812716	1069812716	d1/var
+###	8	644	1164315563	1069812011	d1/var/Makeppfile
+FOO := $(dir $(find_upwards TOT))
+
+repository .=..
+
+BAR := $(dir $(find_upwards TOT))
+
+x:
+	&echo $(FOO) $(BAR) -o $@
+###	6	755	1164321341	1069812714	makepp_test_script.pl
+chdir 'd1/var';
+makepp;
+rename 'x', '../../x';
+rename '.makepp', '../../.makepp';
+chdir '../..';
+1;

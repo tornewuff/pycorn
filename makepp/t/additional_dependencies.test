@@ -1,0 +1,75 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	46	644	1067451873	967513317	Makeppfile
+#
+# Test specifying additional dependencies on a line that does not have any
+# actions.
+#
+.PHONY: all
+
+all: c d f
+
+c: a
+	&cat $^ -o $@
+
+
+#
+# This tests the horrible idiom whereby a command with several targets is
+# sometimes split up so that one target depends on the other, in order to
+# get around make's stupid restriction of one target per command.
+#
+a: b
+
+b:
+	&echo a -o a
+	&echo b -o b
+
+
+#
+# Test depending on a wildcard.
+#
+d: [12].c
+
+d: e
+	&cat $^ -o $@
+
+1.c 2.c 3.c 4.c:
+	&echo $@ -o $@
+
+e:
+	&echo e -o $@
+
+#
+# Test depending on a wildcard when there's no rule.
+#
+f: g [34].c
+
+g:
+	&echo g -o g
+	&echo f -o f
+###	D	755	1067451873	967513503	answers
+###	1	644	1067451873	967513497	answers/a
+a
+###	1	644	1067451873	967513497	answers/b
+b
+###	1	644	1067451873	967513497	answers/c
+a
+###	3	644	1067451873	967513497	answers/d
+e
+1.c
+2.c
+###	1	644	1067451873	967513497	answers/e
+e
+###	1	644	1067451873	967513497	answers/f
+f
+###	1	644	1067451873	967513497	answers/g
+g
+###	1	644	1067451873	967513497	answers/1.c
+1.c
+###	1	644	1067451873	967513497	answers/2.c
+2.c
+###	1	644	1067451873	967513497	answers/3.c
+3.c
+###	1	644	1067451873	967513497	answers/4.c
+4.c
+###	1	644	1067451873	1190053811	answers/n_files
+9 1 0

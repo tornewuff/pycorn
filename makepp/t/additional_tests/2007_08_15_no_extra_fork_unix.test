@@ -1,0 +1,23 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	17	644	1103567918	1211618426	Makeppfile
+# Test to verify (on UNIX) that we don't have an unnecessary fork on the
+# last action, which could waste an enormous amount of memory.
+# Set SLEEP if you want to debug the process tree using pstree.
+
+ifdef SLEEP
+export SLEEP
+endif
+
+# The process of the last action should be the 'sh' running the 'checker'
+# script (because there are no shell metacharacters in the action), which
+# should be the same PID as the makepp process that is running the rule,
+# because it should have been exec'ed therefrom.
+EMPTY =
+$(phony pidcheck):
+	perl { $ENV{PID} = $$ }
+	./checker
+	$(EMPTY)
+###	3	755	1103567918	1187882940	checker
+#! /bin/sh
+[ "$SLEEP" ] && sleep 60
+[ $PID = $$ ] || exit 1

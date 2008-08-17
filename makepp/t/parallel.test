@@ -1,0 +1,90 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	1	755	1067749983	1210350510	is_relevant.pl
+is_windows < 1			# ActiveState doesn't separate STDOUTs and stumbles over mpp -j
+###	10	755	1067451877	1184533865	makepp_test_script.pl
+# This is a test of parallel make.  In order to test that make is actually
+# executing jobs in parallel, we rely on timing to synchronize jobs, which
+# isn't 100% reliable.
+#
+
+# This script is designed to be run with -j 2, so we know that at most 2
+# jobs are running.
+
+eval { makepp '-kj2' } and die;
+1;
+###	55	644	1164352976	1184534747	Makeppfile
+perl {
+  unlink 'b', 'c';
+  sub c_waitfor {
+    my $hires = eval { require Time::HiRes };
+    while( ! (stat $_[0])[7] ) {
+      if( $hires ) {
+	Time::HiRes::sleep( .1 );
+      } else {
+	select undef, undef, undef, .1;
+      }
+    }
+  }
+}
+
+$(phony all): a z
+
+a: b c
+	&cat $^ -o $@
+
+
+#
+# Commands to execute b and c should run in parallel, but commands to execute
+# a should wait for them.  The final contents of b and c will differ depending
+# on whether the build commands were executed in parallel or in serial.
+# This is because we've lied to makepp about which files are modified.
+#
+b:
+	@&echo building b
+	&echo b -o>>b
+	&waitfor c
+	@&echo b is modifying c
+	&echo b -o>>c
+
+c:
+	@&echo building c
+	&echo c -o>>c
+	&waitfor b
+	@&echo c is modifying b
+	&echo c -o>>b
+
+
+# Before 07-07-15 two files were enough to make this fail, as long as the 2nd
+# dependency succeeded.  The order of execution being somewhat random, lets
+# have 6 deps, just to be sure.  Failure meant trying to build z, despite
+# failed deps.
+
+y z: $( u v w x y z).out
+	&echo Must not get here -o y
+	&cat $(inputs) -o z
+
+%.out: %.in
+	&cp -l $(input) $(output)
+
+v.out x.out: %.out: %.in
+	&expr 0
+###	0	644	1184533342	1184533342	u.in
+###	0	644	1184533342	1184533342	v.in
+###	0	644	1184533342	1184533342	w.in
+###	0	644	1184533342	1184533342	x.in
+###	0	644	1184533342	1184533342	y.in
+###	0	644	1184533342	1184533342	z.in
+###	D	755	1067451877	971218421	answers
+###	4	644	1067451877	971218395	answers/a
+b
+c
+c
+b
+###	2	644	1067451877	971218393	answers/b
+b
+c
+###	2	644	1067451877	971218393	answers/c
+c
+b
+###	1	644	1067451877	1190051786	answers/n_files
+7 0 2

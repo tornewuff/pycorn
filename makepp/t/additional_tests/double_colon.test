@@ -1,0 +1,35 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	24	644	1164354575	1060925871	Makeppfile
+#
+# A test of our hack to support the dastardly double colon syntax (often
+# used by makefiles from MakeMaker).
+#
+
+$(phony all):: a
+
+a:: c
+	&cat c -o $@
+
+b :: d
+	&cat d -o $@
+
+a :: d
+	&cat d -o>>$@
+	# Can't use $< here--would be c, not d!!!
+
+b :: c
+	&cat c -o>>$@
+
+c d :
+	&echo $@ -o $@
+
+all:: b
+###	D	755	1067451882	1060925891	answers
+###	2	644	1067451882	1060925879	answers/a
+c
+d
+###	2	644	1067451882	1060925879	answers/b
+d
+c
+###	1	644	1067451882	1190056049	answers/n_files
+4 1 0

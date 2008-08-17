@@ -1,0 +1,29 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	12	755	1119217723	1066416654	makepp_test_script.pl
+#
+# Test whether $(perl ) aborts correctly with an error and whether
+# overriding the variables on the command line eliminates the error.
+#
+
+#
+# First two tests should fail:
+#
+eval { makepp 'X=x' } and die;
+eval { makepp 'Y=y' } and die;
+
+makepp 'X=x', 'Y=y';
+###	9	644	1164354228	1203697219	Makefile
+#
+# This makefile should abort with an error unless X and Y are overridden from
+# the command line.
+#
+X = $(perl die)
+Y = $(perl exit 1)
+
+x_contents:
+	&echo X=$(X) Y=$(Y) -o $@
+###	D	755	1067451882	1066416776	answers
+###	1	644	1067451882	1066416701	answers/x_contents
+X=x Y=y
+###	1	644	1067451882	1190055847	answers/n_files
+1 0 0

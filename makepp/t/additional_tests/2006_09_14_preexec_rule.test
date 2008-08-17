@@ -1,0 +1,18 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	11	644	1143581184	1122590436	Makeppfile
+perl_begin
+	$::preexecute_rule_hook = sub {
+		-e 'y' and die;
+		open(OUT, '>', 'y') or die;
+		print OUT "OK\n";
+		close(OUT);
+	};
+perl_end
+
+x:
+	&echo $(output) -o $(output)
+###	D	755	1122590527	1122590522	answers
+###	1	644	1122590442	1122590513	answers/x
+x
+###	1	644	1122590442	1122590513	answers/y
+OK

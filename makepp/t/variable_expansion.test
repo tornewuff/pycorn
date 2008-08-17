@@ -1,0 +1,480 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	1	644	1151611756	1212336947	.makepprc
+over1=over1 over2=over2 over4=not4 'bar=not ok'
+###	299	644	1171960619	1212428451	RootMakeppfile
+#
+# This makefile tests variable setting and expansion as completely as we can.
+#
+
+.PHONY: all
+
+targets := colon_equal_test patsubst_test rc_expansion shell_command \
+	misc_gnu_make_functions user_func question_equal_test rc_test \
+	filename_test define_test x y root_test global_test undef_test \
+	globalize/over_test map_test bracket_test
+
+ifeq $(mktemp) $(mktemp)
+or ifeq $(mktemp xy) $(mktemp xy)
+or ifeq $(mktemp xy.X) $(mktemp xy.X)
+or ifneq $(mktemp) $(mktemp /)
+or ifneq $(mktemp xy) $(mktemp /)
+or ifneq $(mktemp xy.X) $(mktemp /)
+  targets += mktemp_error	# This assignment is not supposed to take place
+endif
+
+all: $(targets)
+
+#
+# Check the difference between :=, ;= and regular variables, and test the
+# += and &= constructs.
+#
+V1P_NOCOLON = 0
+V1P_COLON := 0
+V12 = 1
+V1_NOCOLON = $(V12)		# Initially equal to 1, then finally equal to 2.
+V1P_NOCOLON += $(V12)
+V1P_NOCOLON &= $(V12)		# Should expand to "2 0 2" at the end.
+V1P_COLON += $(V12)		# Should expand to "0 1" at the end.
+V1_COLON := $(V12)
+V12 = 12
+V1_COLON &= $(V12)		# Should be equal to 12 1.
+V12 = 2
+V2_COLON := $(V12)		# Should be equal to 2.
+
+i = 5
+V1_SEMICOLON ;= $(perl 10 + ++$i)
+V1_SEMICOLON += $(perl 100 + ++$i)
+V1_SEMICOLON &= $(perl ++$i . '$') # Should expand each of these once and remember.
+i = 0
+
+colon_equal_test:
+	&echo $(V1_NOCOLON) $(V2_NOCOLON) -o $@
+	&echo ${V1_COLON} $(V2_COLON) -o>>$@
+	&echo $(V1P_NOCOLON) $(V1P_COLON) -o>>$@
+	&echo $(V1_SEMICOLON) $(V1_SEMICOLON) $(V1_SEMICOLON) -o>>$@
+
+X = 1
+
+QUESEQ ?= 1 $(X)
+QUESEQ ?= 2 $(X)
+
+X = 2
+
+question_equal_test:
+	&echo $(QUESEQ) -o $@
+
+#
+# Check the pattern substitution operator.
+#
+P = a.o b.o c.o d.o
+Q = ax.o ay.o az.o
+A := a
+patsubst_test:
+	&echo $(patsubst %.o, %.c, $(P)) -o $@
+	&echo ${P:.o=.c} -o>>$@
+	&echo $(patsubst a%.o, b%.c, $(Q)) -o>>$@
+    ifeq $(&cut -d' ' -f0 .makepprc),over1=over1 # Builtin command as function
+	&echo $(Q:$(A)%.o=$(X)%.c) -o>>$@
+    endif
+
+#
+# Check RC-style expansion
+#
+MAYBE_EMPTY =
+GONE := a$( $(MAYBE_EMPTY))b
+MAYBE_EMPTY = 1
+ONE := a$( $(MAYBE_EMPTY))b
+MAYBE_EMPTY = 2 3
+TWO := a$( $(MAYBE_EMPTY))b
+rc_expansion:
+	&echo "a$(P)b" -o $@
+	&echo z$(patsubst %.o, %.c, a$(P))y -o>>$@
+	&echo a$( b c d)e -o>>$@
+	&echo $(GONE) $(ONE) $(TWO) -o>>$@
+
+#
+# Check running shell commands:
+#
+SHELLVAR != echo Percy Bryce Shell
+
+shell_command:
+    ifperl ::is_windows < 2
+	exec > $@; \
+	echo "$(shell echo she sells Bourne shells) "; \
+	echo $(shell echo by the C shore) ''
+    else
+	echo $(shell echo she sells Bourne shells) > $@
+	echo $(shell echo by the C shore) >> $@
+    endif
+	&echo $(SHELLVAR) -o>>$@
+
+#
+# Quick check on miscellaneous GNU-make style functions:
+#
+reverse = $(2) $1
+map = $(foreach a,$2,$(call $1,$a))
+one = $(1) $(2) $(3)
+two = $(call one,$(1),foo,$(2))
+DEP_foo = bar baz quux
+DEP_baz = quux blarp
+rest = $(wordlist 2,$(words ${1}),${1})
+tclose = $(if $1,$(firstword $1) \
+		$(call tclose,$(sort ${DEP_$(firstword $1)} $(call rest,$1))))
+
+# The functions above are inspired by GNU make 3.81 testsuite.
+
+downcase = ${perl lc("$1")}
+mymap = $(if $2,$(call $1,$(firstword $2)) $(call $0,$1,$(call rest,$2)))
+surround = ">$1<"
+
+three = $$1 $$2
+four = $(three)
+five = $(call three,foo,bar)
+six = $(call four,foo,bar)
+seven := $(three)
+
+misc_gnu_make_functions:
+	&echo $(basename mydir.with.periods/version-1.0-module.c) \
+	  $(basename subdir/xyz) -o $@
+	&echo $(notdir some/directories/here/file) -o>>$@
+	&echo $(addprefix a, b c d e) -o>>$@
+	&echo $(addsuffix a, b c d e) -o>>$@
+	&echo $(call reverse,bar,foo) -o>>$@
+	&echo $(call reverse,bar) -o>>$@
+	&echo $(call reverse,,foo) -o>>$@
+	&echo $(call reverse,bar,foo,baz) -o>>$@
+	&echo $(call map,surround,1 2 3 4 5) -o>>$@
+	&echo $(call mymap,surround,A B C D E) -o>>$@
+	&echo $(call mymap,downcase,ALL THESE WORDS ARE UPCASE) -o>>$@
+	&echo $(call tclose,foo) -o>>$@
+	&echo $(call two,bar,baz) -o>>$@
+	&echo $(call three,bar,baz) -o>>$@
+	&echo $(call four,bar,baz) -o>>$@
+	&echo $(call five,bar,baz) -o>>$@
+	&echo $(call six,bar,baz) -o>>$@
+	&echo $(call seven,bar,baz) -o>>$@
+	&echo $(dir abc/def/ghi file-without-dir) -o>>$@
+	&echo $(filter %.c %.s, foo.c bar.c baz.s ugh.h) -o>>$@
+	# Above test from GNU make docs.
+	&echo $(filter-out main1.o main2.o,main1.o foo.o main2.o bar.o) -o>>$@
+	&echo $(findstring a,a b c) x$(findstring a,b c)y -o>>$@
+	&echo $(firstword word1 word2 word3) -o>>$@
+	&echo $(sort a b c a q v b) -o>>$@
+	&echo '"$(strip a   b c )"' -o>>$@
+	&echo $(subst :, ,a:b:c) -o>>$@
+	&echo $(suffix src/foo.c src-1.0/bar.c hacks) -o>>$@
+	&echo $(word 2, foo bar baz) -o>>$@
+	&echo $(wordlist 2, 3, foo bar baz) -o>>$@
+	&echo $(words a b c) -o>>$@
+	&echo $(if , $(print echo generated error), b) $(if true, c, $(print echo generated error)) -o>>$@
+	# Above test checks for partial evaluation if the if operands.
+	&echo $(foreach var, 1 2 3 4 5 6, number $(var)) -o>>$@
+	&echo $(join a b c, .o .c) -o>>$@
+	&echo $(origin RM) $(origin ^) $(origin I_hope_this_is_undefined) $(origin inputs) $(origin PATH) $(origin V12) -o>>$@
+
+#
+# Test of rc-style substitution:
+#
+rc_test: rc_off/rc_off_test
+	&echo prefix_$( a b c d)_suffix -o $@
+	&cat $^ -o>>$@
+
+#
+# Test of relative and absolute filenames and multiline $(( )):
+#
+filename_test:
+	&echo $(relative_filename rc_off/.././././test) -o $@
+	&echo $((relative_to a rc_off/Makeppfile,
+		rc_off)) -o>>$@
+
+#
+# Test of define:
+#
+define echo-lines
+	&echo $@ -o $@
+	&echo This is the second line -o>>$@
+endef
+
+# Check that appending with define puts a newline, but that a newline in
+# $(&command) gets turned into a space with deferred expansion.
+define echo-lines +=
+	&echo This is the third line -o>>$@
+$(&echo '&echo transformed\nnewline -o>>$@')
+
+endef
+
+# Check override and that $(&command) preserves \n when expanded in define
+override define bar :=
+&echo OK -o>>define_test
+$(&echo '&echo one line -o>>define_test\n&echo another line -o>>define_test')
+enddef
+
+define bar =
+should not get here
+enddef
+
+define_test:
+	$(echo-lines)
+        $(bar)
+
+#
+# User defined function:
+#
+sub f_my_func {
+  return "a$_[0]b";
+}
+user_func:
+	&echo $(my_func $(P)) -o $@
+
+XX = $(Y)			# Test the difference between := and
+Y = 1				# regular assignment for export.
+Z := $(Y)
+
+export XX Z
+
+ YY := y
+
+export FOO1 := $(YY)
+var = FOO2
+export $(var) = $(YY)
+    export $(var:2=3) = y3
+export $(subst 2,4, $(var)) = y4
+
+YY = y2
+
+x:
+    ifperl ::is_windows < 2
+	echo "$$FOO1 $$FOO2 $$FOO3 $$FOO4 $$XX $$Z " > $@ # Call external echo to test export.
+    else
+	echo %FOO1% %FOO2% %FOO3% %FOO4% %XX% %Z% > $@
+    endif
+
+root := $(ROOT)
+ROOT := bla
+
+root_test: rc_off/root_test
+	&cp $(input) $(output)
+	&echo $(root) $(ROOT) -o>>$@
+
+LOCAL = A
+
+global G_0 = A
+global G_A1 = a $(LOCAL)
+global G_A2 := a $(LOCAL)
+
+load_makefile rc_off
+
+global_test: rc_off/global_test
+	&echo $(G_A1) : $(G_A2) : $(G_B1) : $(G_B2) : $(G_C1) : $(G_C2) -o $@
+	&echo $(G_0) : $(G_LATE1) : $(G_LATE2) -o >>$@
+
+# Test putting a conditional and a rule into a variable
+define bracket_rule =
+  ifdef bracket_rule
+    bracket_test: rc_off/bracket_test
+	&cp $(input) $(output)
+	&echo $[ a b]$[[ 1 2]] -o >>$(output)
+  endif
+enddef
+
+$[bracket_rule]
+
+OLDCHARS = abc
+NEWCHARS = xyz
+map_test:
+	&echo $((map a-b c d-e, s/(.+)-(.+)/$2-$1/; $_ .= '$')) -o$(output)
+	&echo $(makemap a-b c d-e, tr/$(OLDCHARS)/$(NEWCHARS)/ or $$_ = 'failed') -o>>$(output)
+	&echo $(map a-b c d-e fg, undef $_ if /[cd]/) -o>>$(output)
+
+# This comes from former 2004_04_27_target_specific_append.test:
+y: YYY += yy$@
+
+y:
+	&echo "$(YYY)" -o $@
+
+
+
+# This comes from former 2004_04_01_append_to_undef.test:
+B = YYY
+C += $(B)
+B = BBB
+
+undef_test:
+	&echo 'B = $(B)\nC = $(C)' -o $@
+###	D	755	1171960696	1171960688	globalize/
+###	28	644	1171960620	1149012551	globalize/Makeppfile
+# This should be the last Makefile that gets read.
+
+LOCAL = C
+
+G_0 = C
+G_A1 += c $(LOCAL)
+G_A2 += c $(LOCAL)
+G_B1 += c $(LOCAL)
+G_B2 += c $(LOCAL)
+global G_C1 = c $(LOCAL)
+global G_C2 := c $(LOCAL)
+
+global G_LATE1 G_LATE2
+G_LATE1 = late1
+G_LATE2 := late2
+
+over1 += 1not
+override over1 += 1more
+over1 += 1not
+override over1 += 1again
+
+override over3 = 3		# override an unset var
+
+over_test: override over4 = 4
+over_test: over4 += 4not
+over_test: override over4 += 4more
+over_test:
+	&echo $(over1) : $(over2) : $(over3) : $(over4) -o $@
+###	D	755	1171960696	1171960688	rc_off/
+###	45	644	1171960620	1178271908	rc_off/Makeppfile
+#
+# Test substitution with rc-style substitution turned off.
+#
+makepp_simple_concatenation = 1
+
+words := a b c d e
+
+null :=
+
+X := a $(null)		# X has a trailing space.
+
+rc_off_test:
+	&echo prefix_$(words)_suffix -o $@
+	&echo $(X)a -o>>$@
+
+root := $(ROOT)
+ROOT = bla
+
+root_test:
+	&echo $(root) $(ROOT) -o>$@
+
+LOCAL = B
+
+G_0 = B
+G_A1 += b $(LOCAL)
+G_A2 += b $(LOCAL)
+global G_B1 = b $(LOCAL)
+global G_B2 := b $(LOCAL)
+
+G_LATE1 = early1
+G_LATE2 := early2
+
+override global over2 += 2more
+
+load_makefile ../globalize	# Should not globalize our already existing locals.
+
+global_test:
+	&echo $(G_A1) : $(G_A2) : $(G_B1) : $(G_B2) : $(G_C1) : $(G_C2) -o $@
+	&echo $(G_0) : $(G_LATE1) : $(G_LATE2) -o >>$@
+
+define bracket_rule =
+  bracket_test:
+	&echo $[ a b]$[[ 1 2]] -o $(output)
+enddef
+$[bracket_rule]
+###	D	755	1171960696	1171960666	answers/
+###	2	644	1151612515	1178277103	answers/bracket_test
+a b1 2
+a1 a2 b1 b2
+###	4	644	1171960657	1171960657	answers/colon_equal_test
+2
+12 1 2
+2 0 2 0 1
+1$ 12 103 1$ 12 103 1$ 12 103
+###	7	644	1151612515	1177022033	answers/define_test
+define_test
+This is the second line
+This is the third line
+transformed newline
+OK
+one line
+another line
+###	2	755	1149026136	1149015251	answers/global_test
+a A b A c A : a A b B c C : b A c A : b B c C : c A : c C
+C : late1 : late2
+###	3	755	1171960541	1171960541	answers/map_test
+b-a$ c$ e-d$
+x-y z failed
+a-b fg
+###	34	644	1067451880	1211098944	answers/misc_gnu_make_functions
+mydir.with.periods/version-1.0-module subdir/xyz
+file
+ab ac ad ae
+ba ca da ea
+foo bar
+bar
+foo
+foo bar
+>1< >2< >3< >4< >5<
+>A< >B< >C< >D< >E<
+all these words are upcase
+foo bar baz blarp quux
+bar foo baz
+$1 $2
+$1 $2
+$1 $2
+$1 $2
+bar baz
+abc/def/ ./
+foo.c bar.c baz.s
+foo.o bar.o
+a xy
+word1
+a b c q v
+"a b c"
+a b c
+c c
+bar
+bar baz
+3
+b c
+number 1 number 2 number 3 number 4 number 5 number 6
+a.o b.c c
+default automatic undefined automatic environment file
+###	1	644	1067451880	1190053951	answers/n_files
+22 1 0
+###	4	644	1067451880	965337095	answers/patsubst_test
+a.c b.c c.c d.c
+a.c b.c c.c d.c
+bx.c by.c bz.c
+2x.c 2y.c 2z.c
+###	1	644	1067451880	967520887	answers/question_equal_test
+1 2
+###	4	644	1067451880	1172185915	answers/rc_expansion
+aa.ob ab.ob ac.ob ad.ob
+zaa.cy zab.cy zac.cy zad.cy
+abe ace ade
+a1b a2b a3b
+###	3	644	1067451880	990030852	answers/rc_test
+prefix_a_suffix prefix_b_suffix prefix_c_suffix prefix_d_suffix
+prefix_a b c d e_suffix
+a a
+###	2	644	1130862642	1130862642	answers/root_test
+.. bla
+. bla
+###	3	644	1067451880	967520645	answers/shell_command
+she sells Bourne shells 
+by the C shore 
+Percy Bryce Shell
+###	2	644	1151520389	1080869684	answers/undef_test
+B = BBB
+C = BBB
+###	1	644	1067451880	965338704	answers/user_func
+aa.o b.o c.o d.ob
+###	1	644	1148550085	1076548106	answers/x
+y y2 y3 y4 1 1 
+###	1	644	1083086704	1083086676	answers/y
+yyy
+###	D	755	1171960696	1151611756	answers/globalize/
+###	1	644	1151611756	1151611756	answers/globalize/over_test
+over1 1more 1again : over2 2more : 3 : 4 4more
+###	D	755	1171960696	1149012551	answers/rc_off/
+###	2	755	1149026140	1149012551	answers/rc_off/global_test
+a B b B c B : a A b B c C : b B c B : b B c C : c B : c C
+C : early1 : early2

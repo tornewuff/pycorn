@@ -1,0 +1,13 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	1	644	1077932896	1077932821	Makeppfile
+$(phony default): dir/test
+###	D	755	1077933102	1077933039	answers
+###	1	644	1077933039	1077933039	answers/x
+OK
+###	D	755	1077933102	1077933085	dir
+###	2	644	1077933077	1077932860	dir/M
+$(phony test):
+	&echo OK $(only_targets *) -o ../x
+###	2	755	1119218629	1077933027	makepp_test_script.pl
+cp 'dir/M', 'dir/Makeppfile';
+makepp;

@@ -1,0 +1,27 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	D	775	1123879739	1123871271	answers/
+###	D	775	1123882078	1123882011	answers/dir2/
+###	1	664	1123881976	1123884551	answers/dir2/file1
+GOOD\n
+###	D	775	1123882078	1123882001	answers/dir1/
+###	2	664	1123881976	1123884545	answers/dir1/file1
+GOOD\n
+BAD
+###	D	775	1123884574	1123884574	dir1/
+###	D	775	1123884574	1123884574	dir2/
+###	5	664	1152635935	1123884442	Makeppfile
+dir1/file1 dir2/file1 :
+	&touch $(outputs)
+	&echo 'GOOD\\n' -o >>dir1/file1
+	&echo 'GOOD\\n' -o >>dir2/file1
+	&echo 'BAD' -o >>$(output)
+###	9	755	1152635933	1123884520	makepp_test_script.pl
+# Create the build cache:
+makepp \'builtin', qw{-MBuildCacheControl create ./build_cache};
+
+# Now build targets
+makepp qw{--build-cache build_cache};
+
+unlink qw(dir1/file1 dir2/file1);
+
+makepp qw{--build-cache build_cache};

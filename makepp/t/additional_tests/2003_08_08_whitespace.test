@@ -1,0 +1,28 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	20	644	1067451881	1060385735	Makeppfile
+#
+# Test comment syntax (bug reported by hgoldman)
+#
+$(phony all): xyz abc
+
+xyz:
+	&echo This is a test. -o $@
+# this is a comment
+	&echo This is the second part of the test. -o>>$@
+
+
+#
+# Test ifeq syntax with spaces (bug reported by Chris van Engelen):
+#
+abc:
+ifeq (a, a)
+	&echo good -o $@
+else
+	&echo bad -o $@
+endif
+###	D	755	1067451881	1060385756	answers
+###	1	644	1067451881	1060385743	answers/abc
+good
+###	2	644	1067451881	1060385743	answers/xyz
+This is a test.
+This is the second part of the test.

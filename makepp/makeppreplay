@@ -1,0 +1,148 @@
+#!/usr/bin/perl -w
+#use strict;			# TODO: explore why this breaks the builtins.
+
+# $Id: makeppbuiltin,v 1.13 2008/05/17 14:26:14 pfeiffer Exp $
+
+our $VERSION = '@VERSION@';
+use Config;
+our $datadir;
+BEGIN {
+  eval "sub ARCHITECTURE() { '$Config{archname}' }"; # Get a tag for the architecture.
+
+#@@setdatadir
+#
+# Find the location of our data directory that contains the auxiliary files.
+# This is normally built into the program by install.pl, but if makepp hasn't
+# been installed, then we look in the directory we were run from.
+#
+  $datadir = $0;		# Assume it's running from the same place that
+				# we're running from.
+  unless( $datadir =~ s@/[^/]+$@@ ) { # No path specified?
+				# See if we can find ourselves in the path.
+    foreach( split( /:/, $ENV{'PATH'} ), '.' ) {
+				# Add '.' to the path in case the user is
+				# running it with "perl makepp" even if
+				# . is not in his path.
+      if( -f "$_/Glob.pm" ) {	# Found something we need?
+	$datadir = $_;
+	last;
+      }
+    }
+  }
+  $datadir or die "makepp: can't find library files\n";
+
+  $datadir = eval "use Cwd; cwd . '/$datadir'"
+    if $datadir =~ /^\./;	# Make it absolute, if it's a relative path.
+#@@
+  unshift @INC, $datadir;
+}
+
+$Makesubs::rule->{MAKEFILE}{PACKAGE} = '';
+sub suicide {}
+sub signame {}
+
+use Utils;
+use FileInfo ();
+use TextSubs ();
+use Makecmds;
+use Makefile;
+use Rule;
+
+sub eval_or_die($) {
+  if( wantarray ) {
+    my @result = eval $_[0];
+    &maybe_die;
+    @result;
+  } else {
+    my $result = eval $_[0];
+    &maybe_die;
+    $result;
+  }
+}
+{ no warnings 'redefine'; *Makecmds::eval_or_die = \&eval_or_die }
+
+
+sub metahelp { print STDERR "usage: $0", <<'EOF' }
+ [metaoption ...] command [option ...] [argument ...]
+  options depend on the command, while metaoptions are these:
+  -I|--include=dir	dir to load module from
+  -M|--module=module	module with your functions
+Look at @htmldir@/makeppbuiltin.html for wrapper details,
+or at http://makepp.sourceforge.net/@BASEVERSION@/makeppbuiltin.html
+or type "man makeppbuiltin".
+EOF
+
+sub helpfoot { die <<'EOF' }
+
+Look at @htmldir@/makepp_builtins.html for command details,
+or at http://makepp.sourceforge.net/@BASEVERSION@/makepp_builtins.html
+or type "man makepp_builtins".
+EOF
+
+# Drop in replacement for getopts, which parses and pretty prints the option
+# specification.
+sub getopts_help(@) {
+  my @opts = @_;
+  print STDERR "$0 options:";
+  shift @opts if 'HASH' eq ref $opts[0];
+  my %short;
+  for( @opts ) {
+    my $long = TextSubs::_getopts_long( $_ );
+    my $short = $_->[0];	# Show only the 1st short opt (e.g. --fields & --force)
+    $_ = (($short && !$short{$short}) ? "$_->[0], --$long" : $long) .
+      ($_->[3] ? '=arg' : '');
+    $short{$short} ||= 1 if $short;
+  }
+  for( sort { lc( substr $a, 0, 1 ) cmp lc( substr $b, 0, 1 ) ||
+	      substr( $b, 0, 1 ) cmp substr( $a, 0, 1 ) ||
+	      $a cmp $b } @opts ) {
+    s/^/-/;
+    s/^(-.[^,])/    -$1/;	# indent only long option further
+    print STDERR "\n  $_";
+  }
+  &helpfoot;
+}
+
+
+my $re = join '|', grep { exists &{"Makecmds::$_"} && s/^c_// } keys %Makecmds::;
+
+# This function exists so we can efficiently run many tests in one process.
+sub doit {
+  # Look in our called name to see if it contains a builtin's name.
+  my $cmd = $0;
+
+  if( $0 =~ /($re)[^\/]*$/ ) {	# Yes, found a builtin.
+    $0 = $1;
+    $cmd = "Makecmds::c_$0";
+  } else {
+    my $tmp;
+    TextSubs::getopts 1,
+      ['I', qr/include(?:[-_]?dir)?/, \$tmp, 1, sub { unshift @INC, $tmp }],
+      [qw(M module), \$tmp, 1, sub { eval_or_die "use $tmp" }],
+      [qr/[h?]/, 'help', undef, 0, sub { &metahelp; &helpfoot }],
+      [0, 'version', undef, 0, \&FileInfo::version];
+    &metahelp, &helpfoot if !@ARGV;
+
+    $tmp = $0;			# 1st argument must be the command name.
+    $0 = shift @ARGV;
+    if( !exists &{$cmd = "c_$0"} ) {
+      $cmd = "Makecmds::c_$0";
+      die "$tmp: $0 is not a makepp builtin command.\n" if !exists &$cmd;
+    }
+  }
+
+  if( @ARGV and $ARGV[0] eq '-?' || $ARGV[0] eq '--help' ) {
+    no warnings;
+    *TextSubs::getopts = \&getopts_help; # Let the seemingly normal call handle this.
+  }
+
+  if( !$ENV{INSTALL_LOG} && $cmd =~ /install$/ ) {
+    require Makefile;
+    Makefile::find_root_makefile_upwards( $FileInfo::CWD_INFO );
+				# Fill ->{ROOT} if RootMakeppfile found.
+  } elsif( $cmd =~ /preprocess$/ ) {
+    require Makefile;
+  }
+  &$cmd( @ARGV );
+}
+doit;

@@ -1,0 +1,164 @@
+=head1 NAME
+
+makepp_build_algorithm -- How makepp executes a makefile
+
+=for vc $Id: makepp_build_algorithm.pod,v 1.5 2006/03/27 21:56:53 pfeiffer Exp $
+
+=head1 DESCRIPTION
+
+Makepp's internals differ from the standard unix make in fundamental ways.
+This page describes the different philosophy in detail.
+
+=head2 Reverse vs. forward inference
+
+Makepp works in the opposite direction from the standard unix make.
+Traditional unix make is given a target to build, and then it finds a
+rule which matches the characters in the target filename.  If the target
+is older than any of its dependencies of the rule, then it is rebuilt.
+
+For example, consider this pattern rule:
+
+    %.o: %.cxx
+ 	$(CXX) $(CXXFLAGS) -c $(input) -o $(output)
+
+When make realizes it needs to make a file called C<xyz.o>, it searches
+through its list of pattern rules until it sees that C<xyz.o> matches
+the pattern C<%.o>, and then it applies this rule.
+
+Makepp works in the opposite direction.  It first computes all files
+that it can possibly build by applying rules that match the characters
+in the dependency filenames.  Then when it needs to build a file, it
+simply looks to see if it's one of the files that it knows how to build.
+The list of known files is stored based on the absolute filename.
+
+When makepp encounters the above pattern rule, it searches for all files
+in the directory matching the pattern C<%.cxx> (i.e., C<*.cxx>).  For
+each of these files, it then remembers that it can produce the
+corresponding C<.o> file.  If subsequently makepp discovers that it can
+make another C<.cxx> file that doesn't currently exist, this rule will
+also be applied and the corresponding C<.o> file will be marked.
+
+This might seem somewhat inefficient, but it turns out not to be that
+slow in most cases, and it is often true that virtually all the files
+that can be built are in fact built.  And knowing the complete list of
+files that can be built has several advantages:
+
+=over 4
+
+=item *
+
+Wildcards can match files which don't exist yet but can be built.
+
+=item *
+
+Header files which have been detected by the automatic dependency
+scanner don't have to exist; makepp knows where they will be.  (Most
+other solutions to this problem assume that any headers which don't
+exist yet are in the current directory.)
+
+=item *
+
+Repositories are much simpler to implement since makepp knows beforehand
+what files it can make.  (See L<makepp_repositories> for details.)
+
+=item *
+
+It is possible to determine easily which files can be built (see the
+S<C<$(only_targets )>> function.
+
+=item *
+
+Makepp's S<C<$(infer_objects )>> function is greatly simplified by
+knowing what objects are available.
+
+=back
+
+=head2 Files vs. textual patterns
+
+Makepp associates build commands with a target file, not to a textual
+pattern for a filename.  It is therefore not confused by different names
+for the same file.  Thus, for example, makepp will know that C<./xyz>
+and and C<xyz> are the same file, whereas other make utilities may not.
+
+This is particularly important because (unlike the standard make) makepp
+loads makefiles from different directories.  In order for the makefiles
+to be relatively independent, with no special position given to a
+top-level makefile, each makefile refers to all files relative to its
+own directory. Thus if you load a makefile from the subdirectory
+C<other_stuff>, and that makefile refers to C<../xyz>, makepp will again
+realize that it's the same file referred to above.  (It also won't be
+confused by soft-linked directory names.)
+
+=head2 Stored build information
+
+Makepp stores much more information about each file that it builds
+beyond just the date stamp (which is all that the standard make cares
+about).  This information includes:
+
+=over 4
+
+=item *
+
+The signature of this file
+on the last build, so we know if the file itself has changed.
+
+=item *
+
+The names of each dependency file, including include files and other
+files inferred automatically.  If this list changes, then makepp assumes
+it needs to rebuild.
+
+=item *
+
+The signature of each dependency.  This way, makepp knows to rebuild not
+only when the dependencies are newer than the target, but when they
+change at all.  This also makes it possible to use other kinds of
+signatures, such as cryptographic checksums, rather than the file date.
+
+=item *
+
+The entire build command (and its cwd).  This way if you change the
+build command (e.g., change the compiler options), makepp knows to
+rebuild even if the files themselves haven't changed.
+
+=item *
+
+The architecture.  If you have compiled your program on linux
+and then switch to solaris, makepp automatically knows to
+recompile everything.
+
+=back
+
+Makepp makes a subdirectory in every directory that it touches called
+C<.makepp>.  The build information for a file F<filename> in a directory
+is stored in F<.makepp/filename>.  If you delete this subdirectory or
+alter the files, makepp will rebuild all affected files.
+
+=head2 Implicit loading
+
+If makepp is trying to build a target in a directory and doesn't have a
+rule for it yet, or if it is looking for files matching a wildcard in a
+directory, it will look in that directory to see if a makefile is
+present.  If so, the makefile will be loaded automatically.
+
+This means that you usually don't have to tell makepp explicitly where
+to find makefiles--all you have to do is to reference a file in another
+directory, and makepp will automatically figure out how to build it.
+
+Implicit loading will occur only if the directory is writable to you.  Thus if
+you want to prevent makepp from trying to build a bunch of things that never
+change, simply make the directory read-only.
+
+Implicit loading will not occur if you are in a tree under a
+F<RootMakeppfile(.mk)> and the other makefile is outside that tree.  If you do
+want this once, you can give a C<--do-build=/> option to makepp, to make
+everything outside the tree buildable.  If you always want this, you can put a
+C<load_makefile> statement somewhere within the tree to explicitly connect it
+to the tree.
+
+If implicit loading gets in your way (i.e., makepp loads too many
+makefiles and it wastes time, or else you really don't want it to try to
+rebuild all the stuff described in the makefiles), you can turn it off
+for all directories using the C<--noimplicit_load> command line option,
+or you can turn it off for selected directories using the
+C<no_implicit_load> statement in your makefile.

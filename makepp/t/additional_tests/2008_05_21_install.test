@@ -1,0 +1,27 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	3	755	1067451881	1211218113	is_relevant.pl
+# When testing an already installed version, this test doesn't make sence.
+substr +($::makepp_dir = $makepp_path), -7, 7, '';
+-f "$::makepp_dir/install.pl";
+###	16	644	1164353916	1211381577	makepp_test_script.pl
+my $cwd = cwd;
+
+chdir $::makepp_dir;		# install.pl and config.pl are to be run here
+my $cmd = "$::makepp_dir/install.pl";
+system_intabort \$cmd, PERL, $cmd, "$cwd/instbin", "$cwd/instshare", ('none') x 3;
+
+$cmd = "$::makepp_dir/config.pl";
+system_intabort \$cmd, PERL, $cmd, "--makefile=$cwd/config.mk", '-p', $cwd, '-hnone', '-mnone';
+makepp "-f$cwd/config.mk", '--dont-build=all', 'install';
+
+chdir $cwd;
+$cmd = is_windows < 1 ? 'bin/mpp' : 'bin\mpp';
+system_intabort \$cmd, $cmd, '--version'; # Can it start, loading some of our modules?
+substr $cmd, 0, 0, 'inst';
+system_intabort \$cmd, $cmd, '--version';
+1;
+###	D	755	1164319650	1079870636	.makepp/
+###	3	644	1164319650	1190056091	.makepp/log
+This is a dummy log present so as to satisfy makepp's test harness.
+
+N_FILES000

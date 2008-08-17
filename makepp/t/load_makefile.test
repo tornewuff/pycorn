@@ -1,0 +1,59 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	6	755	1143404491	1143323853	makepp_test_script.pl
+#
+# Test the load_makefile statement and that it makes a directory
+# outside the root buildable.
+#
+makepp '-Crootdir';
+makepp;
+###	8	644	1164352749	971325229	Makeppfile
+load_makefile subdir1 subdir2/elifekam XVAR=X
+
+.PHONY: all
+
+all: t0
+
+t0: subdir1/t1 subdir2/t2
+	&cat $^ -o $@
+###	D	755	1143323853	1143323853	outside/
+###	7	644	1143324382	1177406833	outside/Makeppfile
+y:
+	&echo foo bar -o y
+
+# also test toplevel commands
+TEXT = without rule
+&echo $(TEXT) -o z
+-&expr 0			# Don't fail.
+###	D	755	1143323853	1143323853	rootdir/
+###	4	644	1143397582	1143323853	rootdir/RootMakeppfile
+load_makefile ../outside
+
+x: ../outside/y
+	&cp -l $(input) x
+###	D	755	1067451876	971325262	subdir1/
+###	6	644	1067451876	971325099	subdir1/Makeppfile
+#
+# A lower-level makefile.
+#
+
+t1:
+	&echo 1 $(XVAR) -o $@
+###	D	755	1067451876	971325262	subdir2/
+###	5	644	1067451876	971325089	subdir2/elifekam
+#
+# Another lower-level makefile.
+#
+t2:
+	&echo 2 $(XVAR) -o $@
+###	D	755	1067451876	965495978	answers/
+###	1	644	1067451876	1190053853	answers/n_files
+3 1 0
+###	2	644	1067451876	971325134	answers/t0
+1 X
+2 X
+###	D	755	1143323853	1143323853	answers/outside/
+###	1	644	1143324537	1143323853	answers/outside/z
+without rule
+###	D	755	1143323853	1143323853	answers/rootdir/
+###	1	644	1143324537	1143323853	answers/rootdir/x
+foo bar

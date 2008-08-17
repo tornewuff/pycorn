@@ -1,0 +1,46 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	17	644	1159374480	1186006640	Makeppfile
+ifeq $(filter %cl %cl.exe %bcc32 %bcc32.exe, $(CC))
+  $(phony default): x.o
+else
+  $(phony default): x.obj
+endif
+
+ifndef NORULE
+ x.x:
+ ifdef BROKEN
+	perl { die "FAIL" }
+ else
+	&echo "#define X" -o $@
+ endif # BROKEN
+endif # NORULE
+
+%.h: %.x
+	&cp $< $@
+###	20	755	1164351460	1112308605	makepp_test_script.pl
+# Make sure that the include directive is cached even if we can't find the
+# include file.
+eval { makepp 'NORULE=1' } and die;
+open my $mk, '.makepp/x.c.mk';
+my $inc = 0;
+while( <$mk> ) {
+  $inc++ if /INCLUDES=.*x.h/;
+}
+die if !$inc;
+
+# Now just make sure that it builds.
+makepp;
+
+# Finally, make sure that when we update x.x on behalf of cached scanner
+# info, we get a good diagnostic.
+eval { makepp 'BROKEN=1' } and die;
+n_files 0, sub { $fail++ if /because .*x.x failed to build/ };
+die if !$fail;
+
+1;
+###	4	644	1112308158	1112308295	x.c
+#include "x.h"
+#ifndef X
+# error
+#endif
+###	D	755	1112308158	1112308295	answers

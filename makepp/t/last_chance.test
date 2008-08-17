@@ -1,0 +1,41 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	4	755	1164320211	1078122118	makepp_test_script.pl
+makepp;
+n_files 'n_files_0';
+makepp '--rm_stale';	# Make sure that the wildcard doesn't match the last_chance targets
+1;
+###	17	644	1067451873	965331711	Makeppfile
+$(phony default): file1 x
+
+f%ile2x: f%ile2
+	&cp $< $@
+
+f%ile3x: f%ile3
+	&cp $< $@
+
+file% other%: :last_chance
+	&echo $X $@ -o $@
+	&echo other$@ -o $(word 2, $(outputs))
+
+$(phony x): file1 file2 other3
+
+X := $(first_available file2)	# Instance the rule for file2
+X := $(wildcard file*)		# file1 and file3 aren't instanced yet
+
+###	D	755	1067451873	965332260	answers
+###	1	644	1067451873	965332255	answers/file1
+file2 file2x file1
+###	1	644	1067451873	965332253	answers/file2
+file2 file2x file2
+###	1	644	1067451873	965332260	answers/file3
+file2 file2x file3
+###	1	644	1067451873	965332255	answers/other1
+otherfile1
+###	1	644	1067451873	965332253	answers/other2
+otherfile2
+###	1	644	1067451873	965332260	answers/other3
+otherfile3
+###	1	644	1067451873	1190054025	answers/n_files_0
+6 2 0
+###	1	644	1067451873	1190053843	answers/n_files
+0 2 0

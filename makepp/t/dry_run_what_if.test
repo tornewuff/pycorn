@@ -1,0 +1,165 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	32	644	1067451874	1062014179	makepp_test_script.pl
+#
+# Test various kinds of fake signatures that we generate using the
+# --assume-new, --assume-old, and -n option.
+#
+
+sub doit {
+  my( $sf, $opt, $bl, $af, $nowait ) = @_;
+  if( $sf ) {
+    open my $sourcefile, '>sourcefile';
+    print $sourcefile "$sf\n";
+  }
+  open MKP, "$ENV{PERL} $makepp_path $opt|" or die "could not exec makepp\n";
+  open my $log, ">build_log_$bl" or die "could not create build_log$bl\n";
+  /^&(?:cat|echo|sed)/ and print $log $_ while <MKP>;
+  close MKP;
+  cp allfiles => "allfiles_$bl" if $af;
+  wait_timestamp 'allfiles' if !$nowait;
+}
+
+doit 'source_original', '', '0';
+
+doit 0, '-W f', 'W_f', 1;
+
+{ open my $h, '>h' }
+doit 'source_modified', '-o sourcefile', 'o_sourcefile', 1;
+
+{ open my $g, '>g'; print $g "g_modified\n" }
+doit 'source_original', '--dont-build g', 'dont_build_g', 1;
+
+doit 0, '-n', 'n', 1, 1;
+
+1;
+###	31	644	1118567371	1059888249	Makeppfile
+#
+# Makefile that is used to test the various kinds of fake signatures that
+# we use: --assume-new, --assume-old, and -n.
+#
+
+$(phony all): allfiles
+
+allfiles: ab ac bc
+	&cat $^ -o $@
+
+a : e f : signature target_newer  # Make sure target_newer supports it too.
+	&cat $^ -o $@
+
+b : g h
+	&cat $^ -o $@
+
+c : f h
+	&cat $^ -o $@
+
+# Sourcefile is built by makepp_test_script.
+e f g h: sourcefile
+	&sed "s/$$/ $@/" sourcefile -o $@
+
+ab: a b
+	&cat $^ -o $@
+
+bc: b c
+	&cat $^ -o $@
+
+ac: a c
+	&cat $^ -o $@
+###	D	755	1067451874	1060021421	answers
+###	12	644	1067451874	1060021408	answers/allfiles_n
+source_original e
+source_original f
+g_modified
+source_original h
+source_original e
+source_original f
+source_original f
+source_original h
+g_modified
+source_original h
+source_original f
+source_original h
+###	6	644	1067451874	1060021403	answers/build_log_W_f
+&cat e f -o a
+&cat a b -o ab
+&cat f h -o c
+&cat a c -o ac
+&cat b c -o bc
+&cat ab ac bc -o allfiles
+###	7	644	1067451874	1060021405	answers/build_log_o_sourcefile
+&sed "s/$/ h/" sourcefile -o h
+&cat g h -o b
+&cat a b -o ab
+&cat f h -o c
+&cat a c -o ac
+&cat b c -o bc
+&cat ab ac bc -o allfiles
+###	12	644	1067451874	1060021408	answers/allfiles_dont_build_g
+source_original e
+source_original f
+g_modified
+source_original h
+source_original e
+source_original f
+source_original f
+source_original h
+g_modified
+source_original h
+source_original f
+source_original h
+###	11	644	1067451874	1060021401	answers/build_log_0
+&sed "s/$/ e/" sourcefile -o e
+&sed "s/$/ f/" sourcefile -o f
+&cat e f -o a
+&sed "s/$/ g/" sourcefile -o g
+&sed "s/$/ h/" sourcefile -o h
+&cat g h -o b
+&cat a b -o ab
+&cat f h -o c
+&cat a c -o ac
+&cat b c -o bc
+&cat ab ac bc -o allfiles
+###	5	644	1067451874	1060021408	answers/build_log_n
+&sed "s/$/ g/" sourcefile -o g
+&cat g h -o b
+&cat a b -o ab
+&cat b c -o bc
+&cat ab ac bc -o allfiles
+###	1	644	1067451874	1190053829	answers/n_files
+5 1 0
+###	12	644	1067451874	1060021405	answers/allfiles_o_sourcefile
+source_original e
+source_original f
+source_original g
+source_modified h
+source_original e
+source_original f
+source_original f
+source_modified h
+source_original g
+source_modified h
+source_original f
+source_modified h
+###	10	644	1067451874	1060021408	answers/build_log_dont_build_g
+&sed "s/$/ e/" sourcefile -o e
+&sed "s/$/ f/" sourcefile -o f
+&cat e f -o a
+&sed "s/$/ h/" sourcefile -o h
+&cat g h -o b
+&cat a b -o ab
+&cat f h -o c
+&cat a c -o ac
+&cat b c -o bc
+&cat ab ac bc -o allfiles
+###	12	644	1067451874	1060021403	answers/allfiles_W_f
+source_original e
+source_original f
+source_original g
+source_original h
+source_original e
+source_original f
+source_original f
+source_original h
+source_original g
+source_original h
+source_original f
+source_original h

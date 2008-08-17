@@ -1,0 +1,31 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	11	644	1067451876	965496277	Makefile
+#
+# A simple makefile that tests the "include" statement.
+#
+
+.PHONY: all
+
+all: t0 t1 t2
+
+include a.mk b.mk
+
+-include c.mk d.mk
+###	2	644	1067451876	965496079	a.mk
+t0:
+	&echo 0 -o $@
+###	2	644	1067451876	965496089	b.mk
+t1:
+	&echo 1 -o $@
+###	2	644	1067451876	965496275	d.mk
+t2:
+	&echo 2 -o $@
+###	D	755	1067451876	965496320	answers
+###	1	644	1067451876	965496171	answers/t0
+0
+###	1	644	1067451876	965496171	answers/t1
+1
+###	1	644	1067451876	965496309	answers/t2
+2
+###	1	644	1067451876	1190053841	answers/n_files
+3 1 0

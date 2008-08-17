@@ -1,0 +1,262 @@
+=head1 NAME
+
+makepp_build_check -- How makepp decides to rebuild files
+
+=for vc $Id: makepp_build_check.pod,v 1.9 2007/01/05 22:25:31 pfeiffer Exp $
+
+=head1 DESCRIPTION
+
+L<B<a>rchitecture_independent|/architecture_independent>,E<nbsp>
+L<B<e>xact_match|/exact_match>,E<nbsp>
+L<B<i>gnore_action|/ignore_action>,E<nbsp>
+L<B<o>nly_action|/only_action>,E<nbsp>
+L<B<t>arget_newer|/target_newer>
+
+Makepp stores a variety of information about how any given file was
+built the last time.  This information includes the build command, the
+architecture, and the signatures of all the file's dependencies.  (All
+the stored information is in the subdirectory F<.makepp> of each
+directory.)  If any of this information has changed, makepp usually
+decides to rebuild the file.  The build check method is what controls
+makepp's decision to rebuild.  It decides which information to look at,
+and which to ignore.
+
+Makepp usually picks the correct build check method automatically.
+However, you can change the signature method for an individual rule by
+using C<:build_check> modifier on the rule (see
+L<makepp_rules/build_check>), or for all rules in a makefile by using
+the C<build_check> statement (see L<makepp_statements/build_check>, or
+for all makefiles at once using the C<-m> or C<--build-check-method>
+command line option (see L<makepp_command/--build-check-method>).
+
+=head2 Build check methods included in the distribution
+
+At present, there are four build check methods included in the
+distribution.
+
+=over 4
+
+=item exact_match
+
+This method uses the modification dates on the file as signatures.  It
+rebuilds the targets unless all of the following conditions are true:
+
+=over 4
+
+=item *
+
+The signature of each dependency is the same as it was on the
+last build.
+
+=item *
+
+The signature of each target is the same as it was on the last
+build (i.e., no one has messed with the targets since makepp built
+them).
+
+=item *
+
+The build command has not changed.
+
+=item *
+
+The machine architecture (or what perl thinks it is) has not changed.
+
+=back
+
+C<exact_match> is the default method unless you are rebuilding a
+Makefile (see below).  This is a highly reliable way of ensuring correct
+builds, and is almost always what you want.  However, it does have a few
+side effects that may be surprising:
+
+=over 4
+
+=item *
+
+If you've been compiling with the traditional make, and then switch to
+makepp, everything is recompiled the first time you run makepp.
+
+=item *
+
+If you damage makepp's information about what happened on the last build
+(e.g., you delete the subdirectory C<.makepp>, or don't copy it when you
+copy everything else), then a rebuild is triggered.
+
+=item *
+
+If you replace a file with an older version, a rebuild is triggered.
+This is normally what you want, but it might be surprising.
+
+=item *
+
+If you modify a file outside of the control of makepp (e.g., you run
+the compilation command yourself), then makepp will rebuild the file
+next time.  (If you want to avoid this, check out the C<--dont-build>
+command line option.)
+
+=item *
+
+Architecture-independent files are rebuilt when you switch to a
+different architecture.  This is usually not a problem, because they
+often don't take long to build.  The reason why all files are tagged
+with the architecture, instead of just binary files, is that often times
+even ASCII files are architecture-dependent.  For example, output from
+the solaris C<lex> program won't compile on linux (or at least this used
+to be true the last time I tried it).
+
+=back
+
+=item architecture_independent
+
+The C<architecture_independent> method is the same as C<exact_match>
+except that it does not check the architecture.  This can be useful for
+architecture-independent files, that don't need to be rebuilt when you
+switch to a different architecture.  For example, you probably don't
+need to rerun C<bison> on solaris if you already ran it on linux.
+
+The C<architecture_independent> method is best used by specifying it
+using the S<C<:build_check architecture_independent>> modifier to the
+each rule that produces architecture independent files.  Makepp by
+default never assumes any files are architecture independent, because
+even F<.c> files can be architecture dependent.  For example, the output
+of solaris lex will not compile under linux, or at least it wouldn't
+last time I tried.  So you must manually specify this build check method
+for any files which are truly architecture-independent.
+
+=item ignore_action
+
+The C<ignore_action> method is the same as C<exact_match> except that it does
+not check the action string (the command).  Sometimes a command can change and
+you don't want to force a rebuild.
+
+For example, you might want to explicitly put a date into your command to log
+when the build was done, but you don't want to force a rebuild every time the
+command is executed.  For example,
+
+    BUILD_DATE := $(shell date)
+
+    my_program : $(MODULES).o
+ 	$(CXX) $(inputs) -DBUILD_DATE="\"$(BUILD_DATE)\"" date_stamp.c -o $(output)
+
+This will compile F<date_stamp.c> with the last build date stamp, but won't
+force a recompile when the date changes.  Unfortunately, if something else
+about the link command changes (e.g., you change linker options), it also
+won't trigger a rebuild.
+
+This is also useful in conjunction with the $(changed_inputs) or $?  variable
+for actions that merely update a target, rather than rebuilding it from
+scratch.  For example, you could update a .a file like this:
+
+    libmine.a : *.o : build_check ignore_action
+ 	$(AR) ru $(output) $(changed_inputs)
+
+This will still mostly work if you forget to specify the
+C<: build_check ignore_action>.  However, suppose that none of the
+.o files have changed.  The command will now be S<C<ar ru libmine.a>> which
+is probably different from what it was last time (e.g.,
+S<C<ar ru libmine.a buggy_module.o>>), so makepp will run the command.  In
+this case, the command won't do anything except waste time.
+
+Building .a files like this is discouraged, because it can leave stale
+.o files inside the archive.  If you delete a source file, the .o file
+is still inside the .a file, and this can lead to incorrect builds.
+It's better to build a .a file like this:
+
+    libmine.a : *.o
+ 	&rm $(output)
+ 	$(AR) ru $(output) $(inputs)
+
+=item target_newer
+
+The C<target_newer> method looks only at the file date.  If any
+dependency is more recent than the target, the target is rebuilt.  This
+is the algorithm that the traditional unix I<make> utility uses.
+
+The C<target_newer> method isn't as safe as the C<exact_match> method
+because it won't trigger a rebuild if you change the build command, or
+if you replace a file with an older version.  Sometimes also it can get
+confused if clocks are not properly synchronized.  For example, if a
+file somehow gets a date of June 4, 2048, then between now and 2048,
+every file that depends on that file will be rebuilt even though the
+file doesn't change.  Also switching to a different architecture won't
+trigger a rebuild.
+
+But there are a few cases where you may
+want to use the C<target_newer> method:
+
+=over 4
+
+=item *
+
+When it is reasonable for a user to build a file outside of the control
+of makepp.  Perhaps the most common example are the commands that
+generate the makefile itself, i.e., the autoconfigure procedure.  Users
+commonly issue the configure command manually, but makefiles often have
+a way to update themselves automatically.  In this case, we don't want
+to force the makefile to rebuild itself if the user typed the command in
+manually, so the C<target_newer> method is more appropriate than the
+C<exact_match> method.  In fact, if makepp is trying to build a
+makefile, it makes C<target_newer> the default method until it has
+finished building the makefile.
+
+=item *
+
+When it is reasonable for a user to modify a file after makepp has built
+it.  For example, if a file does not exist, you may want to copy it from
+a central location, or check it out from a repository; but the user
+should be allowed to modify it.  If you use the default C<exact_match>
+build check method, makepp will detect that the user has changed the
+file and so it will force a fresh copy from the central location or a
+fresh checkout, wiping out the user's changes.
+
+=back
+
+=item only_action
+
+The very specific C<only_action> method will only execute the action if the
+command string differs from the last time it was executed.  For example,
+
+    $(ROOT)/include/%.h : %.h
+ 	&ln -fr $(input) $(output)
+
+publishes a file, but does not repeat this when the file changes.  Note that
+the C<&ln> command is builtin and thus cheap, but makepp still has to fork off
+and monitor a process to perform the whole action.  So if you have lots of
+files to publish, there is still a benefit.  Actually we did not specify the
+method, because, when the target is a symbolic link, this build check gets
+used automatically.  You only need to specify it for other commands that
+depend solely on the command (which usually contains the names of the inputs):
+
+    %.list : %.x : build_check only_action
+ 	&echo $(inputs) -o $(output)
+
+=back
+
+Other build check methods are possible.  You can write your own build
+check method by creating a module C<BuildCheck::MyMethod>.  Read the
+documentation in F<BuildCheck.pm> in the makepp distribution. Most
+likely, you will want your build check method to inherit from
+C<BuildCheck::exact_match>, so read its documentation too.
+
+It's more commonly useful modify the signature mechanism than to modify
+the build check mechanism directly.  Before you change the build check
+mechanism, see if your problem is better served by changing signatures
+(see L<makepp_signatures> for details).
+
+Here are some reasons why a custom build check method might be useful:
+
+=over 4
+
+=item *
+
+If you want makepp to ignore part of the command.  For example, if you
+have commands in your makefile like this:
+
+    x.o : x.c
+ 	rsh $(REMOTE_MACHINE) cc $< -o $@
+
+you might want makepp not to force a rebuild if C<$(REMOTE_MACHINE)>
+changes.  You could modify the C<exact_match> method so it knows about
+rsh commands and ignores the machine name.
+
+=back

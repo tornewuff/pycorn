@@ -1,0 +1,85 @@
+=head1 NAME
+
+makeppinfo -- What makepp knows about files
+
+=for vc $Id: makeppinfo.pod,v 1.2 2008/06/01 21:47:19 pfeiffer Exp $
+
+=head1 SYNOPSIS
+
+B<makeppinfo> I<option> file ...
+
+B<mppi> I<option> file ...
+
+=head1 DESCRIPTION
+
+Makepp writes detailed information about the files it built and about their
+dependencies.  This information is stored in the F<.makepp> subdirectory along
+the file it pertains to.  It has the form of key-value pairs.  In some cases
+the value will again be a list of associated pairs, typically the signature
+and the file.
+
+These signature lists are the most frequent reason for rebuilding a file, so
+you might like to check, whether the signature stored for a dependency matches
+the current build_signature of that file.
+
+This command is partially a makepp debug tool.  To understand the full output,
+you may need to look at the source code.  That said, there is also some
+generally interesting information to be gotten.
+
+
+=over
+
+=item -A filename
+
+=item --args-file=filename
+
+=item --arguments-file=filename
+
+Read the file and parse it as possibly quoted options on one or several lines.
+
+=item -k list
+
+=item --keys=list
+
+=item --keylist=list
+
+The I<list> specifies one or more space separated Shell style patterns (with
+[xyz], ?, *, {a,bc,def}).  Remember to protect these from your Shell by
+quoting.  These are matched against the keys.  Each pattern may be preceded
+with an exclamtion mark (C<!>) or a caret (C<^>) to exclude the matched keys
+from those selected before instead of adding them to the selection.  If the
+first pattern starts with an exclamtion mark, it operates on all keys.
+
+    --keys='COMMAND CWD'	# How was this built and where (relative to file).
+
+=item -q
+
+=item --quiet
+
+Don't list file and key names.  Repeat to also omit warnings.
+
+=item -t
+
+=item --traverse
+
+Also output the same information for each file in SORTED_DEPS (recursively if
+repeated).
+
+=back
+
+=head1 ENVIRONMENT
+
+Makeppinfo looks at the following environment variable:
+
+=over 4
+
+=item MAKEPPINFOFLAGS
+
+Any flags in this environment variable are interpreted as command line options
+before any explicit options.  Quotes are interpreted like in makefiles.
+
+=back
+
+=head1 AUTHOR
+
+Daniel Pfeiffer (occitan@esperanto.org)

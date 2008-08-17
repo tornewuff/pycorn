@@ -1,0 +1,137 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	51	644	1164351461	1208285030	makepp_test_script.pl
+# This test depends entirely on the builtin rules and the existence of a C compiler.
+#
+# Tests several things about C compilation:
+# 1) Correctly scanning command lines for include files.
+# 2) Correctly calculating checksums so if files change we do not
+#    rebuild, but we always rebuild when necessary.
+# 3) Tests the builtin rules.
+#
+# Replace the .c file multiple times and see which replacements trigger a
+# rebuild.
+
+use Config;
+my $obj;
+my @exe_dep = is_windows ? '--no-path-exe-dep' : ();
+for $iter ( 0..3 ) {
+  # This is slow and low-tech, but we need to guarantee that the .c has
+  # a timestamp different from its build info, *and* that the .o
+  # timestamp changes between runs, even if the compiler is very fast and
+  # the files are on NFS (so that we cannot rely on calls to time).
+  wait_timestamp( 'compilation_test.c', "compilation_test.$obj" ) if $iter;
+  print "**** Iteration $iter\n";
+  cp "compilation_test_$iter.c", 'compilation_test.c';
+  makepp @exe_dep, 'CPPFLAGS=-I subdir1 -Isubdir2', 'compilation_test';
+				# We test both the "-I subdir" and "-Isubdir"
+				# syntax.
+  $obj ||= -f 'compilation_test.o' ? 'o' : 'obj';
+  system '.' . ($^O =~ /^MSWin/ ? '\\' : '/') . "compilation_test > iteration_$iter";
+  my $exitstatus = 2;
+  open my $fh, ".makepp/compilation_test.$obj.mk" or return 0;
+  while ( <$fh> ) {
+    if ( m@subdir1/x2\.h@ ) {
+      $exitstatus = 0; last;
+    }
+  }
+  return 0 if $exitstatus;
+				# Make sure makepp found x2 in subdir1, not
+				# in the main directory.
+
+  n_files "n_files_$iter", sub { die if /warning: can.t locate file/ };
+				# Make sure makepp correctly found all include files.
+}
+if( is_windows ) {
+  for my $n ( 0..3 ) {
+    open my $fh, '+<', "answers/n_files_$n" or die $!;
+    my $line = <$fh>;
+    seek $fh, 0, 0;
+    $line =~ s/ 0 / 1 /;	# Extra phony on each test
+    print $fh $line;
+  }
+}
+1;
+###	10	644	1067451873	1055627995	compilation_test_0.c
+#include <stdio.h>
+#include "x.h"
+#include "y.h"
+
+
+int main()
+{
+  printf("%d %d %d %d\n", __LINE__, X, X2, Y);
+  return 0;
+}
+###	10	644	1067451873	1055628000	compilation_test_1.c
+#include <stdio.h>
+#include "x.h"
+#include "y.h"
+
+/* Same except that a comment was added. */
+int main()
+{
+  printf("%d %d %d %d\n", __LINE__, X, X2, Y);
+  return 0;
+}
+###	11	644	1067451873	1055628006	compilation_test_2.c
+#include <stdio.h>
+#include "x.h"
+#include "y.h"
+
+/* Line count has changed!  Should recompile. */
+
+int main()
+{
+  printf("%d %d %d %d\n", __LINE__, X, X2, Y);
+  return 0;
+}
+###	11	644	1067451873	1055628020	compilation_test_3.c
+#include <stdio.h>
+#include "x.h"
+#include "y.h"
+  
+   /* Only whitespace has changed.  No recompilation. */ 
+ // This is a C++ comment
+int main()
+{
+                  printf("%d %d %d %d\n",       __LINE__, X, X2, Y);
+                  /* another comment that is ignored */  return 0;
+}
+###	D	755	1067451873	1056139580	subdir1
+###	6	644	1067451873	1055626466	subdir1/Makeppfile
+x.h:
+	&echo '#define X 1' -o $(output)
+	&echo '#include "x2.h"' -o >>$(output)
+
+x2.h:
+	&echo '#define X2 2' -o $(output)
+###	D	755	1067451873	1056139580	subdir2
+###	8	644	1067451873	1055626463	subdir2/Makeppfile
+x.h:
+	&echo '#define X 99' -o $(output)
+
+x2.h:
+	&echo '#define X2 100' -o $(output)
+
+y.h:
+	&echo '#define Y 4' -o $(output)
+###	2	644	1067451873	1055551960	x2.h
+/* This file should be ignored. */
+#define X2 3
+###	D	755	1067451873	1055628127	answers
+###	1	644	1067451873	1055628033	answers/iteration_0
+8 1 2 4
+###	1	644	1067451873	1055628036	answers/iteration_1
+8 1 2 4
+###	1	644	1067451873	1055628038	answers/iteration_2
+9 1 2 4
+###	1	644	1067451873	1055628041	answers/iteration_3
+9 1 2 4
+###	1	644	1067451873	1190053877	answers/n_files_0
+5 0 0
+###	1	644	1067451873	1190053880	answers/n_files_1
+0 0 0
+###	1	644	1067451873	1190053884	answers/n_files_2
+2 0 0
+###	1	644	1067451873	1190053887	answers/n_files_3
+0 0 0

@@ -1,0 +1,59 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	22	644	1164351845	1082033129	Makeppfile
+#
+# A test of the only_targets, only_phony_targets and only_nontargets subroutines.
+#
+
+$(phony all): a x
+
+a:
+	&echo $(only_targets ? subdir/*) -o $@
+	&echo $(only_nontargets ? subdir/*) -o>>$@
+	&echo $(only_targets **/a) -o>>$@
+	&echo $(only_phony_targets **/a) -o>>$@
+	&echo $(only_phony_targets **/a*) -o>>$@
+
+$(foreach) : subdir/* : foreach b c d e f g
+	&cat $^ -o $@
+
+# This is the former 2004_04_19_onlyphony.test
+x:
+	&echo $(only_phony_targets dir/bar) -o $@
+	&echo $(only_phony_targets */bar) -o>>$@
+	&echo $(only_phony_targets dir/*) -o >>$@
+	&echo $(only_phony_targets */*) -o >>$@
+###	D	755	1082033157	1082032506	subdir/
+###	0	644	1067451877	966117638	subdir/h
+###	0	644	1067451877	966117638	subdir/i
+###	0	644	1067451877	966117638	subdir/j
+###	0	644	1067451877	966117638	subdir/k
+###	D	775	1082033157	1082033012	subdir/x/
+###	2	664	1082032967	1082032967	subdir/x/Makeppfile
+a:
+	never do this
+###	D	775	1082033157	1082033012	subdir/y/
+###	2	664	1082033012	1082033012	subdir/y/Makeppfile
+$(phony a):
+	never do this
+###	D	775	1082033157	1082033018	subdir/z/
+###	2	664	1082033018	1082033018	subdir/z/Makeppfile
+$(phony a):
+	never do this
+###	D	755	1082399429	1082399562	dir
+###	2	644	1082397913	1082397912	dir/Makeppfile
+$(phony bar):
+	@&echo bar
+###	D	755	1082033157	1082033070	answers/
+###	5	644	1082033063	1082033063	answers/a
+a b c d e f g x
+subdir/h subdir/i subdir/j subdir/k subdir/x subdir/y subdir/z
+a subdir/x/a
+subdir/y/a subdir/z/a
+subdir/y/a subdir/z/a all
+###	4	644	1082399441	1082399441	answers/x
+dir/bar
+dir/bar
+dir/bar
+dir/bar
+###	1	644	1067451877	1190053898	answers/n_files
+2 1 0

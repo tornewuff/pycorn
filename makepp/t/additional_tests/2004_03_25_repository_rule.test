@@ -1,0 +1,28 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	12	644	1080239550	1080240115	Makeppfile
+# Test case to make sure that we don't publish files from a repository
+# just because they can be built, because that interferes with the same
+# file being published when a rule to build it locally is encountered.
+
+x: d/foo.v
+	&cp -l $< x
+
+%.v: %.vx
+	&cp -l $< $@
+
+foo.vx: bar.vx
+	&cp -l $< $@
+###	D	755	1080240134	1080240122	d
+###	7	644	1080239413	1080239329	d/Makeppfile
+repository ..
+
+%.v: %.vx
+	&cp -l $< $@
+
+foo.vx: bar.vx
+	&cp -l $< $@
+###	1	644	1080239531	1080239512	d/bar.vx
+OK
+###	D	755	1080239550	1080239531	answers
+###	1	644	1080239811	1080239531	answers/x
+OK

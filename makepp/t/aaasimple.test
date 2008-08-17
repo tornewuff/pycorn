@@ -1,0 +1,25 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	13	644	1067451873	965331711	Makeppfile
+#
+# This test is about the simplest possible test of a makefile, using
+# the most straightforward inference rules.
+#
+
+file3: file1 file2
+	&cat file1 file2 -o $@
+
+file2:
+	&echo 2 -o $(target)
+
+file1:
+	&echo 1 -o $(target)
+###	D	755	1067451873	965332260	answers
+###	1	644	1067451873	965332255	answers/file1
+1
+###	1	644	1067451873	965332253	answers/file2
+2
+###	2	644	1067451873	965332260	answers/file3
+1
+2
+###	1	644	1067451873	965332231	answers/n_files
+3 0 0

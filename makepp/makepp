@@ -1,0 +1,1890 @@
+#!/usr/bin/perl -w
+#
+# Makepp version @VERSION@.
+# $Id: makepp,v 1.169 2008/08/04 21:58:24 pfeiffer Exp $
+# See @htmldir@/index.html for user documentation.
+#
+require 5.006;
+use strict;
+
+our $VERSION = '@VERSION@';
+use Config;
+our $datadir;
+BEGIN {
+  eval "sub ARCHITECTURE() { '$Config{archname}' }"; # Get a tag for the architecture.
+
+#@@setdatadir
+#
+# Find the location of our data directory that contains the auxiliary files.
+# This is normally built into the program by install.pl, but if makepp hasn't
+# been installed, then we look in the directory we were run from.
+#
+  $datadir = $0;		# Assume it's running from the same place that
+				# we're running from.
+  unless( $datadir =~ s@/[^/]+$@@ ) { # No path specified?
+				# See if we can find ourselves in the path.
+    foreach( split( /:/, $ENV{'PATH'} ), '.' ) {
+				# Add '.' to the path in case the user is
+				# running it with "perl makepp" even if
+				# . is not in his path.
+      if( -f "$_/Glob.pm" ) {	# Found something we need?
+	$datadir = $_;
+	last;
+      }
+    }
+  }
+  $datadir or die "makepp: can't find library files\n";
+
+  $datadir = eval "use Cwd; cwd . '/$datadir'"
+    if $datadir =~ /^\./;	# Make it absolute, if it's a relative path.
+
+  my $workaround = sub {
+    my $code = shift;
+    for( @_ ) {
+      my $file = "$datadir/$_";
+      local $_ = "$file.broken";
+      next if -f;		# Already converted
+      rename $file, $_;
+      open my $in, '<', $_;
+      open my $out, '>', $file;
+      chmod 07777 & (stat)[2], $file;
+      while( <$in> ) {
+	&$code;
+	print $out $_;
+      }
+    }
+  };
+  if( $Config{ptrsize} == 8 && $^O eq 'hpux' ) {
+    # This is a very bad hack!  On HP/UX use64bitall is broken (at least 5.8.0,
+    # 5.8.1 and 5.8.8) in that int does not uniquely convert references.  So we
+    # fallback to a much slower hex representation, which is not broken.  Note
+    # that this list includes all files where we remember references in hash keys,
+    # which are luckily disjoint from those where we do calculations with int.
+    my $makeppok = -f "$datadir/makepp.broken";
+    &$workaround( sub {
+	s<\bint(\(?)([,;\) ])> {
+	  my $o = $1 || ($2 ne ' ' ? '(' : '');
+	  my $c = ($2 ne ' ' ? ' )' : '') . (($2 eq ',' || $2 eq ';') ? $2 : '');
+	  "sprintf$o '%x', " . ($2 ne ' ' ? '$_' : '') . $c
+	}ge;
+      },
+      qw(BuildCheck/exact_match.pm BuildCacheControl.pm CommandParser.pm FileInfo.pm FileInfo_makepp.pm Makefile.pm Rule.pm Scanner.pm
+	 makepp makeppinfo) );
+    exec $^X, $0, @ARGV unless $makeppok;
+  } elsif( $^O =~ /^MSWin/ ) {
+    # This is a very bad hack!  On Win Active State "lstat 'file'; lstat _ or -l _" is broken.
+    &$workaround( sub {
+	s/\blstat\b/stat/g;
+	s/-l _/0/g;
+      },
+      qw(FileInfo.pm) );
+  }
+#@@
+  unshift @INC, $datadir;
+}
+
+use TextSubs;
+use POSIX ();
+
+
+#
+# Signal handling and exiting
+#
+# Do this early, because the END block defined below shall be the first seen
+# by perl, such that it is the last executed.  Unless we need to propagate a
+# signal, it leaves the process via POSIX::_exit, so that no expensive garbage
+# collection of FileInfos occurs.  All other places can use die or normal
+# exit.  If you define additional END blocks in any module, you must take care
+# to not reset $?.
+#
+{
+  my (%signo, @signame);
+  if(defined(my $sig_name = $Config{sig_name})) {
+    my $i=0;
+    for my $name (split(' ', $sig_name)) {
+      $signo{$name} ||= $i;
+      $signame[$i] = $name;
+      $i++;
+    }
+  }
+  sub signo {
+    $signo{$_[0]} || $_[0];
+  }
+  sub signame {
+    $signame[$_[0]] || $_[0];
+  }
+}
+
+our $int_signo = signo('INT');
+our $quit_signo = signo('QUIT');
+
+my $logfh;
+our @close_fhs = \(*STDOUT, *STDERR);
+our $critical_sections = 0;
+
+our $n_files_changed = 0;	# Keep track of the number of files that
+				# we actually changed.
+our $n_phony_targets_built = 0;	# Keep track of the number of phony targets
+                                # built, too.
+my $error_found = 0;		# Non-zero if we found an error.  This is used
+				# to stop cleanly when we are doing a parallel
+				# build (unless -k is specified).
+my $failed_count = 0;		# How many targets failed.
+my $build_cache_hits = 0;	# Number of the files changed that were
+				# imported from a build cache.
+our $rep_hits = 0;		# Number of the files changed that were
+				# imported from a rep.
+our $log_level = 2;		# Default to logging. 1: STDOUT, 2: $logfile
+sub log($@);
+
+my @signals_to_handle = is_windows > 0 && is_perl_5_6 ?
+  () :				# ActiveState 5.6 doesn't define signals.
+  qw/INT QUIT HUP TERM/;
+{
+  my %pending_signals;
+  sub suicide {
+    my ($sig) = @_;
+    $SIG{$sig} = 'DEFAULT';
+
+    # If we're propagating a signal from a subprocess that produced a core
+    # dump, then we want to propagate the same signal without overwriting
+    # the core file.  This is true even if the subprocess didn't produce a
+    # core dump, because it could be propagating a signal from its child
+    # that did produce a core dump.
+    $sig = 'INT' if $sig eq 'QUIT' &&
+      !(require BSD::Resource && BSD::Resource::setrlimit( &BSD::Resource::RLIMIT_CORE, 0, 0 ));
+
+    kill $sig, $$;
+    POSIX::_exit(0x80 | signo($sig)); # just in case;
+  }
+  sub handle_signal {
+    my $sig = $_[0];
+
+    # Do nothing on SIGINT or SIGQUIT if there are external processes.  These
+    # signals are sent to all child processes as well, and if any of those
+    # processes propagates them, then we will too.  Otherwise we ignore them
+    # completely (which is the UNIX convention).
+    return if $MakeEvent::n_external_processes &&
+      ($sig eq 'INT' || $sig eq 'QUIT');
+
+    $pending_signals{$sig} = 1;
+    # If there's nothing that we absolutely have to do before terminating, then
+    # just terminate.
+    exit unless $critical_sections;
+
+    &MakeEvent::Process::terminate_all_processes;
+  }
+  # This gets called after a critical section is completed:
+  sub propagate_pending_signals {
+    die if $critical_sections<0;
+    return if $critical_sections;
+    exit 2 if grep $_, values %pending_signals;
+  }
+  sub reset_signal_handlers {
+    @SIG{@signals_to_handle} = ( 'DEFAULT' ) x @signals_to_handle;
+  }
+  # Autovivification of hash elements probably isn't reentrant, so initialize
+  # them here in case we're using Perl 5.6.
+  @pending_signals{@signals_to_handle} = ( 0 ) x @signals_to_handle;
+
+  END {
+    ::log N_REP_HITS => $rep_hits
+      if $log_level && $rep_hits;
+    ::log N_CACHE_HITS => $build_cache_hits
+      if $log_level && $build_cache_hits;
+    ::log N_FILES => $n_files_changed, $n_phony_targets_built, $failed_count
+      if defined $logfh;		    # Don't create log for --help or --version.
+    if( exists $Devel::DProf::{VERSION} ) { # Running with profiler?
+      warn "Doing slow exit, needed for profiler.\n";
+    } else {
+      close $_ for @close_fhs;
+      $pending_signals{$_} && suicide $_ for keys %pending_signals;
+      POSIX::_exit $?;
+    }
+  }
+
+}
+@SIG{@signals_to_handle} = ( \&handle_signal ) x @signals_to_handle;
+
+
+use FileInfo qw(file_info chdir absolute_filename file_exists relative_filename may_have_changed $CWD_INFO);
+use FileInfo_makepp;
+use Makefile;
+use Rule;
+use BuildCheck::exact_match;
+use Signature;
+eval 'use Signature::c_compilation_md5'; # Try to use MD5 signature checking.
+our $has_md5_signatures = ($@ eq '');
+use MakeEvent qw(when_done wait_for read_wait);
+
+our $original_cwd = $CWD_INFO;	# Remember the directory we started from.
+
+my $invocation = join_with_protection($0, @ARGV);
+
+our $progname = 'makepp';	# Use a constant string, even for mpp, to make IDE parsing easy.
+
+for( qw(/usr/xpg4/bin/sh /sbin/xpg4/sh /bin/sh) ) {
+  if( -x ) {
+    $ENV{SHELL} = $_;		# Always use a hopefully Posix shell.
+    last;
+  }
+}
+delete $ENV{PWD};		# This is dangerous.
+
+our %global_ENV = %ENV;		# Make a copy of the environment, because
+				# we're going to change the environment a lot.
+our( $assume_unchanged_dir_flag, $dont_build_dir_flag, $dont_read_dir_flag,
+  $sandbox_enabled_flag, $in_sandbox_dir_flag, $sandbox_warn_flag, $virtual_sandbox_flag );
+				# This is set if we set ASSUME_UNCHANGED /
+				# DONT_BUILD on any directory. Optimizations
+				# can be made if they aren't set.
+
+our $dry_run = 0;		# Display commands but don't actually
+				# execute them.
+our $force_rebuild = 0;		# Force a rebuild of everything regardless
+				# of signatures.
+our $indent_level = 0;		# Indentation level in the log output.
+
+our $n_phony_messages = 0;	# Number of times we've had to warn about
+				# phony targets.
+#
+# Default settings for various command line options:
+#
+our $build_check_method_name = 'exact_match';
+our $default_build_check_method = $BuildCheck::exact_match::exact_match;
+				# Default to requiring an exact match for
+				# building.  This gets overridden when
+				# we are trying to build a makefile, however.
+our $default_signature = $Signature::signature;
+                                # Default signature is file time + size.
+our $environment_override = 0;	# Variables in environment do not override
+				# variables in the makefile by default.
+our $implicitly_load_makefiles = 1; # Load a makefile from every directory
+				# that contains a dependency or is searched
+				# by a wildcard.
+our $implicit_load_makeppfile_only = 0;
+				# Never implicitly load makefile and Makefile.
+our $force_rescan = 0;		# Don't use cached scanner results
+our $final_rule_only = 0;	# Unconditionally run only the top-level rules
+our $global_build_cache;	# Build cache specified on command line.
+our $nopopulate_bc = 0;		# Don't populate the build cache
+our $md5check_bc = 0;		# Check the MD5 signature of build cache files
+our $populate_bc_only = 0;	# Don't import from the build cache
+our $force_bc_copy = 0;		# Don't link from BC (for testing)
+our $nocache_scaninfo = 0;	# Don't save scanner results
+our $keep_going = 0;		# -k specified.
+our $rm_stale_files = 0;	# Ignore stale files, removing them if
+				# necessary, instead of treating them as
+				# source files.
+our $symlink_in_rep_as_file;	# Treat a symlink in a repository as a file
+                                # to be fetched, rather than a link to be
+                                # fetched.
+our $no_path_executable_dependencies = 0;
+				# Don't add implicit dependencies on executables
+				# picked up from the command search path.
+my $logfile;			# Other than default log file.
+our @makepp_include_path = file_info( $datadir, $original_cwd );
+				# The default directories to search for
+				# include files supplied with makepp.
+our $parallel_make = 0;		# True if we're in parallel make mode.
+our $quiet_flag = 0;		# Default to printing informational messages.
+our $remake_makefiles = 1;	# Default to making the makefiles automatically.
+our $profile = 0;		# Log messages about execution times.
+our $gullible = 0;		# Trust actions not to touch non-targets
+our $sigmethod_name = '';	# No -m option seen yet.
+our $stop_on_race = 0;		# Stop if a race is detected.
+our $warn_level = 1;		# Default to warning.
+our $verbose = 0;
+our $silent_execution;
+
+$SIG{__WARN__} = sub {
+  my $level = ($_[0] =~ /^(?:error|info): /s) ? '' : 'warning: ';
+				# TODO: should we return if !$warn_level && $1 ne 'error'?
+  print STDERR "$progname: $level$_[0]";
+  if( $log_level == 2 ) {
+    &::log() unless defined $logfh; # Only open the file.
+    print $logfh "*** $level$_[0]";
+  }
+};
+
+
+
+
+=head2 build
+
+  my $handle = build($objinfo);
+
+Starts building the specified object.  When build() returns, the object
+may not have been built yet; build() returns a handle (see MakeEvent.pm for
+details) which you can wait on if you want to wait until the build is
+actually done.	The usual idiom is
+
+  wait_for main::build($objinfo);
+
+If you do this, of course, you make it harder for makepp to build targets in
+parallel because the makepp process will not spawn any other build requests
+until this one is done.
+
+When any targets are built, the global variable $n_files_changed is
+updated.
+
+=cut
+
+sub build {
+  exists $_[0]{BUILD_HANDLE} and return $_[0]{BUILD_HANDLE};
+				# Don't start a rebuild if we're already
+				# trying to build it, or if we've tried
+				# before.
+  return undef if $error_found;	# If we're quitting because of an error, don't
+				# start any new builds (but still propagate
+                                # errors from existing builds).
+#
+# Find a rule for this object.
+#
+  my $oinfo = $_[0];		# Name the arguments.
+  if( &FileInfo::dont_read ) {
+    print_error( "Not building inexistent `" . &absolute_filename . "' because it's marked for dont-read" );
+    return 1;
+  }
+  if( &FileInfo::dont_build ) {
+    if( exists $_[0]{IS_PHONY} || &FileInfo::file_exists ) {
+      ::log BUILD_NOT => $oinfo
+	if $log_level;
+    } elsif( &FileInfo::dont_build == 2 ) { # Outside of ROOT
+      print_error( "Not building inexistent `" . &absolute_filename . "' because it's marked for dont-build" );
+      return 1;
+    } else {
+      warn "Not building inexistent `" . &absolute_filename . "' because it's marked for dont-build";
+    }
+    return undef $_[0]{BUILD_HANDLE};
+  }
+  ::log TRY => $oinfo
+    if $log_level;
+
+  # NOTE: We can't unlink the target just yet (even if it's from a repository),
+  # because then we couldn't use its cached scanner info. Instead, that
+  # happens just before (and only if) it's built.
+
+  my $rule = FileInfo::get_rule( $oinfo ) || # Do we already have a rule for it?
+
+#
+# Make up a dummy rule if there is no rule.  This makes it much easier to
+# handle the case where there is a target with no action but some
+# dependencies, like this:
+#
+#  all: my_program my_other_program
+#
+# This is quite common in makefiles.  Another more sinister idiom is like
+# this:
+#
+#  y.tab.c: y.tab.h
+#  y.tab.h: parse.y
+#      yacc -d $<
+#
+# This despicable idiom is the only way to tell the traditional make that the
+# yacc command produces both output files.  Not only is this ugly, but if the
+# rule containing the action looks up-to-date but the side-effect is not, then
+# the side-effect doesn't get updated.  This isn't easy to fix, because by the
+# time we build the side effect file, the action rule could have already been
+# checked.
+#
+      new DefaultRule($oinfo);
+
+  # By the time we're done getting the rule, the target might have already
+  # been built, so just return its handle in that case.  Otherwise we'll try
+  # to build it a second time after its rule has been nuked, and that won't
+  # work.
+  exists $oinfo->{BUILD_HANDLE} and return $oinfo->{BUILD_HANDLE};
+
+  # If we find that the rule for this target is in the middle of being
+  # processed, then just return as if the file were already built and hope
+  # for the best.  (This is currently the best we can do with circular
+  # dependencies.)
+  return undef if $rule->{SCANNING};
+
+  # If the file still looks stale (now that we've tried to load its rule), and
+  # we're not treating stale files as source files, then we need to error out
+  # here, because something specifically requested a stale file.
+  if($rm_stale_files && FileInfo::is_stale( $oinfo )) {
+    print_error(
+      'Not building ', $oinfo, " because it's a stale generated file"
+    );
+    return 1;
+  }
+
+#
+# If a makefile contains $(MAKE), then we turn off implicit loading of other
+# makefiles, assuming that the makefile is constructed to load them
+# manually.  This is a bit tricky, since the implicit loading flag must be
+# passed in a global variable.
+#
+  my $local_implicit_load_flag = $implicitly_load_makefiles;
+				# Save the status of implicit loading, and pass
+				# it to our wildcard action routines via a
+				# closure.
+  $rule->{MAKEFILE} && $rule->{MAKEFILE}{RECURSIVE_MAKE} and
+    $local_implicit_load_flag = 0; # Turn off implicit loading of makefiles
+				# for dependencies of this target if
+				# recursive make was invoked anywhere in this
+				# makefile.
+  local $implicitly_load_makefiles = $local_implicit_load_flag;
+				# Make a locally modifiable version of the
+				# global flag.	This local modification will
+				# not apply, however, to the routines activated
+				# by when_done.
+
+  undef $oinfo->{BUILD_HANDLE}; # Indicate that we're trying to build.
+				# This will be replaced later by a real
+				# build handle.	 This must be done after
+				# get_rule because we may attempt to load a
+				# makefile in get_rule, and we don't want
+				# to print out a warning message about
+				# encountering the rule after we already tried
+				# to build the file.
+  local $rule->{SCANNING} = 1;	# Ditto for other targets of this rule that
+				# we might not know about yet.
+
+  ::log USE => $rule
+    if $log_level;
+
+  # In --final-rule-only mode, ignore the dependencies and implicit targets
+  # of the rule unless the target is phony.
+  my $dont_scan = $final_rule_only && !UNIVERSAL::isa( $rule, 'DefaultRule' ) &&
+    !exists $oinfo->{IS_PHONY};
+  warn 'Ignoring dependencies of ', &absolute_filename,
+    " because --final-rule-only is specified\n"
+    if $dont_scan;
+
+  my ($all_targets, $all_dependencies, $command_string, $env) =
+    $rule->find_all_targets_dependencies($oinfo, $dont_scan);
+				# Find out everything that's needed
+				# for this command, and everything that it
+				# changes.
+
+  $all_dependencies = $rule->sorted_dependencies($all_dependencies);
+				# Use sorted list from now on.
+
+  ::log DEPEND => $all_targets, $all_dependencies
+    if $log_level;
+
+#
+# Build each of the dependencies:
+#
+  my @build_handles;
+  if( exists $rule->{SCAN_FAILED} ) {
+    # If we couldn't even figure out what the dependencies are, then
+    # propagate error status instead of running the rule. But if -k is
+    # specified, then build the dependencies that we already know about.
+    die unless $rule->{SCAN_FAILED};
+    push @build_handles, $rule->{SCAN_FAILED};
+    my $reason = '';
+    if(UNIVERSAL::isa($rule->{SCAN_FAILED}, 'FileInfo')) {
+      my $finfo = $rule->{SCAN_FAILED};
+      my ($handle, $next);
+      while($handle = $finfo->{BUILD_HANDLE} and
+        exists($handle->{STATUS}) and
+        $next = $handle->{STATUS} and
+        UNIVERSAL::isa($next, 'FileInfo')
+      ) {
+	$finfo = $next;
+      }
+      $reason = ', because ' . absolute_filename( $finfo ) . ' failed to build';
+    }
+    print_error(
+      'Not building ' . &absolute_filename .
+      ' because the dependencies could not be computed' . $reason
+    );
+  }
+  my $handle;
+  if( @$all_dependencies and $main::keep_going || ! exists $rule->{SCAN_FAILED} ) {
+    local $indent_level = $indent_level + 2;
+				# Temporarily change the indentation level
+				# when building dependencies.
+    foreach my $dep (@$all_dependencies) {
+      next if exists $dep->{BUILD_HANDLE} && !defined $dep->{BUILD_HANDLE};
+				# Don't wait for what's already been done.
+      $handle = when_done build( $dep ), \&TextSubs::CONST0, ERROR => $dep;
+      $handle and push @build_handles, $handle;
+				# Don't bother saving it if it's blank.
+    }
+  }
+
+  $handle = when_done @build_handles, \&build_dependencies_done,
+    [$oinfo, $all_targets, $all_dependencies, $command_string, $rule, $env, $dont_scan];
+  $handle && exists($handle->{STATUS}) && !$handle->{STATUS} and
+    undef $handle;		# If the build operation already succeeded,
+				# don't keep the handle around.
+  foreach my $target (@$all_targets) { # Tag all targets with the handle
+    $target->{BUILD_HANDLE} = $handle; # that builds them.
+  }
+#
+# If we're not doing a parallel make, wait for the above to finish, because
+# it's very confusing if makepp gets ahead of the shell commands.
+#
+  $parallel_make or
+    wait_for $oinfo->{BUILD_HANDLE};
+
+  $oinfo->{BUILD_HANDLE};
+}
+
+#
+# This subroutine is called when all the dependencies for a given target
+# are finished building.  We make sure the target is up to date, or if it
+# isn't, we set off the build.
+# Arguments:
+# a) A list of all the targets.
+# b) A list of all the dependencies, in sorted order.
+# c) The command string to execute.
+# d) The rule object to execute.
+#
+# Note that indentation level in the log file is handled automatically by
+# the when_done mechanism.
+#
+sub build_dependencies_done {
+  my ($oinfo, $all_targets, $all_dependencies, $command_string, $rule, $env, $dont_scan) = @_;
+
+#
+# This routine is only called if no errors were encountered in building the
+# dependencies.
+#
+  return undef if $error_found; # If we're quitting because of an error,
+				# don't start any new builds.  This can happen
+				# if we're doing a parallel build and we got
+				# an error in a different, unrelated target.
+
+  foreach( @$all_dependencies ) {
+    FileInfo::check_for_change( $_ );	# Restat each dependency.  This will slow down
+				# the build, but it's important for accuracy,
+				# because if a file has been edited or if
+				# a command altered a file without specifying
+				# it as a target, we won't know about it
+				# otherwise, and thus the build info that
+				# we store will be wrong.  (There's still a
+				# time window where this can occur, but since
+				# we restat just before we execute the
+				# commands, it's much narrower.)
+    warn 'Target ', &absolute_filename, ' depends on temporary file ',
+      absolute_filename( $_ ), "\n"
+      if exists $_->{IS_TEMP};
+  }
+
+#
+# Now check all the signatures of each target to see if it is up
+# to date.
+#
+  my $is_recursive_make = defined $RecursiveMake::command && $command_string =~ /\brecursive_makepp\b/;
+				# Note that the above will catch invocations
+				# of the recursive_makepp program, and also
+				# invocations of makepp when
+				# --traditional-recursive-make is in effect,
+				# because the latter adds a bogus
+				# --recursive_makepp option to the command
+				# line.
+  my $rebuild_needed;		# Assume we don't need to rebuild.
+  my $dont_build;		# Assume no files marked with --dont-build.
+  my $out_of_sandbox;		# Assume no files marked with --out-of-sandbox.
+
+  my @targets_to_copy_from_repository; # If we have to copy any files in from
+				# a repository, this is where we store them.
+  my @targets_to_copy_from_build_cache; # Targets to copy from a build cache.
+
+  my $build_cwd = $rule->build_cwd;
+  my $build_check_method = $rule->build_check_method;
+  my $sig_method = $rule->signature_method; # Get which signature checking
+				# algorithm we want to use.
+
+  if( $is_recursive_make ) {
+    $rebuild_needed = 1;	# Always reexecute this command.
+    ::log BUILD_RECURSIVE => $all_targets
+      if $log_level;
+  } elsif( $dont_scan ) {
+    $rebuild_needed = 1;      # Always reexecute this command.
+    ::log BUILD_FINAL => $all_targets
+      if $log_level;
+  } else {
+  target_loop:
+    foreach my $target (@$all_targets) {
+      last if $rebuild_needed && $dont_build;
+      if( FileInfo::dont_build $target ) {
+	$dont_build = $target; # Remember not to clobber dont-build targets
+	next target_loop; # Skip to next target now.
+      }
+      unless( FileInfo::in_sandbox $target ) {
+	$out_of_sandbox = $target;
+	$dont_build = $target unless $sandbox_warn_flag;
+                                # Remember not to overstep sandbox
+      }
+      next target_loop if $rebuild_needed
+	or exists $target->{IS_TEMP};
+				# Temporary targets don't have to be up-to-date
+      if( exists $target->{IS_PHONY} ) { # If this is a phony target, then we always
+                                # rebuild.
+	$rebuild_needed = 1;
+	::log BUILD_PHONY => $target
+	  if $log_level;
+	next target_loop;	# Keep checking for dont_build.
+      }
+
+#
+# Sometimes when we're using repositories, we may need to execute a rule
+# but the output directory does not exist yet.  If the output directory
+# does not exist, but it does exist in a repository, then go ahead and
+# make it.  However, if the output directory does not exist in any
+# repository, then don't make it, because it's possible that the
+# command or the targets are erroneous, and we don't want to scatter
+# junk directories around.
+#
+      if( exists $target->{'..'}{DIR_IN_REPOSITORY} &&
+	  !file_exists( $target->{'..'} )) {
+
+	FileInfo::mkdir( $target->{'..'} ); # Make it with parents.
+      }
+
+      my $is_src_file = UNIVERSAL::isa $rule, 'DefaultRule';
+      if( $build_check_method->build_check( $target, $all_dependencies,
+                                            $command_string, $build_cwd,
+                                            $sig_method, $env )) { # Need to rebuild?
+	if( exists $target->{ALTERNATE_VERSIONS} ) { # Possibly copy from repository?
+	  for( @{$target->{ALTERNATE_VERSIONS}} ) {
+	    if( $rm_stale_files && $is_src_file && FileInfo::was_built_by_makepp $_  ) {
+	      ::log REP_SKIP => $_
+		if $log_level;
+	      next;
+	    }
+	    ::log REP_CHECK => $_
+	      if $log_level;
+	    if( $is_src_file ||
+               !$build_check_method->build_check_from_build_info( $_, $all_dependencies, $command_string, $build_cwd, $sig_method, $env )) {
+	      push @targets_to_copy_from_repository, $_, $target;
+				# Remember to copy this from repository.
+	      next target_loop; # Move on to next target.
+	    }
+	  }
+	}
+	if( my $build_cache = !$populate_bc_only && $rule->build_cache ) {
+                                # Do we have a build cache we can look in?
+	  my $bc_key = $build_check_method->
+	    build_cache_key( $target, $all_dependencies, $command_string,
+			     $build_cwd, $sig_method, $env );
+	  if( $bc_key ) {      # Got a valid key?
+	    my $bc_entry = $build_cache->lookup_file($bc_key);
+	    if( $bc_entry ) { # Got a candidate entry in cache?
+	      ::log BC_FOUND => $target, $bc_key
+		if $log_level;
+	      push @targets_to_copy_from_build_cache, $bc_entry, $target;
+	      next target_loop; # Move on to next target.
+	    } else {
+	      ::log BC_NONE => $target, $bc_key
+		if $log_level;
+	    }
+	  } else {
+	    ::log BC_NO_KEY => $target
+	      if $log_level;
+	  }
+	}
+	$rebuild_needed = 1;	# We'll need to run the command.
+	next target_loop;	# Keep checking for dont_build.
+      }
+    }
+  }
+
+  unless( $rebuild_needed ) {
+    # At this point, it appears that we won't have to run the rule.
+    # However, we could have a problem when we attempt to import from
+    # the cache, and because there could be concurrent processes operating
+    # on the build cache, we can't predict ahead of time whether such a
+    # problem will occur.  The solution is to attempt the import first,
+    # and if it fails then fall back to rebuilding.
+  import_loop:
+    while (@targets_to_copy_from_build_cache) { # Do the same for the build cache:
+      my ($target_src, $target_dst) = splice @targets_to_copy_from_build_cache, 0, 2;
+      my $reason;
+      $target_src->copy_from_cache($target_dst, $rule, \$reason) or do {
+	my $msg = 'Copy of ' . BuildCache::Entry::absolute_filename( $target_src ) . ' into ' .
+	  absolute_filename( $target_dst ) . " failed because $reason\n";
+	&$::build_cache_error_hook($msg) if $::build_cache_error_hook;
+	if($reason =~ /\(OK\)$/ && !$stop_on_race) {
+	  warn $msg."This might just mean that the build cache file was in an inconsistent state due to concurrent access, so we'll rebuild instead.\n";
+	  $rebuild_needed = 1;
+	  last import_loop;
+	} else {
+	  # If something happens that we can't explain as a transient
+	  # phenomenon, then we *don't* want to just fall back to
+	  # rebuilding, because the user probably wants to know that the
+	  # build cache isn't operating normally.
+	  die $msg;
+	}
+      };
+
+      ::log BC_COPY => $target_dst, $target_src
+	if $log_level;
+      ++$build_cache_hits;
+      print "$progname: Imported `", absolute_filename( $target_dst ), "' from build cache\n";
+    }
+  }
+
+  if( $rebuild_needed ) {
+    if( $dont_build ) {
+      # NOTE: This can trip even if the target(s) that we need are up to date
+      # if some other target *not* marked for dont-build isn't up to date.
+      # This usually isn't a problem in practice, and it appears nontrivial
+      # to fix.
+      print_error(
+	'Not building ' . absolute_filename( $oinfo ) .
+        ' because ' . absolute_filename( $dont_build ) .
+        ' (a target of its rule) was marked for dont-build or out-of-sandbox'
+      );
+      return 1;
+    }
+    warn 'Building ', absolute_filename( $out_of_sandbox ), ", which is outside the sandbox\n"
+      if $out_of_sandbox;
+				# Do we actually need to rebuild something?
+    if( $is_recursive_make ) {	# If this is a recursive make invocation,
+				# we'll have to reexecute a build
+				# command for it, so don't inhibit that.
+      foreach my $target (@$all_targets) {
+	delete $target->{BUILD_HANDLE};
+      }
+    }
+
+    unless( $is_recursive_make || $dry_run ) {
+      # For the targets that are about to be built, flush out any potentially
+      # stale stuff (repository links and build info) from the filesystem.
+      foreach my $tinfo (@$all_targets) {
+        ++$tinfo->{BUILDING} if $::virtual_sandbox_flag;
+	next if exists $tinfo->{TEMP_BUILD_INFO};
+	if( grep $_, FileInfo::build_info_string( $tinfo, qw'FROM_REPOSITORY LINKED_TO_CACHE' ) ||
+	    !(exists $tinfo->{IS_PHONY} || FileInfo::is_writable_owner $tinfo )) {
+				# Marked read only?
+	  ::log REMOVE => $tinfo
+	    if $log_level;
+	  FileInfo::unlink $tinfo;	# If it's from a repository, get rid of it.
+				# It might be a bogus file from the past.
+                                # If it's from a build cache, delete it so
+                                # we don't corrupt the file in the build
+                                # cache.
+	}
+	FileInfo::clear_build_info $tinfo;
+      }
+    }
+    $critical_sections++;
+    # TBD: It would be better to mark all the targets as invalid first,
+    # and then restore them when the command succeeded (and ideally restore
+    # the ones that weren't touched if it fails).  That way, we won't get
+    # confused if makepp stops very suddenly (e.g. kernel panic), even if
+    # none of the targets' timestamps changed.
+    my $execute_handle = $dry_run && !$is_recursive_make ?
+      $rule->print_command($command_string) :
+      $rule->execute($command_string, $all_targets, $all_dependencies);
+				# Start executing the command, or just print
+				# it if -n is enabled (unless it's recursive
+				# make).
+    shift;
+    my $handle = when_done $execute_handle, \&build_target_done, \@_,
+      ERROR => sub {
+	$error_found = $_[0]
+	  if $_[0] =~ /^signal (?:$int_signo|$quit_signo)$/os;
+	$error_found ||= $_[0]      # Remember the error status.  This will
+	  unless $main::keep_going; # cause us to stop compilation as soon as
+				    # possible.
+	$failed_count += @$all_targets;
+	print_error( "Failed to build target", (@$all_targets>1 ? 's' : ''),
+		     map( ' `'.absolute_filename( $_ )."'", @$all_targets ),
+		     " [$_[0]]" );
+	::log RULE_FAILED => $rule
+	  if $::log_level;
+				# Sometimes it's hard to tell where the problem
+				# was if -k was specified unless we mark it
+				# in the log file.
+  # TBD: We don't need to invalidate the build info of targets that we know
+  # weren't touched by the command.  We can leverage the code that detects
+  # when we need to retouch a file (also TBD) to accomplish this.
+	foreach my $tinfo (@$all_targets) {
+	  next if exists $tinfo->{IS_PHONY}; # Skip phony targets.
+	  may_have_changed( $tinfo );	# Invalidate cached info.
+    				# We don't really need to blow away BUILD_INFO,
+				# because we called clear_build_info earlier,
+				# but that doesn't slow things down too much.
+	  may_have_changed( FileInfo::dereference $tinfo );
+    				# Since we don't know whether the command
+				# modified the link or its referent or both,
+				# need to invalidate both.
+	  unless( $is_recursive_make || $dry_run ) {
+				# Never store build information on recursive
+				# makes.  They always need to be rerun every
+				# time we run through the makefile.
+	    FileInfo::set_build_info_string( $tinfo,
+					     BUILD_SIGNATURE => 'FAILED',
+					     COMMAND => 'FAILED' );
+	  }
+	}
+	&FileInfo::update_build_infos # Flush the build info to disk.
+	  unless $dry_run;
+	$critical_sections--;
+	propagate_pending_signals;
+	return $_[0];		# Propagate the status.
+      };
+
+    return $handle;		# Not finished building until the rule has
+				# finished executing.
+  }
+
+#
+# We didn't actually need to rebuild anything.	We may have to copy or link
+# a target from the repository, however.
+#
+  while( @targets_to_copy_from_repository ) {
+    my( $target_src, $target_dst ) = splice @targets_to_copy_from_repository, 0, 2;
+				# Get where we move/link from and to.
+    my $status = Repository::get( $target_dst, $target_src );
+				# Move or link the target.
+    $status == 0 or return $status;
+  }
+  ::log UP_TO_DATE => $all_targets
+    if $log_level;
+
+  # We need to cache the scanner info even if the action wasn't executed,
+  # because the existing build info may have been generated with
+  # --nocache_scaninfo. Since FileInfo::set_build_info is intelligent, this
+  # shouldn't slow things down noticably if the scan info didn't change.
+  if( UNIVERSAL::isa $build_check_method, 'BuildCheck::exact_match' ) {
+    $rule->cache_scaninfo([
+      grep {
+	!exists $_->{IS_PHONY} &&
+	(FileInfo::build_info_string($_, 'CWD') || '') eq
+	  relative_filename( $build_cwd, $_->{'..'} )
+      } @$all_targets
+    ]);
+  }
+
+  foreach my $tinfo (@$all_targets) {
+    FileInfo::set_rule($tinfo, undef);	# Discard the rule to save memory.
+  }
+  undef;			# Success, and nothing to wait for.
+}
+
+#
+# This subroutine is called when a rule's command has finished executing.
+# We don't reach this subroutine if an error occured while the rule was
+# executing.
+#
+# Arguments:
+# a) A list of all the targets.
+# b) A list of all the dependencies, in sorted order.
+# c) The indentation level in the log file.
+# d) The command string to execute.
+# e) The rule object to execute.
+#
+# Note that indentation level in the log file is handled automatically by
+# the when_done mechanism.
+#
+#
+sub build_target_done {
+  my ($all_targets, $all_dependencies, $command_string, $rule, $env) = @_;
+  my $implicit_phony = 0;
+
+  # TBD: We should probably do an eval on a per-target basis, because it's nice
+  # to clean up after the rest of the targets after one fails to have its build
+  # info straightened out.
+  eval {
+    my $sig_method = $rule->signature_method; # Get which signature checking
+				# algorithm we want to use.
+    my $build_cwd = $rule->build_cwd;
+    my $is_recursive_make = defined $RecursiveMake::command && $command_string =~ /\brecursive_makepp\b/;
+    my $build_cache = $rule->build_cache;
+    my $build_check_method = $rule->build_check_method;
+
+    ::log SUCCESS => $rule, $all_targets
+      if $log_level;
+#
+# Update the stored build information for each target:
+#
+    my @built_targets;
+    foreach my $tinfo (@$all_targets) {
+      next if exists $tinfo->{IS_PHONY}; # Skip phony targets.
+      may_have_changed( $tinfo ); # Invalidate cached info.
+    				# We don't really need to blow away BUILD_INFO,
+				# because we called clear_build_info earlier,
+				# but that doesn't slow things down too much.
+      my $deref = FileInfo::dereference( $tinfo );
+      may_have_changed( $deref ) unless $tinfo == $deref;
+    				# Since we don't know whether the command
+				# modified the link or its referent or both,
+				# need to invalidate both.
+      push(@built_targets, $tinfo);
+    }
+    $rule->cache_scaninfo(\@built_targets);
+    foreach my $tinfo (@built_targets) {
+      if (!$is_recursive_make && !$dry_run) {
+				# Never store build information on recursive
+				# makes.  They always need to be rerun every
+				# time we run through the makefile.
+        my $tsig = $sig_method->signature($tinfo);
+        if ($tsig) {		# File actually exists now:
+				# Store the information on how we built it.
+	  my $sorted_dep_names = join("\01", map relative_filename( $_, $build_cwd ), @$all_dependencies);
+	  my $sorted_dep_sigs = join("\01", map { $sig_method->signature($_) || '' } @$all_dependencies);
+          my @extra;
+          if( %$env ) {
+	    my @deps = sort keys %$env;
+	    @extra = (
+	      ENV_DEPS => join("\01", @deps), ENV_VALS => join("\01", @{$env}{@deps})
+	    );
+          }
+	  if( $tinfo->{LINK_DEREF} && $tinfo->{LSTAT}[FileInfo::STAT_NLINK] == 1 ) {
+				# Assume nlink > 1 to mean action only created
+				# a link to an already existing symlink.
+	    ::log SYMLINK => $tinfo
+	      if $log_level;
+	    # Don't use dereference, as that follows a link to a link.
+	    push @extra, 'SYMLINK', readlink FileInfo::absolute_filename $tinfo;
+	    my $linkee = file_info $extra[-1], $tinfo->{'..'};
+	    $tinfo->{LINK_DEREF} ||= $linkee;
+	    warn '`'. FileInfo::absolute_filename_nolink( $tinfo ) . "' is a symbolic link to `$extra[-1]',
+  which is neither a depedency of rule `" . $rule->source . "',
+  nor a target.  That means makepp can't guarantee a correct build of that file.
+  Your rule should in essence follow one of these two schemes:
+    link: linkee
+	&ln --force --resolve \$(input) \$(output)
+    linkee link:
+	&echo Somehow produce linkee -o \$(output)
+	&ln -fr \$(outputs)\n\n"
+	      if !grep $_ == $linkee, @$all_dependencies, @$all_targets;
+	  }
+	  FileInfo::set_build_info_string( $tinfo,
+					   SORTED_DEPS => $sorted_dep_names,
+					   DEP_SIGS => $sorted_dep_sigs,
+					   BUILD_SIGNATURE => $tsig,
+					   COMMAND => $command_string,
+					   CWD => relative_filename( $build_cwd, $tinfo->{'..'} ),
+					   ARCH => ARCHITECTURE, @extra);
+				# Tag the build with the architecture, too.
+          if ($build_cache && !$nopopulate_bc) {     # Store this file in a build cache?
+            my $bc_key = $build_check_method->
+              build_cache_key($tinfo, $all_dependencies, $command_string,
+                            $build_cwd, $sig_method, $env);
+            if ($bc_key) {
+              my $reason;
+	      # Store the file in cache.
+              $build_cache->cache_file($tinfo, $bc_key, \$reason) or do {
+		my $msg = 'Exporting of ' . absolute_filename( $tinfo ) . " to the build cache failed because $reason\n";
+		&$::build_cache_error_hook($msg) if $::build_cache_error_hook;
+                if($reason =~ /\(OK\)$/ && !$stop_on_race) {
+		    $msg .= "This might be due to concurrent access, so we'll just skip exporting this target.\n";
+                    warn $msg;
+                } else {
+                    die $msg;
+                }
+              };
+            }
+          }
+        } elsif( $warn_level && !exists $tinfo->{IS_TEMP} ) {
+	  if( $rule->{MAKEFILE}->expand_variable( 'makepp_require_phony', $rule->source )) {
+	    $implicit_phony++;
+	  } elsif( $n_phony_messages++ ) {	  # Give a shorter message on other instances.
+	    warn 'target ' . absolute_filename( $tinfo ) . " is probably also phony\n";
+	  } else {
+	    warn 'I attempted to build ' . absolute_filename( $tinfo ) . ',
+  but after successfully executing the commands, the target does not exist.
+  Perhaps it is a phony target?	 If so, the rule defining it should be modified
+  like this:
+  $(phony ', relative_filename($tinfo, $build_cwd), '): dependencies
+	actions
+
+  or you could also declare it as phony like this:
+  .PHONY: ', relative_filename( $tinfo, $build_cwd ), "\n";
+	  }
+	  undef $tinfo->{IS_PHONY};
+	  $tinfo->{SIGNATURE} = 9e99; # Give it a very recent time to
+                                # force rebuilding of everything that depends
+				# on it even if -m target_newer is in effect.
+        }
+      }
+      $dry_run and $tinfo->{ASSUME_CHANGED} = 1;
+				# If this is a dry run, the file didn't
+				# actually change, but force any command that
+				# depends on it to execute.
+      undef $tinfo->{BUILD_HANDLE} unless $is_recursive_make;
+				# No need to keep the handle around since
+				# the build was successful.  Just leave a
+				# flag that we tried to build.
+      FileInfo::set_rule( $tinfo, undef ); # Discard the rule to save memory.
+    }
+
+    my $default = ref($rule) eq 'DefaultRule';
+				# Don't count targets for which there was no rule.
+    for( @$all_targets ) {
+      if( exists $_->{IS_PHONY} ) { ++$n_phony_targets_built }
+      elsif( !$default ) { ++$n_files_changed }
+    }
+  };
+  my $error = $@;
+
+  &FileInfo::update_build_infos # Flush the build info to disk.
+    unless $dry_run;
+  if( $implicit_phony ) {	# Why must this block come before $critical_sections--?
+    warn $error if $error;
+    return -2;
+  }
+  $critical_sections--;
+  propagate_pending_signals;
+
+  die $error if $error;
+  undef;			# Return a success code.
+}
+
+
+my $stop;
+sub maybe_stop {
+  if( $stop ) {
+    $stop = 0;
+    print "makepp: Stopped after loading Makeppfiles.  Continue with",
+      -t() ? " one of:\n\n\tbg\n\tfg\n" : ":\n\n",
+      "\tkill -CONT $$\n\n";
+    &flush_log;
+    kill STOP => $$;
+  }
+}
+
+
+
+# Find .makepprc upwards and add content to @ARGV
+sub makepprc {
+  my $cwd_devid;		# Remember what device this is mounted on
+				# so we can avoid crossing file system boundaries.
+
+  for( my $dirinfo = $CWD_INFO;
+       $dirinfo &&
+       (FileInfo::stat_array $dirinfo)->[FileInfo::STAT_DEV] ==
+	 ($cwd_devid ||= (FileInfo::stat_array $CWD_INFO)->[FileInfo::STAT_DEV]);
+				# Don't cross device boundaries.  This is
+				# intended to avoid trouble with automounters
+				# or dead network file systems.
+       $dirinfo = $dirinfo->{'..'} ) { # Look in all directories above us.
+    my $finfo = file_info '.makepprc', $dirinfo;
+    return if exists $finfo->{MAKEPPRC}; # Already read?
+    next unless file_exists $finfo;
+    return unless $finfo->{LSTAT}[FileInfo::STAT_SIZE]; # Empty file is test dir boundary.
+    open my $fh, absolute_filename $finfo or die "$0: cannot open `.makepprc'--$!\n";
+    local $/;
+    unshift @ARGV, $dirinfo == $CWD_INFO ?
+      unquote_split_on_whitespace <$fh> :
+      ('-C', $dirinfo, unquote_split_on_whitespace( <$fh> ), '-C', $CWD_INFO);
+    close $fh;
+    undef $finfo->{MAKEPPRC};	# Mark as read
+    return;
+  }
+}
+
+=head2 parse_command_line
+
+  parse_command_line(@ARGV, \%environment_hash);
+
+Parses and executes the given command line.  Loads whatever makefiles are
+necessary and builds the appropriate targets, or at least starts off the
+build.	(It doesn't wait until the build is finished.)	Returns a list of
+build handles.
+
+The environment must be provided as a reference to a hash.  Any rules which
+are executed have the environment set to this value before the shell is
+invoked.
+
+This parser only accepts options which are valid during recursive makes or
+from the load_makefile command.	 There are other options which are handled
+by the mainline makepp code which are not accepted here.
+
+parse_command_line assumes that the current directory is the proper directory
+for executing the command.
+
+=cut
+
+my @do_build;
+sub parse_command_line(\%@) {
+  local $_;			# Don't mess up caller's $_.
+
+  my $this_ENV = shift;		# First argument is the environment hash.
+  my @targets;			# Targets we need to make.
+  my @initial_makefiles;
+  my @makefiles;
+  my @include_path = @makepp_include_path;
+				# Make a copy of the include path so we can
+				# add to it.
+
+#
+# Command line variable settings affect all makefiles regardless of where they
+# are specified on the command line.
+#
+  my %command_line_vars;
+
+  my $root_makefile;
+  my $target_cwd = $CWD_INFO;
+  my $tmp;
+  &makepprc;
+  while( @ARGV ) {
+    TextSubs::getopts \%command_line_vars, 1,
+      @_,
+      ['c', qr/root(?:[-_]?dir(?:ectory)?)?/, \$tmp, undef, sub {
+	 $tmp = Makefile::find_root_makefile_upwards( $CWD_INFO ) || $CWD_INFO->{ROOT}
+	   or die "$0: No RootMakeppfile(.mk) found above `", absolute_filename( $CWD_INFO ), "'\n";
+				# See if we find a RootMakeppfile from here.
+	 $root_makefile ||= $tmp;
+	 $tmp = $tmp->{'..'};
+	 chdir $tmp;		# Switch to that directory.
+	 $target_cwd = $tmp;	# It's now the directory relative to which
+                                # further targets are specified.
+	 &makepprc;
+       }],
+      [qw(C directory), \$tmp, 1, sub {
+	 if( ref $tmp ) {	# Called via makepprc?
+	   chdir $tmp;		# Switch to that directory.
+	   return;
+	 }
+	 $tmp = file_info $tmp;
+	 FileInfo::mkdir $tmp;	# Make sure the directory exists.
+	 chdir $tmp;		# Switch to that directory.
+	 $root_makefile ||= Makefile::find_root_makefile_upwards $tmp;
+				# See if we find a RootMakeppfile from here.
+	 $target_cwd = $tmp;	# It's now the directory relative to which
+                                # further targets are specified.
+	 &makepprc;
+       }],
+
+      [undef, qr/dump[-_]?makep*file/, \$tmp, 1,
+       sub {
+	 open my $fh, '>', $tmp or die "Failed to write $tmp--$!";
+	 push @close_fhs, $fh;
+	 $CWD_INFO->{DUMP_MAKEFILE} = $fh;
+       }],
+
+      ['f', qr/(?:make)?file/, \$tmp, 1, sub {
+				# Load a makefile without changing directory?
+	 push @makefiles, [file_info( $tmp ), $CWD_INFO]; # Load makefile later
+				# when we can specify MAKECMDGOALS.
+       }],
+      [qw(F makeppfile), \$tmp, 1, sub {
+	 $tmp = file_info $tmp;
+	 my $mdir = $tmp;	# Assume it is actually a directory.
+	 FileInfo::is_or_will_be_dir $tmp or $mdir = $tmp->{'..'};
+				# Default directory is the directory the
+				# makefile is in.
+	 push @makefiles, [$tmp, $mdir]; # Load the makefile later.
+	 FileInfo::mkdir( $mdir ); # Make sure the directory exists, so we
+				# can cd into it.
+	 $root_makefile ||= Makefile::find_root_makefile_upwards $mdir;
+				# See if we find a RootMakeppfile from here.
+	 $target_cwd = $mdir;	# It's now the directory relative to which
+				# further targets are specified.
+       }],
+
+      ['I', qr/include(?:[-_]?dir)?/, \$tmp, 1, sub {
+				# Specify more directories for the include
+				# path?
+	 push @include_path, file_info $tmp;
+       }],
+
+      [undef, qr/load[-_]?make(?:pp)?file/, \$tmp, 1, sub {
+	 $tmp = file_info $tmp;
+	 my $mdir = $tmp;	# Assume it is actually a directory.
+	 FileInfo::is_or_will_be_dir( $tmp ) or $mdir = $tmp->{'..'};
+				# Default directory is the directory the
+				# makefile is in.
+	 push @initial_makefiles, [$tmp, $mdir]; # Load the makefile later.
+	 FileInfo::mkdir( $mdir ); # Make sure the directory exists, so we
+				# can cd into it.
+       }],
+
+      ['r', qr/no[-_]?builtin[-_]?rules/, \$command_line_vars{makepp_no_builtin}],
+				# Pretend this was give as a variable.
+      [qw(R repository), \$tmp, 1, sub {
+	 require Repository;
+	 if( $tmp =~ /^([^=]+)=(.*)/s ) { # Is it of the format dir=repository-dir?
+	   Repository::load( file_info($2), file_info $1 );
+				# Load the given files into the repository.
+	 } else {		# It must be just a single directory.
+	   Repository::load( file_info($tmp), $CWD_INFO );
+				# Load it into the current directory.
+	 }
+       }];
+    delete $command_line_vars{makepp_no_builtin} if !defined $command_line_vars{makepp_no_builtin};
+				# Ref above brought this into existence.
+
+    push @targets, file_info shift @ARGV, $target_cwd
+      if @ARGV;
+				# Evidently it is a real target.  This is a
+				# hack, because getopts has no way of handling
+				# normal args immediately.  So we operate in
+				# strict mode, giving the 1st non-opt/non-var,
+				# at the beginning of @ARGV.  Just one extra
+				# call per target...
+  }
+  close DATA;			# Only needed for --help.
+  @_ = ();			# Free lots of memory.
+
+  die "--md5-check-bc: MD5 signatures not available\n"
+    if $md5check_bc && !$has_md5_signatures;
+
+  $root_makefile ||= Makefile::find_root_makefile_upwards( $target_cwd );
+  if( $root_makefile ) {
+    unshift @initial_makefiles, [$root_makefile, $root_makefile->{'..'}];
+    my $build_root = $root_makefile->{'..'};
+
+    for( @do_build ) {
+      my $saw_build_root;
+      $_ = $_->{'..'} unless $_ == $FileInfo::root;
+      while( !exists $_->{DONT_BUILD} ) {
+	$saw_build_root++ if $_ == $build_root;
+	if( $_ == $FileInfo::root ) {
+	  if( $saw_build_root ) {
+	    $build_root->{DONT_BUILD} = 1;
+				# Found a do_build within build tree
+				# but not within a dont_build dir.
+	    warn "--do-build not overriding --dont-build implies not building anything else.\n";
+	    @do_build = ();
+	  }
+	  last;
+	}
+	$_ = $_->{'..'};
+      }
+    }
+    $dont_build_dir_flag = 1;
+    exists $build_root->{DONT_BUILD} or
+      undef $build_root->{DONT_BUILD};
+    exists $FileInfo::root->{DONT_BUILD} or
+      $FileInfo::root->{DONT_BUILD} = 2;
+				# If we have a root, don't build anything
+				# outside our build tree unless specifically
+				# requested.  Use 2 to mean: implicitly set.
+  }
+
+  my $makecmdgoals = join(' ', map relative_filename( $_ ), @targets);
+				# Format MAKECMDGOALS.
+
+  if(@initial_makefiles) {
+    my $cwd = $CWD_INFO;
+    foreach (@initial_makefiles) {
+      Makefile::load($_->[0], $_->[1], \%command_line_vars, $makecmdgoals,
+			\@include_path, $this_ENV); # Load the initial makefiles
+    }
+    chdir $cwd;
+  }
+
+#
+# At this point we have a list of target fileinfo structures in @targets.
+# Now load makefiles.  The procedure for finding a makefile is:
+# 1) Use any explicitly specified on the command line.
+# 2) If none, try to find one in the current directory.
+# 3) If none and no RootMakeppfile, try all the directories containing targets.
+#
+  {
+    last if @makefiles;		# last leaves this block
+
+    my $finfo = Makefile::find_makefile_in( $CWD_INFO );
+				# Look in the current directory.
+
+    $finfo and @makefiles = [$finfo, $CWD_INFO] and last;
+
+    $root_makefile and last;
+
+    for( @targets ) {
+      $finfo = Makefile::find_makefile_in( $_->{'..'} ) and
+				# Did we find one in this directory?
+	push @makefiles, [$finfo, $finfo->{'..'}];
+    }
+
+    @makefiles or @makefiles = [$CWD_INFO, $CWD_INFO];
+				# Load the default makefile if we still haven't
+				# found one.
+  }
+
+  foreach (@makefiles) {
+    $_ = Makefile::load($_->[0], $_->[1], \%command_line_vars, $makecmdgoals,
+			\@include_path, $this_ENV); # Load all the makefiles, and store
+				# the makeinfo structure back in @makefiles.
+  }
+  &maybe_stop;
+
+  @targets or			# No targets specified?
+    @targets = ($target_cwd->{MAKEINFO} || $makefiles[0] || $CWD_INFO)->{FIRST_TARGET} ||
+				# Use the first one in the first makefile.  If
+				# we had no makefile in cwd but a
+				# RootMakeppfile, @makefiles is empty.  That's
+				# why we fall back to $CWD_INFO, just so we
+				# don't reference undef.
+    die 'no targets specified and no default target in makefile `' .
+      absolute_filename( ($target_cwd->{MAKEINFO} || $makefiles[0])->{MAKEFILE} || $CWD_INFO ) .
+      "'\n";
+
+  my @handles;
+  foreach my $target (@targets) {
+    exists $target->{DONT_BUILD} or undef $target->{DONT_BUILD};
+    my $handle = build($target); # Try to build the file.
+    $handle and push @handles, $handle; # If the build actually did
+				# anything, save the handle for it.
+  }
+
+  @handles;
+}
+
+
+=head2 ::log
+
+  ::log KEY => {object | array of objects | string} ...
+    if $log_level;
+
+The list of available KEYs is present in makepplog.  If you pass an non-key
+str if will later be output verbatim.  The objects must have a method `name'.
+
+This log overrides logarithm (which is not needed by makepp).  Because of
+this, and because it is not exported, it must always be invoked as ::log.
+
+The log format contains a few control chars, denoted here as ^A, ^B ...
+
+The first line is special, the invocation preceded by "logversion^A" as
+explained at @obsolete_msg in makepplog.
+
+A leading ^B is stripped, but tells makepplog to outdent, and a leading ^C to
+indent.  After that a line with no ^A is considered plain text.  Else it is
+split on the ^A`s.  There must be a ^A at the line end, which allows having
+multine fields between ^A`s.  If the resulting fields contain ^B`s they are
+lists of simple fields, else just one simple field.
+
+The first field is a message I<key>.  The others work as follows.  If the
+simple fields contain ^C`s they are ref definitions of up to 4 fields:
+
+    ref[^Cname[^Cdir-ref[^Cdir-name]]]
+
+The I<refs> are numbers (hex on HP/UX with 64bit pointers) and the I<names>
+are to be remembered by makepplog for these numbers.  If a I<dir-name> is
+present, that is remembered for I<dir-ref>, else it has been given earlier.
+If a I<dir-ref> is given, that is prependended to I<name> with a slash and
+remembered for I<ref>.  Else if only I<name> is given that is remembered for
+I<ref> as is.  If I<ref> is alone, it has been given earlier.  Makepplog will
+output the remembered name for refs between quotes.
+
+The fields may also be plain strings if they contain no known I<ref>.  Due to
+the required terminator, the strings may contain newlines, which will get
+displayed as \n.  For keys that start with N_, all fields are treated as plain
+numbers, even if they happen to coincide with a I<ref>.
+
+=cut
+
+my $last_indent_level = 0;
+sub log($@) {
+
+  # Open the log file if we haven't yet.  Must do it dynamically, because
+  # there can be messages (e.g. from -R) before handling all options.
+  unless( defined $logfh ) {
+    if( $log_level == 1 ) {
+      (my $mppl = $0) =~ s/\w+$/makepplog/;
+      -f $mppl or
+	substr $mppl, 0, 0, absolute_filename( $original_cwd ) . '/';
+      open $logfh, '|' . PERL . " $mppl -pl-" or # Pass the mesages to makepplog for formatting.
+	die "$progname: can't pipe to `makepplog' for verbose option--$!\n";
+    } else {
+      if( !$logfile ) {
+	mkdir '.makepp';	# Just in case
+	$logfile = '.makepp/log';
+      }
+      open $logfh, '>', $logfile or
+	die "$progname: can't create log file ./$logfile--$!\n";
+    }
+    push @close_fhs, $logfh;
+    print $logfh "2\01$invocation\n";
+
+    # If we're running with --traditional-recursive-make, then print the directory
+    # when we're entering and exiting the program, because we may be running as
+    # a make subprocess.
+
+    Rule::print_build_cwd( $CWD_INFO )
+      if defined $RecursiveMake::traditional;
+
+    return unless @_;		# From __WARN__
+  }
+
+  print $logfh
+    join "\01",
+      $indent_level == $last_indent_level ? shift() : # Cheaper than passing a slice to map
+	($indent_level < $last_indent_level ? "\02" : "\03") . shift,
+      map( {
+	if( !ref ) {
+	  $_;
+	} elsif( 'ARRAY' eq ref ) {
+	  join "\02", map {		# Array shall only contain objects.
+	    if( exists $_->{LOGGED} ) {	# Already defined
+	      int;			# The cheapest external representation of a ref.
+	    } elsif( !exists $_->{'..'} ) { # not a FileInfo
+	      # These two liness are a reminder for when we store RULE_SOURCE per ref.
+	      #undef $_->{LOGGED};
+	      #int() . "\03" . $_->name;
+	      $_->name;
+	    } elsif( exists $_->{'..'}{LOGGED} ) { # Dir already defined
+	      undef $_->{LOGGED};
+	      int() . "\03$_->{NAME}\03" . int $_->{'..'};
+	    } else {
+	      undef $_->{LOGGED};
+	      undef $_->{'..'}{LOGGED};
+	      int() . "\03$_->{NAME}\03" .
+		int( $_->{'..'} ) . "\03" . ($_->{'..'}{FULLNAME} || absolute_filename $_->{'..'} );
+	    }
+	  } @$_;
+# The rest is a verbatim copy of the map block above.  This function is heavy
+# duty, and repeating code is 6% faster than calling it as a function, even
+# with &reuse_stack semantics.
+	} elsif( exists $_->{LOGGED} ) {	# Already defined
+	  int;			# The cheapest external representation of a ref.
+	} elsif( !exists $_->{'..'} ) { # not a FileInfo
+	  # These two liness are a reminder for when we store RULE_SOURCE per ref.
+	  #undef $_->{LOGGED};
+	  #int() . "\03" . $_->name;
+	  $_->name;
+	} elsif( exists $_->{'..'}{LOGGED} ) { # Dir already defined
+	  undef $_->{LOGGED};
+	  int() . "\03$_->{NAME}\03" . int $_->{'..'};
+	} else {
+	  undef $_->{LOGGED};
+	  undef $_->{'..'}{LOGGED};
+	  int() . "\03$_->{NAME}\03" .
+	    int( $_->{'..'} ) . "\03" . ($_->{'..'}{FULLNAME} || absolute_filename $_->{'..'} );
+	}
+      } @_ ),
+      "\n";
+  $last_indent_level = $indent_level;
+}
+
+END {
+  local $?;
+  defined $RecursiveMake::traditional and $Rule::last_build_cwd and
+    print "$progname: Leaving directory `" . absolute_filename( $Rule::last_build_cwd ). "'\n";
+}
+
+=head2 flush_log
+
+Flush the log file and standard file handles.  This is useful for making sure
+that output of a perl action is not lost before the action's process
+terminates with POSIX::_exit.
+
+=cut
+
+sub flush_log {
+  my $fh = select STDOUT; local $| = 1;
+  select STDERR; $| = 1;
+  if( defined $logfh ) { select $logfh; $| = 1 }
+  select $fh;
+}
+
+my $hires_time;
+sub print_profile {
+  print $profile ? 'Begin @' . &$hires_time() . " $_[0]\n" : "$_[0]\n";
+}
+
+sub print_profile_end {
+  print 'End @' . &$hires_time() . " $_[0]\n";
+}
+
+=head2 print_error
+
+  print_error "message", ...;
+
+Prints an error message, with the program name prefixed.  For any arg which is
+a reference, $arg->name is printed.
+
+If any filename is printed, it should have be quoted as in `filename' or
+`filename:lineno:' at BOL, so that IDEs can parse it.
+
+=cut
+
+sub print_error {
+  my( $log, $stderr ) = $log_level && '*** ';
+  my $str = '';
+  if( $_[0] =~ /^error()/ || $_[0] !~ /^\S+?:/ ) { # No name?
+    $stderr = "$progname: ";
+    $str = 'error: ' unless defined $1;
+  }
+  $str .= ref() ? $_->name : $_
+    for @_;
+  $str .= "\n" if $str !~ /\n\z/;
+  print STDERR $stderr ? $stderr . $str : $str;
+  ::log $log . $str if $log_level == 2;
+  &flush_log;
+}
+
+###############################################################################
+#
+# Parse the top level command.	This is at the bottom of the file to force
+# all the miscellaneous initialization stuff scattered in with the routines
+# to be executed.
+#
+
+my @other_args;			# Arguments that are valid at places other
+				# than the top level.
+
+if ($ENV{MAKEPPFLAGS} || $ENV{MAKEFLAGS}) {
+  unshift @ARGV, unquote_split_on_whitespace($ENV{MAKEPPFLAGS} || $ENV{MAKEFLAGS});
+				# See if we're passed flags from a parent
+				# process.
+  $ARGV[0] =~ /^-/ || $ARGV[0] =~ /=/ or substr $ARGV[0], 0, 0, '-';
+				# If we're actually called from make, the first
+				# argument might not have a minus sign.
+                                # However, don't put a minus sign in if it's
+                                # a variable assignment.
+}
+
+
+sub perform(@) {
+  my @handles = @_;		# Name the arguments.
+  my $status;
+  my $start_pid = $$;
+  my $error_message = $@;
+  $error_message or eval { $status = wait_for @handles }; # Wait for those things to be built.
+				# Wait for all the children to complete.
+  $error_message ||= $@;        # Record any new error messages.
+  {
+    my $orig = '';
+    if($error_message) {
+        chomp($orig = $error_message);
+        $orig = " (Original error was $orig)";
+    }
+
+    if( $$ != $start_pid ) {
+      print STDERR qq{makepp internal error: sub-process died or returned to outer scope.
+If we had not caught this, it would cause exit blocks to run multiple times.
+Use POSIX::_exit instead.$orig Stopped};
+      close $_ for @close_fhs;
+      POSIX::_exit 3;
+    }
+
+    # Wait for our last jobs to finish.  This can be the case when running
+    # with -kj<n>, a job failed and we ran out of queued jobs.
+    &MakeEvent::event_loop
+      while $MakeEvent::n_external_processes;
+
+    die qq{makepp internal error: dangling critical section.
+This means that there was a live process in the background when makepp
+died, so makepp did not have a chance to create build info files for
+targets generated by that process.  It also means that makepp can't
+propagate signals.  This could instead mean that you need an extra 'eval'
+somewhere to prevent an exception from bypassing process accounting and
+signal propagation.$orig Stopped}
+      if $critical_sections;
+
+    if($error_found && $error_found =~ /^signal ($int_signo|$quit_signo)$/) {
+      my $sig = $1;
+      handle_signal signame($sig);
+    }
+  }
+
+  if( $n_files_changed || $rep_hits || $build_cache_hits || $n_phony_targets_built || $failed_count ) {
+    print "$progname: $n_files_changed file" . ($n_files_changed == 1 ? '' : 's') . ' updated' .
+      ($rep_hits ? ", $rep_hits repository import" . ($rep_hits == 1 ? '' : 's') : '') .
+      ($build_cache_hits ? ", $build_cache_hits build cache import" . ($build_cache_hits == 1 ? '' : 's') : '') .
+      ($error_found ? ',' : ' and') .
+      " $n_phony_targets_built phony target" . ($n_phony_targets_built == 1 ? '' : 's') . ' built' .
+      ($failed_count ? " and $failed_count target" . ($failed_count == 1 ? '' : 's') . " failed\n" : "\n");
+  } else {
+    print "$progname: no update necessary\n";
+  }
+
+  print 'Ending makepp @' . &$hires_time() . "\n" if $profile;
+  print_error $error_message if $error_message;
+  exit 1 if $error_message || $status;
+  exit 0;
+}
+
+perform eval {
+				# Now parse the command line, and handle the
+				# targets.  Do fast exit without freeing all
+				# variables.  Cleaning up the FileInfo tree
+				# can take a long time and there's no need to
+				# do it.  (This saves 8% of the run time on a
+				# FileInfo tree with > 10^5 files, so it's not
+				# a trivial savings.)
+  my $tmp;
+  parse_command_line %global_ENV,
+    ['b', qr/build[-_]?cache/, \$tmp, 1, sub {
+       eval { require BuildCache }; # Load the build cache stuff now.
+       # TODO: how would the require fail and why doesn't the module end with "1;"?
+       $@ and die "$progname: build cache mechanism not available:\n$@\n";
+       $global_build_cache = new BuildCache( $tmp );
+                                # Open up the build cache.
+     }],
+    [undef, qr/build[-_]?check(?:[-_]?method)?/, \$build_check_method_name, 1, sub {
+       $default_build_check_method =
+	 eval "require BuildCheck::$build_check_method_name;
+	       \$BuildCheck::$build_check_method_name\::$build_check_method_name" or
+				# Load the method.
+	 die "$progname: invalid build check method $build_check_method_name\n";
+     }],
+
+    [undef, qr/do[-_]?build/, \$tmp, 1, sub {
+       $tmp = file_info $tmp;
+       undef $tmp->{DONT_BUILD};
+       push @do_build, $tmp;
+     }],
+    [undef, qr/do[-_]?read/, \$tmp, 1, sub {
+       undef file_info( $tmp )->{DONT_READ};
+     }],
+    [undef, qr/dont[-_]?build/, \$tmp, 1, sub {
+       $tmp = file_info $tmp;
+       $tmp->{DONT_BUILD} = 1;
+       $dont_build_dir_flag = 1 if FileInfo::is_or_will_be_dir( $tmp );
+				# Remember that we have to check parent dirs
+     }],
+    [undef, qr/dont[-_]?read/, \$tmp, 1, sub {
+       $tmp = file_info $tmp;
+       $tmp->{DONT_READ} = 1;
+       $dont_read_dir_flag = 1 if FileInfo::is_or_will_be_dir( $tmp );
+				# Remember that we have to check parent dirs
+     }],
+
+    ['e', qr/env(?:ironment)?[-_]?overrides?/, \$environment_override],
+
+    [undef, qr/final[-_]?rules?[-_]?only/, \$final_rule_only],
+    [undef, qr/force[-_]?copy[-_]?from[-_]?bc/, \$force_bc_copy],
+    [undef, qr/force[-_]?rebuild/, \$force_rebuild], # Always rebuild.
+    [undef, qr/force[-_]?rescan/, \$force_rescan],
+
+    [undef, 'gullible', \$gullible],
+
+    [qr/[h?]/, 'help', undef, undef, sub { local $/; print <DATA>; exit 0 }],
+
+    [undef, qr/implicit[-_]load[-_]?[Mm]akeppfile[-_]?only/, \$implicit_load_makeppfile_only],
+    [undef, qr/(?:in(?:side)?[-_]?)?sand[-_]?box/, \$tmp, 1, sub {
+       $tmp = file_info $tmp;
+       $tmp->{IN_SANDBOX} = 1;
+       $sandbox_enabled_flag = 1; # default is now out-of-sandbox
+       $in_sandbox_dir_flag = 1 if FileInfo::is_or_will_be_dir( $tmp );
+				# Remember that we have to check parent dirs
+     }],
+
+    [qw(j jobs), \$MakeEvent::max_proc, 1, sub {
+       $MakeEvent::max_proc =~ /^\d+$/ or die "$progname: invalid argument to -j\n";
+       if( is_windows > 0 ) {
+	 $MakeEvent::max_proc = 1;
+	 warn "parallel make (-j) only supported on Cygwin or MinGW Perl\n";
+	 return;
+       }
+       if( $MakeEvent::max_proc != 1 ) { # More than one process?
+	 $parallel_make = 1;
+				# Remember if we're doing a parallel make.
+				# It's not sufficient to test $max_proc,
+				# because if we are doing a recursive make,
+				# we have to increment max_proc, and we don't
+				# want to switch into parallel make mode.
+	 require File::Copy;	# Needed for reemitting collected output.
+				# Do it once here, so as to not recheck each time.
+       }
+     }],
+
+    ['k', qr/keep[-_]?going/, \$keep_going],
+
+    [undef, qr/log(?:[-_]?file)?/, \$logfile, 1],
+
+    ['m', qr/signature(?:[-_]?method)?/, \$tmp, 1, sub {
+       my $sig = eval "require Signature::$tmp;
+		       \$Signature::$tmp\::$tmp";
+				# Load the signature method.
+       if( defined $sig ) {
+	 $sigmethod_name = $tmp;
+	 $default_signature = $sig;
+       } else {
+	 # Build check methods and signature methods used to be the same thing,
+	 # so to avoid breaking things, accept build check methods here too.
+	 $default_build_check_method =
+	   eval "require BuildCheck::$tmp;
+		 \$BuildCheck::$tmp\::$tmp" or
+	   die "$progname: invalid signature $tmp\n";
+	 $build_check_method_name = $tmp;
+       }
+     }],
+
+    [undef, qr/md5[-_]?(?:check[-_]?)?bc/, \$md5check_bc],
+    [undef, qr/stop[-_]?(?:on[-_]?)?race/, \$stop_on_race],
+    ['n', qr/(?:just[-_]?print|dry[-_]?run|recon)/, \$dry_run],
+    [undef, qr/no[-_]?cache[-_]?scaninfos?/, \$nocache_scaninfo],
+    [undef, qr/no[-_]?implicit[-_]?load/, \$implicitly_load_makefiles, undef, 0],
+    [undef, qr/no[-_]?log/, \$log_level, undef, 0], # Turn off logging.
+    [undef, qr/no[-_]?populate[-_]?bc/, \$nopopulate_bc],
+				# don't populate bc with targets, just read from it
+    [undef, qr/no[-_]?remake[-_]?makefiles/, \$remake_makefiles, undef, 0],
+				# Don't remake makefiles automatically?
+    [undef, qr/no[-_]?warn/, \$warn_level, undef, 0],
+
+
+    ['o', qr/(?:assume[-_]?old|old[-_]?file)/, \$tmp, 1, sub {
+       $tmp = file_info $tmp;
+       $tmp->{ASSUME_UNCHANGED} = 1; # Don't pay any attention to this file.
+       $assume_unchanged_dir_flag = 1 if FileInfo::is_or_will_be_dir( $tmp );
+				# Remember that we have to check parent dirs
+     }],
+    [undef, qr/out[-_]?of[-_]?sand[-_]?box/, \$tmp, 1, sub {
+       $tmp = file_info $tmp;
+       undef $tmp->{IN_SANDBOX};
+       $in_sandbox_dir_flag = 1 if FileInfo::is_or_will_be_dir( $tmp );
+				# Remember that we have to check parent dirs
+     }],
+
+    [undef, qr/populate[-_]?bc[-_]?only/, \$populate_bc_only],
+    [undef, 'profile', \$profile, undef, sub {
+       if( !$hires_time ) {
+	 eval { require Time::HiRes };
+	 $hires_time = $@ ? sub { time } : \&Time::HiRes::time;
+	 print 'Beginning makepp @' . &$hires_time() . "\n";
+       }
+     }],
+
+    [qw(q quiet), \$quiet_flag],
+
+
+    [undef, 'recursive[-_]?makepp'],
+				# This is a dummy option simply used to make
+				# recursive invocations easily identifiable by
+				# searching the action string.	It does
+				# nothing.
+    [undef, qr/re?m(?:ove)?[-_]?stale(?:[-_]?files)?/, \$rm_stale_files],
+    [undef, qr/symlink[-_]?in[-_]?rep(?:os(?:itory)?)?[-_]?as[-_]?file/, \$symlink_in_rep_as_file],
+    [undef, qr/no[-_]?path[-_]?exe(?:cutable)?[-_]?dep(?:s|endency|endencies)?/, \$no_path_executable_dependencies],
+
+    [undef, qr/sand[-_]?box[-_]?warn(?:ing)?/, \$sandbox_warn_flag],
+    [qw(s silent), \$silent_execution],
+    [undef, qr/stop(?:[-_]?after[-_]?load(?:ing|ed)?)?/, \$stop],
+
+    [undef, qr/traditional[-_]?recursive[-_]?make/, \$RecursiveMake::traditional],
+
+    [qw(v verbose), undef, undef, sub {
+       $verbose = 2;		# Value 2 queried only by Makecmds.
+       $log_level = 1;		# Send the log to stdout instead.  Don't make
+				# this the option variable, as it must be
+				# exactly 1, not just true.
+     }],
+    [undef, 'version', undef, undef, \&FileInfo::version],
+    [0, 'virtual[-_]?sandbox', \$virtual_sandbox_flag],
+
+    ['W', qr/(?:what[-_]?if|assume[-_]?new|new[-_]?file)/, \$tmp, 1, sub {
+       file_info( $tmp )->{ASSUME_CHANGED} = 1;
+				# Pretend this file has changed.
+     }];
+};
+
+
+__END__
+Usage: makepp [-options] [VAR=value] targets
+
+Valid options include:
+
+-o filename or --assume-old=filename
+	Pretend the given file has not changed, even if it has.	 No target
+	which depends on the given file will be rebuilt because that file
+	has changed.
+-W filename or --assume-new=filename
+	Pretend the given file has changed, even if it hasn't.	Any target
+	that depends on the given file will be rebuilt.
+-b /path/to/build/cache or --build-cache=/path/to/build/cache
+        Specify location of build cache.  Files will be taken from the cache
+        if they can avoid a rebuild, and anything built will be added.
+--dont-build=file
+	Don't rebuild file even if makepp thinks it needs to be rebuilt.
+	Anything that depends on the file will be built with the current
+	version of the file.
+-e or --environment-overrides
+	Causes environment variables override variable settings in the
+	Makefile.  Normally, variables set in the makefile override
+	the setting of environment variables.
+-c or --root-directory
+	Changes to the RootMakeppfile directory before trying to build targets.
+-C dirname or --directory=dirname
+	Changes to the given directory before trying to build targets.
+-f makefilename or --makefile=makefilename
+	Uses the specified makefile instead of searching for one.
+	Use of -F is recommended instead.
+-F makefile or -F directory
+	Uses the specified makefile, but cds to the directory before
+	loading the makefile, so build commands in the makefile will be
+	run with their current directory the same as the makefile.
+	If you just specify a directory, makepp searches for a makefile
+	in that directory.
+--force-rebuild
+	Always execute a rule, even if makepp doesn't think the target needs
+	rebuilding.
+-?, -h or --help
+	This help message
+-j n or --jobs=n
+	Execute n jobs in parallel.  This is useful for speeding up builds on
+	multiprocessor systems.
+-k or --keep-going
+	Build everything that doesn't depend on the file causing the error.
+--log=logfilename
+	Send the log to the specified file, instead of to .makepp_log.
+-m or --signature-method=method
+	Sets the default signature method for any rules which don't specify
+	a signature method.  At present, the possible values are target_newer
+	(the method that traditional make uses) and exact_match (the default
+	for makepp), md5 (checksumming the file contents), and
+	c_compilation_md5 (the default method for C/C++ compilations).
+-n or --dry-run or --just-print
+	Display the commands that ought to be run but don't actually
+	execute them.
+--no-log
+	Don't bother to write a log file.
+--no-log-scan
+	Don't log messages about scanning, but log other things.
+--no-implicit-load
+	Don't automatically load makefiles from any directories.
+	If you specify this option, then you must load makefiles for any
+	subdirectories explicitly using the load_makefile statement in the
+	makefile.
+--no-populate-bc
+	By default, all invocations of makepp using --build-cache populate
+	the cache with calculated targets. This option disables population
+	of the build cache but still allows reading from the build cache.
+--no-remake-makefiles
+	Don't try to make each makefile using instructions in that makefile.
+--no-warn
+	Don't print any warning messages.
+-q or --quiet
+	Don't print informational messages like "Scanning ....".
+-r or --no-builtin-rules
+	Don't load the default rules for any makefile.
+-R newdir=olddir or --repository newdir=olddir
+	Automatically creates soft links from olddir (the repository) or any
+	of its subdirectories to newdir (or its subdirectories) for any
+	files which don't exist in newdir but are needed for the build process.
+--traditional-recursive-make
+	Emulate traditional unix make more precisely in recursive make
+	invocations.  This has the unfortunate side effect of disabling
+	parallel make and repositories in the recursively invoked make
+	processes.
+-v or --verbose
+	Explain what it is trying to build and why each thing is rebuilt.
+	Directs the contents of the log file to the screen instead.
+--version
+	Print out the current version.
+
+The following options are also available:
+  -A, --args-file=file
+      --build-check-method=arg
+      --do-build=arg
+      --do-read=arg
+      --dont-read=arg
+      --dump-makefile=arg
+      --final-rules-only
+      --force-copy-from-bc
+      --force-rescan
+      --gullible
+  -I, --include-dir=arg
+      --implicit-load-makeppfile-only
+      --inside-sand-box=arg
+      --load-makeppfile=arg
+      --no-cache-scaninfos
+      --no-path-executable-dependencies
+      --out-of-sand-box=arg
+      --populate-bc-only
+      --profile
+      --recursive-makepp
+      --remove-stale-files
+  -s, --silent
+      --sand-box-warning
+      --stop-after-loading
+
+Look at @htmldir@/index.html for more details,
+or at http://makepp.sourceforge.net/@BASEVERSION@/
+or type "man makepp".

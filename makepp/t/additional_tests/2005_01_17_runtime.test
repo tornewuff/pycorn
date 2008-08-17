@@ -1,0 +1,35 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	1	775	1168790726	1168790726	is_relevant.pl
+-x 'a';				# Can't set this on VFAT, but may be the default.
+###	3	775	1168790818	1168790819	makepp_test_script.pl
+makepp;
+cp x => 'x-1';
+makepp 'C=12';
+###	14	775	1168790874	1168789807	Makeppfile
+runtime $(patsubst %.m, %.n, a), b
+runtime b, c
+
+C := 1
+
+$(phony default): x
+
+x:
+	./a > x
+
+c:
+	&echo "#!/bin/sh" -o $@
+	&echo "echo $(C)" -o>>$@
+	-&chmod 755 $@		# Can't set this on VFAT.
+###	3	775	1168789807	1168789807	a
+#!/bin/sh
+
+exec ./b "$@"
+###	3	775	1168789807	1168789807	b
+#!/bin/sh
+
+exec ./c "$@"
+###	D	775	1168789807	1168789807	answers/
+###	1	775	1168789807	1168789807	answers/x
+12
+###	1	775	1168789807	1168789807	answers/x-1
+1

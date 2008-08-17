@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# Simple shell script to create a ".test" test case for makepp using spar.
+# The first argument is the name of a directory containing the test case.
+#
+# This script will automatically remove the makepp database and logs. In
+# order to ensure that the ".test" file does not depend on whether the
+# test case was already run, the makepp "clean" target and/or the
+# "cleanup_script" executable should ensure that all other generated files
+# are removed.
+#
+# "spar" must be in the path, or the SPAR environment variable must point
+# to it. "spar" is in the makepp CVS tree under t.
+
+if [ ! -n "$1" ]
+then
+	echo "usage: makepp_test_case <dir>" >&2
+	exit 2
+fi
+
+cd $1
+if [ $? -ne 0 ]
+then
+	echo "Couldn't cd to $1" >&2
+	exit 2
+fi
+
+
+if [ -x cleanup_script ]
+then
+	# Since the test program also runs cleanup_script, we shouldn't use
+	# it to avoid including build products in the .test file.  Instead,
+	# use a "clean" target that removes files (including non-targets)
+	# that are produced by running the test.
+	echo "Warning: cleanup_script shouldn't be used for pre-packaging" >&2
+	./cleanup_script
+elif fgrep '$(phony clean):' *[Mm]ake*file >/dev/null 2>&1
+then
+	makepp clean
+fi
+
+makeppclean -r
+
+pwd=`pwd`;
+${SPAR-spar} -m ../`basename $pwd`.test

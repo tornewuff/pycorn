@@ -1,0 +1,24 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	1	644	1070669423	1070669357	Makeppfile
+$(phony target):
+###	1	644	1070669423	1070669357	foo
+A file not imported from the repository to link to.
+###	D	755	1070668820	1070668804	answers
+###	0	644	1070668804	1070668804	answers/x
+###	D	755	1070669462	1070669468	dir
+###	6	644	1070669423	1070669362	dir/Makeppfile
+repository ..
+
+bar%: tar%
+	touch $@
+
+$(phony target): $(wildcard bar*)
+###	8	644	1070669422	1070669410	makepp_test_script.pl
+symlink qw/foo tarfoo/;
+makepp qw(--symlink-in-repos-as-file dir/target);
+open my $out, '>x';
+if( -l 'dir/target' ) { print $out "oops1\n" }
+if( -e 'dir/barget' ) { print $out "oops2\n" }
+unless( -e 'dir/barfoo' ) { print $out "oops3\n" }
+unless( -e 'dir/tarfoo' ) { print $out "oops4\n" }
+1;

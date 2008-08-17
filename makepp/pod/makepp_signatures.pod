@@ -1,0 +1,234 @@
+=head1 NAME
+
+makepp_signatures -- How makepp knows when files have changed
+
+=for vc $Id: makepp_signatures.pod,v 1.12 2007/05/06 10:40:53 pfeiffer Exp $
+
+=head1 DESCRIPTION
+
+L<B<c>_compilation_md5|/c_compilation_md5>,E<nbsp>
+L<B<m>d5|/md5>,E<nbsp>
+L<B<s>hared_object|/shared_object>
+
+Each file is associated with a I<signature>, which is a string that changes if
+the file has changed.  Makepp compares signatures to see whether it needs to
+rebuild anything.  The default signature for files is a concatenation of the
+file's modification time and its size, unless you're executing a C/C++
+compilation command, in which case the default signature is a cryptographic
+checksum on the file's contents, ignoring comments and whitespace.  If you
+want, you can switch to a different method, or you can define your own
+signature functions.
+
+How the signature is actually used is controlled by the I<build check method>
+(see L<makepp_build_check|makepp_build_check>).  Normally, if a file's
+signature changes, the file itself is considered to have changed, and makepp
+forces a rebuild.
+
+If makepp is building a file, and you don't think it should be, you might want
+to check the build log (see L<makepplog|makepplog>).  Makepp writes an
+explanation of what it thought each file depended on, and why it chose to
+rebuild.
+
+There are several signature methods included in makepp.  Makepp usually picks
+the most appropriate standard one automatically.  However, you can change the
+signature method for an individual rule by using C<:signature> modifier on the
+rule which depends on the files you want to check (see
+L<makepp_rules/signature>), or for all rules in a makefile by using the
+C<signature> statement (see L<makepp_statements/signature>), or for all
+makefiles at once using the C<-m> or C<--signature-method> command line option
+(see L<makepp_command/-m>).
+
+=head2 Signature methods included in the distribution
+
+=over 4
+
+=item plain (actually nameless)
+
+The plain signature method is the file's modification time and the file's
+size, concatenated.  These values are quickly obtainable from the operating
+system and almost always change when the file changes.
+
+Makepp used to look only at the file's modification time, but if you run
+makepp several times within a second (e.g., in a script that's building
+several small things), sometimes modification times won't change.  Then,
+hopefully the file's size will change.
+
+If the case where you may run makepp several times a second is a problem
+for you, you may find that using the C<md5> method is somewhat more
+reliable.  If makepp builds a file, it flushes its cached MD5 signatures
+even if the file's date hasn't changed.
+
+For efficiency's sake, makepp won't reread the file and recompute the complex
+signatures below if this plain signature hasn't changed since the last time it
+computed it.  This can theoretically cause a problem, since it's possible to
+change the file's contents without changing its date and size.  In practice,
+this is quite hard to do so it's not a serious danger.  In the future, as more
+filesystems switch to timestamps of under a second, hopefully Perl will give us
+access to this info, making this failsafe.
+
+=item md5
+
+Computes an MD5 checksum of the file's contents, rather than looking at
+the file's date or size.  This means that if you change the date on
+the file but don't change its contents, makepp won't try to rebuild
+anything that depends on it.
+
+This is particularly useful if you have some file which is often
+regenerated during the build process that other files depend on, but
+which usually doesn't actually change.  If you use the C<md5> signature
+checking method, makepp will realize that the file's contents haven't
+changed even if the file's date has changed.  (Of course, this won't
+help if the files have a timestamp written inside of them, as archive
+files do for example.)
+
+=item c_compilation_md5
+
+This is the default method, if your Perl supports MD5 (standard since 5.8).
+It checks if a file's name looks like C or C++ source code, including things
+like Corba IDL.  If it does, this method applies.  If it doesn't, it falls
+back to plain signatures for binary files (determined by name or else by
+content) and else to L</md5>.  Alas you can currently tune what is to be
+considered C or binary only by subclassing C<Signature::c_compilation_md5> to
+get a new signature type and there overriding or extending the methods
+C<recognizes_file> and C<excludes_file>.
+
+The idea is to be independent of formatting changes.  This is done by pulling
+everything up as far as possible, and by eliminating insignificant spaces.
+Words are exempt from pulling up, since they might be macros containing
+C<__LINE__>, so they remain on the line where they were.
+
+    // ignored comment
+  
+    #ifdef XYZ
+ 	#include <xyz.h>
+    #endif
+  
+    int a = 1;
+  
+    void f
+    (
+ 	int b
+    )
+    {
+ 	a += b + ++c;
+    }
+  
+ 	/* more ignored comment */
+
+is treated as though it were
+
+    #ifdef XYZ
+    #include<xyz.h>
+    #endif
+  
+  
+  
+    int a=1;
+  
+    void f(
+  
+    int b){
+  
+  
+    a+=b+ ++c;}
+
+That way you can reindent your code or add or change comments without
+triggering a rebuild, so long as you don't change the line numbers.  (This
+signature method recompiles if line numbers have changed because that causes
+calls to C<__LINE__> and most debugging information to change.)  It also
+ignores whitespace and comments B<after> the last token.  This is useful for
+preventing a useless rebuild if your VC adds lines at a C<$>C<Log$> tag when
+checking in.
+
+This method is particularly useful for the following situations:
+
+=over 4
+
+=item *
+
+You want to make changes to the comments in a commonly included header
+file, or you want to reformat or reindent part of it.  For one project
+that I worked on a long time ago, we were very unwilling to correct
+inaccurate comments in a common header file, even when they were
+seriously misleading, because doing so would trigger several hours of
+rebuilds.  With this signature method, this is no longer a problem.
+
+=item *
+
+You like to save your files often, and your editor (unlike emacs) will
+happily write a new copy out even if nothing has changed.
+
+=item *
+
+You have C/C++ source files which are generated automatically by other
+build commands (e.g., yacc or some other preprocessor).  For one system
+I work with, we have a preprocessor which (like yacc) produces two
+output files, a C<.cxx> and a C<.h> file:
+
+    %.h %.cxx: %.qtdlg $(HLIB)/Qt/qt_dialog_generator
+ 	$(HLIB)/Qt/qt_dialog_generator $(input)
+
+Every time the input file changed, the resulting F<.h> file also was
+rewritten, and ordinarily this would trigger a rebuild of everything
+that included it.  However, most of the time the contents of the F<.h>
+file didn't actually change (except for a comment about the build time
+written by the preprocessor), so a recompilation was not actually
+necessary.
+
+=back
+
+=item shared_object
+
+This method only works if you have the utility C<nm> in your path, and it
+accepts the C<-P> option to output Posix format.  In that case only the names
+and types of symbols in dynamically loaded libraries become part of their
+signature.  The result is that you can change the coding of functions without
+having to relink the programs that use them.
+
+In the following command the command scanner will detect an implicit
+dependency on F<$(LIBDIR)/libmylib.so>, and build it if necessary.  However
+the link command will only be reperformed whenever the library exports a
+different set of symbols:
+
+    myprog: $(OBJECTS) :signature shared_object
+ 	$(LD) -L$(LIBDIR) -lmylib $(inputs) -o $(output)
+
+This works as long as the functions' interfaces don't change.  But in that
+case you'd change the declaration, so you'd also need to change the callers.
+
+Note that this method only applies to files whose name looks like a shared
+library.  For all other files it falls back to C<c_compilation_md5>, which may
+in turn fall back to others.
+
+=back
+
+=head2 Custom methods
+
+You can, if you want, define your own methods for calculating file
+signatures and comparing them.  You will need to write a perl module to
+do this.  Have a look at the comments in C<Signature.pm> in the
+distribution, and also at the existing signature algorithms in
+C<Signature/*.pm> for details.
+
+Here are some cases where you might want a custom signature method:
+
+=over 4
+
+=item *
+
+When you want all changes in a file to be ignored.  Say you always want
+F<dateStamp.o> to be a dependency (to force a rebuild), but you don't
+want to rebuild if only F<dateStamp.o> has changed.  You could define a
+signature method that inherits from C<c_compilation_md5> that recognizes
+the F<dateStamp.o> file by its name, and always returns a constant value
+for that file.
+
+=item *
+
+When you want to ignore part of a file.  Suppose that you have a program
+that generates a file that has a date stamp in it, but you don't want to
+recompile if only the date stamp has changed.  Just define a signature
+method similar to C<c_compilation_md5> that understands your file format
+and skips the parts you don't want to take into account.
+
+=back

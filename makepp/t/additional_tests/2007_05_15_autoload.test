@@ -1,0 +1,46 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	1	644	1103317920	1208344763	is_relevant.pl
+is_windows < 2
+###	2	755	1164209909	1209463398	makepp_test_script.pl
+substr $ENV{PATH}, 0, 0, '.:';
+makepp;
+###	35	644	1103567918	1210352253	Makeppfile
+X := x
+
+$(phony test): a.$(X) b.$(X)
+	&echo OK
+
+a b:
+	&echo $@ -o $@
+	# Now make sure we don't build built-ins:
+    ifperl ::is_windows < 1
+	-source /dev/null
+    endif
+	case 1 in 1) echo "OK";; esac
+	for x in 1; do break; done
+	while :; do break; done
+	until :; do break; done
+	cd . ; export FOO
+	echo
+	eval echo
+	if [ "" ] ; then echo ; fi
+	# Now make sure we don't autoload for executables:
+	grep $@ $@
+
+autoload more_rules.makeppfile
+
+autoload die.makeppfile
+
+die.makeppfile:
+	perl { use Carp; confess }
+
+# Make sure that we don't try to build these due to executable dependency:
+source case break esac cd export echo eval if fi for do done while until:
+	false
+
+more_rules.makeppfile: d/foo
+	&perl 'chomp; print "$$_.\$$(X):\n\t\&touch \$$\@\n\n"' $< -o $(output)
+###	D	755	1164209909	1103567781	d
+###	2	755	1164209909	1103567781	d/Makeppfile
+foo: ../a ../b
+	&cat $(inputs) -o $(output)

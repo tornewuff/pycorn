@@ -1,0 +1,203 @@
+=head1 NAME
+
+makepplog -- Textual analysis of the build log
+
+=for vc $Id: makepplog.pod,v 1.9 2008/06/01 21:47:19 pfeiffer Exp $
+
+=head1 SYNOPSIS
+
+B<makepplog> I<option> ...
+
+B<mppl> I<option> ...
+
+=head1 DESCRIPTION
+
+Makepp by default writes a detailed log of its decision finding and actions.
+So as to not waste its time with pretty printing, this data is dumped in a
+compact but fairly cryptical format.  This tool does the pretty printing in
+various formats.  For a less detailed but even prettier graphical view see
+L<makeppgraph|makeppgraph>.
+
+This is solely based on the contents of the log file, so it can be performed
+at any time, and even on a different machine.
+
+
+=over
+
+=item -A filename
+
+=item --args-file=filename
+
+=item --arguments-file=filename
+
+Read the file and parse it as possibly quoted options on one or several lines.
+
+=item -c
+
+=item --current-working-directory
+
+=item -C number
+
+=item --current-working-directory-and-up=number
+
+The first two options strip the current directory from the front of all
+filenames it outputs.  The second two additionally replace I<number>
+directories up from here, with the necessary number of F<../> entries.
+
+These options only work meaningfully when you call makepplog in the same
+directory makepp ran, or one near there.
+
+=item -f
+
+=item --follow
+
+As in C<tail> command, process more lines of logfile as it grows.
+
+=item -i
+
+=item --installation-directories
+
+These options replace the invocation of makepp and the pathes to the built in
+makefiles with F<.../> so as to keep odd pathes out of your sight.
+
+=item -k list
+
+=item --keys=list
+
+=item --keylist=list
+
+The I<list> specifies one or more space separated Shell style patterns (with
+[xyz], ?, *, {a,bc,def}).  Remember to protect these from your Shell by
+quoting.  These are matched against the message keys (as shown by
+C<--showkey>).  Each pattern may be preceded with an exclamtion mark (C<!>) or
+a caret (C<^>) to exclude the matched keys from those selected before instead
+of adding them to the selection.  If the first pattern starts with an
+exclamtion mark, it operates on all keys.  There are a few key prefixes with
+fixed meanings so you can select categories of keys:
+
+=over
+
+=item BC*
+
+All build cache related messages.
+
+=item BUILD*
+
+All build reason related messages.
+
+=item LOAD*
+
+All makefile loading related messages.
+
+=item REP*
+
+All repository related messages.
+
+=item RULE*
+
+All rule related messages.
+
+=item SCAN*
+
+All scanning related messages.
+
+=back
+
+    --keys='LOAD* RULE*'	# Only makefile loading and rule messages.
+    --keys='!BUILD* *CMD'	# No build messages, except BUILD_CMD.
+
+=item -K
+
+=item --showkey
+
+This prefixes each output line with the internal name of the message key, for
+use with C<--perl>.
+
+=item -l filename
+
+=item --log=filename
+
+=item --log-file=filename
+
+The I<filename> is to where makepp wrote its log.  It may also be a directory,
+in which a file called F<.makepp/log> or F<log> will be searched.  To read
+from stdin, you must give F<-> as a I<filename>.  When this option is not
+given, it defaults to the current directory.
+
+This option can be given multiple times, e.g. for merging all the logs from
+C<--traditional-recursive-make>.  But it will get the message version
+information, which keeps track of message formats, only from the first file.
+So if you feed it log files from different version of makepp in the same
+invocation, output can get a bit messed up.
+
+=item -n
+
+=item --no-indent
+
+Makepp puts indentation information into the log file to show you what
+happened because of what else.  This option turns indentation off.
+
+=item -o filename
+
+=item --output=filename
+
+Write the output to this file, rather than stdout.
+
+=item -p
+
+=item --prefix
+
+Prefix every structured message with the string "makepplog: ".  IDEs like
+Emacs can then parse the lines and hyperlink to the mentioned files.
+
+=item -t
+
+=item --tabulate
+
+Put each list item on a new line, rather than outputting a line that can
+easily become longer than a screenful.
+
+=item -u
+
+=item --uniq
+
+=item --unique
+
+Report each found include statement and each scan output only once.
+
+=back
+
+=head1 EXAMPLES
+
+If you want to know which file includes which other file, and nothing else:
+
+    makeppclean -r
+    makepp			# Full build to scan all source files.
+    makepplog -p '/^INCL$/'
+
+If you want to format lines with a prefix so Emacs' compilation-mode can parse
+the lines and exlude all scanning related messages:
+
+    makepplog -mp '!/^SCAN/'
+
+If you want to explore which keys you can exclude or include in the above
+manners:
+
+    makepplog -kn
+
+=head1 ENVIRONMENT
+
+Makepplog looks at the following environment variable:
+
+=over 4
+
+=item MAKEPPLOGFLAGS
+
+Any flags in this environment variable are interpreted as command line options
+before any explicit options.  Quotes are interpreted like in makefiles.
+
+=back
+
+=head1 AUTHOR
+
+Daniel Pfeiffer (occitan@esperanto.org)

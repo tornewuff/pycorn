@@ -1,0 +1,27 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	9	400	1164353694	1060835785	Makeppfile
+#
+# Test bug reported by Chris van Engelen about quotes in load_makefile command
+# strings and whether a makefile can be read when it has a mode of 0400.  (Bug
+# reported by Hagen Ulrich in makepp 1.19.).
+#
+
+load_makefile subdir1 VAR1="a b c"
+
+$(phony all): subdir1/$( a b c)
+###	D	755	1067451881	1060835822	subdir1
+###	4	644	1164353486	1060835783	subdir1/Makeppfile
+X := $(print $(VAR1))
+
+$(VAR1):
+	&echo $@ -o $@
+###	D	755	1067451881	1060835819	answers
+###	1	644	1067451881	1190055489	answers/n_files
+3 1 0
+###	D	755	1067451881	1060835811	answers/subdir1
+###	1	644	1067451881	1060835793	answers/subdir1/a
+a
+###	1	644	1067451881	1060835793	answers/subdir1/b
+b
+###	1	644	1067451881	1060835793	answers/subdir1/c
+c

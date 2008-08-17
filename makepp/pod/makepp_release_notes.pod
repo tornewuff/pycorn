@@ -1,0 +1,649 @@
+=head1 NAME
+
+makepp_release_notes -- Major changes in each version of makepp
+
+=for vc $Id: makepp_release_notes.pod,v 1.55 2008/08/09 09:34:01 pfeiffer Exp $
+
+=head1 DESCRIPTION
+
+=head2 Version 1.50 (under development)
+
+=over 4
+
+=item *
+
+Ported to IBM z/OS Unix System Services.  Only smart recursive make doesn't work.
+
+=item *
+
+Makepp has become noticeably faster.
+
+=item *
+
+Abolish the undocumented fancy renaming of only '.' to '_dot_' in variable and function names.
+
+=item *
+
+Makepp will now also look for options in files called F<.makepprc>.  The
+option C<-A> or C<--args-file> is now consistently available on all commands.
+
+=item *
+
+The environment variable MAKEPP_CASE_SENSITIVE_FILENAMES supercedes the
+options --case-sensitive-filenames and --no-case-sensitive-filenames.
+
+=item *
+
+New variable $/ for portable directory separator.  Lots of Windows fixes,
+including C<-j> (parallel builds) for Cygwin and MinGW and smart recursive
+builds on Cygwin.
+
+=item *
+
+Also install abbreviations consisting of 'mpp' plus the first letter of every
+following word, e.g. 'mppc' for L<makeppclean|makeppclean>.
+
+=item *
+
+New L<makepplog, mppl|makepplog> utility to see the log data readably, needed
+due to a changed file format.  New L<makeppgraph, mppg|makeppgraph> utility to
+graphically analyze dependencies, includes and partially the reasons for a
+rebuild.  New L<makeppinfo, mppi|makeppinfo> utility to see somewhat
+cryptically what makepp knows about some file.
+
+=item *
+
+All utilities now also query an environment variable for presetting options.
+Each one is called like the utility in upper case, with FLAGS added,
+e.g. C<$MAKEPPCLEANFLAGS> or C<$MAKEPPLOGFLAGS>.
+
+=item *
+
+New `:build_check only_action' for commands that don't depend on the contents
+of their dependencies, like symlink creation, where it is used automatically.
+
+=item *
+
+Removed C<--keep-repository-links> option, the behaviour of which is now the
+default.
+
+=item *
+
+Removed C<--norc-substitution> and C<--percent-subdirs> and
+C<$(rc_substitution)> and C<percent_subdirs>.  They are now to be given
+anywhere from target specific assignment to command line or environment vars
+C<makepp_simple_concatenation> and C<makepp_percent_subdirs>.
+
+=item *
+
+New action syntax C<&perl_function 'arg 1' arg2 ...> and
+C<&external-perl-script 'arg 1' arg2 ...>  New Perl function C<run>.
+
+There are the following L<builtin commands|makepp_builtins>: C<&chmod>,
+C<&cp>, C<&cut>, C<&echo>, C<&expr>, C<&grep>, C<&install>, C<&ln>, C<&mkdir>,
+C<&mv>, C<&perl>, C<&preprocess>, C<&printf>, C<&rm>, C<&sed>, C<&sort>,
+C<&template>, C<&touch>, C<&uninstall>, C<&uniq> and C<&yes>, which can
+replace Unix commands of the same name, and more or less also the following:
+C<awk>, C<chgrp>, C<chown>, C<head>, C<m4>, C<rmdir>, C<tail> and C<tr>.  They
+are also available L<stand-alone|makeppbuiltin> from the Shell.  They can also
+be used as functions, e.g. C<$(&cat file)>, or as
+L<statements|makepp_statements/Commands>, or standalone.
+
+Note that, unlike earlier CVS versions, C<&cut -f>, C<&grep -v> and C<&sort
+-r> now behave as in Unix.  Note that in earlier CVS versions of C<&template>
+C<@@> was processed before C<@>, but now lines are consistently handled front
+to back.
+
+=item *
+
+Added a C<global> statement for sharing variables accross makefiles.  The
+assignment variant of C<export> now works like a normal assignmant, so you may
+have to change to C<:=>.  Added the C<override> modifier to assignments.  The
+C<define var :=> statement now optionally allows specifying the kind of
+assignment.  And the forms with immediate evaluation retain the newlines in
+C<$(shell ...)> or C<$(&command)>.  There are new assignment operators C<&=>
+for prepending, and C<;=> which is a C<=> when set, but automatically turns
+into a C<:=> when first used.
+
+=item *
+
+Short command line options may now be grouped in the Unix way, so C<-k -j 4>
+may be given as C<-kj4>.  In all long options the dash between words may now
+consistently be omitted or replaced with an underscore, so that C<--no-log>
+can be C<--nolog> or C<--no_log>.  Unknown options now cause an error.
+
+=item *
+
+A makefile is now also found if it is called C<Makeppfile.mk>.
+
+=item *
+
+There are two new possible filenames for makefiles: C<RootMakeppfile> or
+equivalently C<RootMakeppfile.mk>.  The presence of either of these gives your
+build tree a formal root, accesible through the new variable C<$(ROOT)>.  The
+advantage is that this file is always loaded first, if present, allowing you
+to more easily create a build system where makepp can be called from anywhere,
+without telling it which makefile to start at.
+
+The root of the file system is then automatically marked for C<--dont-build>,
+so that makepp doesn't go messing into other directories you include or use
+libs from, just because they happen to have a Makefile or sources.
+
+Usually this means that the root of your build system gets marked for
+C<--do-build>.  If, however, you say C<--do-build> for something under your
+build system root, which doesn't inherit C<--dont-build>, then instead your
+build system root gets marked for C<--dont-build>.
+
+=item *
+
+New option C<--stop-after-loading> (or C<--stop>) gives makepp a headstart
+while you're still editing.
+
+=item *
+
+Removed command C<makeppclient> since we never managed to let builds start
+significantly faster.  The option C<--stop-after-loading> is more beneficial.
+
+=item *
+
+Interface definition files for SWIG (.i files) are now scanned for
+includes.  Makepp now understands swig invocations.  (SWIG stands for
+Simplified Wrapper and Interface Generator.  It automatically generates
+all the wrapper functions to link your C or C++ code to a variety of
+other languages such as perl, python, tcl, ruby, ocaml, C#, etc.  See
+http://www.swig.org.)
+
+=item *
+
+Gnu Emacs 22 now has a standard makefile-makepp-mode, which is the default
+when visiting F<Makeppfile>.
+
+=item *
+
+$[VARIABLE] or $[function ...] is evaluated when reading a makefile line, so
+the variable may contain makepp syntax.
+
+=item *
+
+$( ...) is now always a list in rc-style substitution, so that C<-I$(
+$(DIRLIST))> will leave no lonely option when DIRLIST is empty.
+
+=item *
+
+You can now double-paren functions and multi-line lists, allowing things like
+S<C<$((perl if( $a < 5 ) { ... }))>>.
+
+=item *
+
+New C<c_compilation_md5> signature, which also allows adding whitespace where
+there was none and inversely.  It also ignores whitespace and comments after
+the last token.  This is useful for preventing a useless rebuild if your VC
+adds lines at a C<$>C<Log$> tag when checking in.
+
+=item *
+
+New scanner C<esqlc_compilation> for embedded SQL C.  You must supply the
+rules, however.
+
+=item *
+
+Implement C<$?> exactly as GNU make does.  New long name C<$(changed_inputs)>
+for it.
+
+=item *
+
+Implement C<$(error ...)> and C<$(warning ...)> as in GNU make.
+
+=item *
+
+New method C<: build_check ignore_action> to ignore changes to the action
+string.
+
+=item *
+
+New statements C<ifperl>, C<ifmakeperl>, C<iftrue>, C<ifntrue>, C<ifsys> and C<ifnsys>.
+
+=item *
+
+Conditionals C<ifxxx> may now be grouped with C<and> and C<or>.  When written
+on the same line after C<else>, they create a branch of the same statement,
+rather than requiring nesting.
+
+=item *
+
+New options C<--rm-stale>, C<--sandbox> and C<--dont-read>, for sandbox
+control when running multiple concurrent (possibly distributed) makepp
+commands.
+
+=item *
+
+Added support for dependencies on environment variables, using the
+C<:env> rule option.
+
+=item *
+
+Various signal handling fixes.
+
+=item *
+
+New command C<makeppclean> that efficiently removes generated files
+without loading makefiles.
+
+=item *
+
+Ported to MinGW.
+
+=item *
+
+Experimental new build caches, to cache files that are identical.  This means
+that if you change a file and revert, then you can have makepp drop back to
+the immediately preceding .o file without rebuilding.  Or you can share builds
+of identical files between separate source trees.  This feature is still
+experimental and the interface is not yet final.  Newly added grouping of
+build caches.
+
+=back
+
+=head2 Version 1.40 (December 2004)
+
+Thanks to Anders Johnson and Daniel Pfeiffer for major contributions of
+code to this release.
+
+=over 4
+
+=item *
+
+Too many bug fixes to list individually.  Probably the most salient
+fixes are to make it work significantly more reliably on cygwin, but
+there were also fixes to variable expansion, scanning, repositories,
+etc.
+
+=item *
+
+Rewritten command parser and file scanner architecture so that it is
+more easily extensible.  Makepp now supports Verilog (a language used
+for chip design) in addition to C++ and Fortran.  It should be
+relatively straightforward to support additional languages.  I<(Anders
+Johnson)>
+
+=item *
+
+New command C<makeppclient> that lets builds start faster.  I<(Daniel
+Pfeiffer)>
+
+=item *
+
+If you have Perl 5.6.0 or higher, HTML documentation now comes with the new
+working camel logo and syntax highlighting in the examples.
+I<(Daniel Pfeiffer)>
+
+=item *
+
+Numerous corrections and improvements to the documentation.  I<(Mostly
+Anders Johnson)>
+
+=item *
+
+Support for GNU make's C<define> statement to define multi-line variable
+values.
+
+=item *
+
+$(PWD) and $(CURDIR) now work as in GNU make.
+
+=item *
+
+New C<--keep-repository-links> option to prevent makepp from deleting
+all the soft links it creates when making repositories.
+
+=item *
+
+New C<--assume-old>, C<--assume-new>, and C<--dont-build> options, and
+support for the C<-n> option.
+
+=item *
+
+Support for double colon rules has slightly improved, so that we can
+handle makefiles produced by MakeMaker without much trouble.
+
+=item *
+
+Added syntax for perfoming Perl code as a statement and in rules C<perl { ...
+}> or C<makeperl { ...  }>.  Added functions for evaluating Perl statements
+C<$(perl ... )> or C<$(makeperl ... )>.  Added statement C<makesub { ... }>.
+I<(Daniel Pfeiffer)>
+
+=item *
+
+Short options can now be directly followed by argument as in -j4.  Documented
+options --jobs, --keep-going, --makefile, --what-if, --assume-new, --new-file,
+--assume-old & --old-file are now really accepted.
+I<(Daniel Pfeiffer)>
+
+=back
+
+=head2 Version 1.19 (July 2003)
+
+Special thanks to Matthew Lovell and Chris van Engelen for lots of suggestions
+and tracking down problems in the code.
+
+=over 4
+
+=item *
+
+Documentation was reorganized so that man pages as well as HTML pages can be
+produced, and a cookbook/FAQ was added (see L<makepp_cookbook>).
+
+=item *
+
+A "configure" script was added so installation is more like other software
+products from the user point of view.
+
+=item *
+
+The S<C<$(origin )>> function from GNU make is now supported.
+
+=item *
+
+L<Target-specific variables|makepp_variables/Target-specific
+assignments> are now supported as in GNU make, except that they do not
+propagate their values to dependencies.
+
+=item *
+
+New functions S<C<$(find_upwards )>> and S<C<$(relative_filename )>>
+(contributed by Matthew Lovell) and S<C<$(relative_to )>>.
+
+=item *
+
+In compilation commands, S<C<-I dir>> and S<C<-L dir>> are now supported
+and work just like C<-Idir> and C<-Ldir>.
+
+=item *
+
+Recompilation of C files will now occur if a multi-line comment was
+inserted, or if the line numbering changed in any way.  Previously it
+ignored newlines in computing the checksum, which meant that a change
+that affected debugger info might not force a recompilation.
+
+=item *
+
+A bug in S<C<$(shell )>> which caused it to return a null string occasionally
+(especially when the system was heavily loaded) was fixed.
+
+=item *
+
+Unreadable files or directories suppress importing from repositories but are
+not matched by wildcards.
+
+=item *
+
+A few other minor bugs were fixed.
+
+=back
+
+=head2 Version 1.18
+
+The most important change was support for the Cygwin build environment.
+You can now run makepp with the Cygwin version of perl; I do not think
+it will work properly with the native windows version of perl yet.
+
+A few other bug fixes went into this release.
+
+=head2 Version 1.10
+
+The most important change in this version is that makepp can accept a
+vastly larger number of makefiles without any command line options
+because of some changes to the implementation of recursive make.  There
+are a few minor improvements in the GNU make compatibility, and a slight
+improvement in memory usage.
+
+
+There are several user visible changes:
+
+=over 4
+
+=item *
+
+C<c_compilation_md5> is now the default signature method.  This means
+that by default, makepp won't recompile C/C++ modules if only whitespace
+or comments have changed.
+
+=item *
+
+A new signature method C<md5> has been added, which runs an MD5 checksum
+on the file's contents.  This is not enabled by default; makepp still
+uses its original method (C<exact_match>) for any files other than C/C++
+source files.
+
+=back
+
+Because of these changes, makepp will recompile everything the first
+time you run it.
+
+=head2 Version 1.05
+
+In addition to bug-fixes, this version has one user-visible change.  The
+C<--norc-substitution> command line option was introduced to allow
+compatible handling of whitespace in makefiles.
+
+=head2 Version 0.99
+
+In addition to numerous bug fixes, this version has several user-visible
+changes:
+
+=over 4
+
+=item *
+
+Multiple targets for a rule are now treated in a way which is more
+compatible with old makefiles.  Makepp has a heuristic algorithm for
+guessing whether the rule is supposed to build all targets at once or
+whether the rule needs to be invoked multiple times.  I do not think
+this will break any existing makefiles, but it should allow makepp to
+work with many more makefiles designed for unix make.
+
+=item *
+
+The C<--traditional-recursive-make> option can be used for legacy
+makefiles which use recursive invocations of make in a way that didn't
+work with makepp's default implementation.
+
+=item *
+
+Repositories now work with libtool.
+
+=item *
+
+Variable settings are now allowed with the C<load_makefile> statement
+and with recursive make.
+
+=back
+
+=head2 Version 0.95
+
+This version has several user-visible changes:
+
+=over 4
+
+=item *
+
+A tutorial on writing makefiles for makepp has been added.
+
+=item *
+
+GNU make style conditionals (ifeq/ifneq/ifdef/ifndef) are now
+supported, as is the S<C<$(if )>> function.
+
+=item *
+
+By default, the C<%> wildcard now matches only files within a directory;
+C<%.c> is now equivalent to C<*.c>, not C<**/*.c>.  The reason for this
+change was that rules almost never need to use the more complicated
+wildcard, and it often caused unnecessary directories to be searched.
+You can get the old behavior by specifying C<--percent-subdirs> on the
+command line.  (I'm curious how people feel about this change.  Please
+let me know if you have good reasons for it being one way or the other.)
+
+=item *
+
+By default, makefiles from any directory that contains a dependency, or
+that is searched by a wildcard, are loaded automatically.  Usually this
+means you don't need any C<load_makefile> statements at all.  If this
+causes you problems, you can turn off implicit loading of makefiles by
+adding C<--no-implicit-load> to the command line.  (I'm curious whether
+people like or dislike implicit loading of makefiles.)
+
+=item *
+
+A target may now be declared phony on the same line that defines the
+target by using the new S<C<$(phony )>> function, like this:
+
+    $(phony all): program_1 program_2
+
+The S<C<$(phony )>> function simply returns its
+arguments, but marks them as phony targets.  You can still use
+the older syntax that looks like this:
+
+    all: program_1 program_2
+
+    .PHONY: all
+
+
+The S<C<$(phony )>> function is an attempt to improve the readability of
+makefiles.  I'd welcome other suggestions, as I'm still not entirely
+happy with the syntax.
+
+=back
+
+=head2 Version 0.90
+
+In order to support features like parallel make, most of the internals
+had to be reorganized or rewritten.  The result is much cleaner and
+hopefully more reliable.
+
+Bugs too numerous to mention have been fixed.  In order to help ensure
+reliability, a test suite has been developed.  It doesn't test
+absolutely everything yet, but it does test most things, and I hope to
+make it more extensive in the future.  You can run it by typing C<makepp
+test> in the makepp distribution directory.  If an unmodified makepp
+fails the test suite, please let me know so I can fix it.
+
+
+There are many new features:
+
+=over 4
+
+=item *
+
+Repositories are now supported.
+
+=item *
+
+It is now possible to specify different methods for calculating and
+comparing file signatures.  For example, you can use an MD5 checksum
+ignoring comments and whitespace, or you can require merely that the
+target be newer than the dependencies (the method that the traditional
+make uses).
+
+=item *
+
+Makefiles are only rebuilt if they are older than their dependencies; a
+different signature method is used in this special case.
+
+=item *
+
+Parallel builds are now supported, though this is still an experimental
+feature.  See the C<-j> option.
+
+=item *
+
+It is now possible to write your own functions.  See the C<sub>
+statement and L<makepp_extending> for details.
+
+=item *
+
+Filenames with characters like colon or space are now
+supported with a new quoting syntax.
+
+=item *
+
+Synonymous, less cryptic names for automatic variables have been
+introduced to encourage more readable makefiles.
+
+=item *
+
+Makepp now remembers the architecture of the machine
+you built on, and rebuilds if the architecture is different.
+
+=item *
+
+Directories can now be targets or dependencies; a previous restriction
+that all directories had to exist before the start of the build has been
+lifted.
+
+=item *
+
+Makepp now writes a log file called C<.makepp_log> explaining why it
+rebuilt everything.  This is extremely useful for debugging.
+
+=item *
+
+The usual C<-k> option for continuing to build even when an error occurs
+is now supported.
+
+=item *
+
+The documentation has been reorganized and extended.
+
+=back
+
+There are also (unfortunately) a few incompatibilities with
+previous versions:
+
+=over 4
+
+=item *
+
+The file format for storing information about the last build has
+changed.  Thus makepp will insist on rebuilding everything the first
+time you run the new version.
+
+=item *
+
+load_makefile no longer supports targets or variable settings.  It now
+supports loading a list of makefiles rather than just one, so the C<-F>
+switch is now unnecessary (and no longer documented).
+
+=item *
+
+Recursive make now ignores variable settings on the command
+line.  This is necessary to load makefiles in a consistent way.
+
+=item *
+
+C<$(INFERRED_OBJS)> is no longer supported (since it was not a
+well-designed interface anyway).  Use the newer S<C<$(infer_objects )>>
+function instead.
+
+=item *
+
+C<$_> is no longer supported.  Use C<$(foreach)> instead.
+
+=item *
+
+A few seldom used GNU make options such as C<-s>, C<-n>, and C<-q> are
+no longer supported due to internal architecture changes.  C<-n> will
+probably be supported again in future releases.
+
+=item *
+
+A man page is no longer provided since the documentation is no longer
+written in the perl pod format.  Use the HTML documentation instead.
+
+=item *
+
+The automatic clean target is no longer supported.  A better
+way to do it is with C<$(only_targets)>.
+
+=back

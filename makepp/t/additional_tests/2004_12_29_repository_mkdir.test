@@ -1,0 +1,14 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	2	755	1104359644	1212339178	.makepprc
+-R test_subdir=.
+-F test_subdir
+###	3	644	1104360682	1104360682	Makeppfile
+$(phony all): subdir1/testfile
+subdir1/testfile :
+	&echo $@ -o $@
+###	D	755	1104360599	1104360642	subdir1/
+###	D	755	1104360699	1104360701	answers/
+###	D	755	1104360691	1104360803	answers/test_subdir/
+###	D	755	1104360691	1104360803	answers/test_subdir/subdir1/
+###	1	444	1104360691	1104360691	answers/test_subdir/subdir1/testfile
+subdir1/testfile

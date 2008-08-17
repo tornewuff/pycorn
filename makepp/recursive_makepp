@@ -1,0 +1,80 @@
+#!/usr/bin/perl -w
+#
+# This is a script that runs when make is invoked recursively using the
+# $(MAKE) variable.  It simply reports to the parent make process what
+# the make command was and what the current working directory is now.
+# The parent makepp process sets the environment variable MAKEPP_SOCKET
+# to be the name of a file that we're supposed to write information about the
+# cwd and make command.
+# $Id: recursive_makepp,v 1.3 2008/06/01 21:41:32 pfeiffer Exp $
+#
+
+use Cwd;
+use IO::Socket;
+
+#print STDERR "Warning: detected recursive invocation of makepp.
+#This is not recommended (use load_makefile within your makefile instead), but
+#will probably work.
+#
+#";
+				# Encourage people to switch to the more
+				# enlightened way.
+
+my $socket_name = $ENV{'MAKEPP_SOCKET'};
+				# Where are we supposed to send the output?
+defined($socket_name) or 
+  die "$0: not invoked from makepp\n";
+
+my $socket = IO::Socket::UNIX->new(Peer => $socket_name,
+				   Type => SOCK_STREAM);
+				# Open the socket.
+defined($socket) or do {
+  print "Error opening $socket_name--$!\n";
+  sleep 500;
+  die "recursive makepp: socket open error--$!\n";
+};
+
+push @words, cwd;		# First word is the directory to run the
+				# commands in.
+
+#
+# Replace the quotes that used to be around each of the arguments.  We
+# can't make it exactly like it used to be, but if we place quotes around
+# every argument, then we'll certainly not be confused by spaces.
+#
+foreach (@ARGV) {
+  s/\\/\\\\/g;			# Protect all backslashes.
+  s/\"/\\\"/g;			# Protect all single quotes.
+  push @words, qq["$_"];	# Append this word, keeping spaces intact.
+}
+
+my $message = join(" ", @words) . "\n"; # Send the command first.
+while (($var, $val) = each %ENV) { # Send the environment back too.
+  $val =~ s{([\0-\037\\])}{sprintf("\\%o", ord($1))}eg;
+				# Protect any binary characters or backslashes.
+  $message .= "$var=$val\n";
+}
+
+print($socket $message . "\01END\01") or # Send to makepp.
+  die "recursive makepp: error writing to socket--$!\n";
+
+my $response;
+
+while (sysread($socket, $_, 1000)) {	# Wait for a response before we proceed.
+  $response .= $_;
+}
+
+if ($response =~ s/^(\d+)\s+//) { # Status is the first word of the response.
+  $status = $1;
+} else {
+  warn "recursive_makepp: protocol error\n";
+  $status = 253;
+}
+
+chomp $response;                # Strip extra newline out if there is one.
+$response and print STDERR "$response\n"; # Any error message?
+
+#chomp $_;
+#print "Recursive make: status was '$_'\n";
+
+exit $status;                   # Exit with the same error code.

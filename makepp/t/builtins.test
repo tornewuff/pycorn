@@ -1,0 +1,554 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	191	421	1162935563	1217791125	RootMakeppfile
+#
+# This file tests the builtin commands.
+#
+
+# Test &rm by specifying dirs first and deleting answers for files we never create
+$(phony all): a b c \
+    dir2/c dir2/d dir2/subdir/c dir2/subdir/d dir2/subdir/d1 install_log \
+    c[au]t.out echo.out sed.out expr.out grep.out sort.out template.out uniq.out uc.out \
+    preprocess.out
+	&rm -fv bogus answers/bogus answers/bogus/subdir answers/bogus/file answers/bogus/subdir/file
+
+IGNINST =
+ifperl ((stat 'RootMakeppfile')[2] & 01777) != 0421
+  CHMOD = @&echo chmod not working, //server/share?
+  CHMODTEST =
+  perl { unlink 'answers/install_log' }
+  ifnsys cygwin
+    IGNINST = -			# Because &install fails if chmod() does
+  endif
+else
+  CHMOD = &chmod
+  CHMODTEST = perl { ((stat 'b')[2] & 0777) == 0664 && ((stat 'c')[2] & 0777) == 0750 or die }
+endif
+
+# Test comment on same line and &touch
+a b:
+	&touch -v $(outputs)	# tab comment
+	$(CHMOD) -v 664 $(outputs) # space comment
+
+
+# Test that &ln -f removes an empty dir and &chmod
+c: dir1/c b
+	&ln -v --force $(input) .
+	&ln -fv RootMakeppfile dir1
+	$(CHMOD) 750 c
+	$(CHMODTEST)
+
+
+# Test &mkdir -p implicitly also making parent and -A
+dir2/subdir dir2:
+	&echo -o $(mktemp) -- -vpfm750
+	&mkdir -A $(mktemp /) $(output)
+
+
+# Test &ln
+dir2/c: dir1/c dir2
+	&ln -v $(input) $(dir $(output))
+
+
+# Test &ln -s
+dir2/d: dir1/d dir2
+	&ln --verbose --symbolic ../$(input) $(output)
+
+
+# Test &ln -r
+dir2/subdir/c dir2/subdir/d: dir1/c dir1/d dir2
+	&ln --verbose --resolve $(wordlist 1, 2, $(inputs)) $(dir $(output))
+
+
+# Test &ln -r with short opts
+dir2/subdir/d1: dir1/d dir2
+	&ln -vr $(input) $(output)
+
+# Test &sed and -r0
+# helper variable for sed
+what = just
+%.out: %.in uniq.in
+	&perl -r0 'print tr/a-e//d, ":"' $(inputs) --output=$(output)
+	&perl 'print "$$.\n"' $(input) --output=>>$(output)
+	&sed -v s/$$what/only/o $(input) --output=>>$(output)
+	&sed -v 'chomp; $$_ .= "|" . reverse . "\n"' -o +<$(output)
+
+
+# Test complicated variant of &cat with missing newline and multi line file.
+cat.out: sed.in uniq.in
+	&cat --sync-lines $(inputs 1 2 1) -o $(output)
+
+
+# Test various variants of &cut
+cut.out: cut.in
+	&cut -vf1..-2 -d\  $(input) -o $(output)
+	&cut -vmp '%s\0%3s\0%2s\n' -f1,3,-1 -d\  $(input) -o >>$(output)
+	&cut -vmf16 -d\  $(input) -o >>$(output)
+	&cut -vf1 -sdf $(input) -o >>$(output)
+	&cut -vc0,1,4..6,11..-1 $(input) -o >>$(output)
+	&cut -vl1,4,6..-5 $(input) -o >>$(output)
+	&cut -vSmf1 -dF $(input) -o >>$(output)
+	&cut -vSl1,-2 $(input) uniq.in -o >>$(output)
+
+
+# Test various variants of &echo and its siblings
+echo.out:
+	&echo -o $(output) - -- no options - -n -o $(output)
+	&echo -nE aa\\tbb \# no comment! -o >>$(output)
+	# NUL is the only code portable to EBCDIC
+	&echo 'aa\tbb\x00cc\x{0000}dd\000ee' -o >>$(output)
+	&printf -E '%03d\t%02.2f:%s:' 5 5 '\123' -o >>$(output)
+	&printf '%03d\t%02.2f:%s:\n' 5 5 '\123' -o >>$(output)
+ifnsys MSWin*
+	&yes Hi there! -o '| read x; echo $$x >>$(output)'
+	&yes -o '| read x; read y; echo $$x $$y >>$(output)'
+else # Complex Shell command not available on native Windows.
+	&echo 'Hi there!\ny y' -o >>$(output)
+endif
+
+
+# Test arithmetic, logical and string &expr
+expr.out:
+	-&expr -n 8 - 3 * 2 - 2 -o $(output)
+	&expr 8 - 3 * 2 > 1 && "'joy'" || \'sorrow\' -o >>$(output)
+
+
+# Test various variants of &grep
+sub choose_a { /a/ }
+grep.out grep.o grep.ou: grep.in
+	&grep --separator=, /a/ grep.in -o grep.o -w grep.waste
+	&grep -co '>>grep.o' /a/ template.tmpl
+	&grep --vice-versa -s, /a/ grep.in -o '>>grep.o'
+	&grep -r3 /a/ grep.in -o '>>grep.o'
+	&grep -vco '>>grep.o' &choose_a template.tmpl
+	&grep -l /[Jj]ust/ RootMakeppfile sed.in template.tmpl -o '>>grep.o'
+	&echo -o '>>grep.o'
+	&grep -vl /[Jj]ust/ RootMakeppfile sed.in template.tmpl -o '>>grep.o'
+	&echo -o '>>grep.o'
+	&grep -vvl /[Jj]ust/ RootMakeppfile grep.in template.tmpl uniq.in -o '>>grep.o'
+	&cp -vfl grep.o grep.ou
+	&cp -v grep.ou grep.ou1
+	&mv -v grep.ou1 $(output)
+
+
+# Test &sort
+perl { sub transform { $_ = ((split)[1] || '')."\0$_" } sub detransform { (split "\0")[1] }}
+sort.out: template.tmpl
+ifperl 'a' lt 'A'		# Ebcdic, sorts differently
+	&cp -l answers/sort.out .
+else
+ 	&sort $(input) -o $(output)
+	&echo + -o >>$(output)
+	&sort --compare '$$b cmp $$a' $(input) -o >>$(output)
+	&echo + -o >>$(output)
+	&sort -t '$$_ = [lc, $$_]' -c '$$a->[0] cmp $$b->[0]' -d '$$_->[1]' $(input) -o >>$(output)
+	&echo + -o >>$(output)
+	&sort -t &transform -d &detransform $(input) -o >>$(output)
+	&echo +++ -o >>$(output)
+ 	&sort --uniq $(input) $(input) -o >>$(output)
+	&echo + -o >>$(output)
+	&sort --unique --compare '$$b cmp $$a' $(input) $(input) -o >>$(output)
+	&echo + -o >>$(output)
+	&sort -ut '$$_ = [lc, $$_]' -c '$$a->[0] cmp $$b->[0]' -d '$$_->[1]' $(input) $(input) -o >>$(output)
+	&echo + -o >>$(output)
+	&sort -urt transform -d detransform $(input) $(input) -o >>$(output)
+	&echo + -o >>$(output)
+	&sort -uc 'ord( $$a ) <=> ord $$b' $(input) -o >>$(output)
+endif
+
+
+# Test &template
+perl { %hash = (aa => 1, aaa => "1\n2", TITLE => 'Test') }
+%.out: title.tmpl %.tmpl
+	&template -v -o $(output) -h\\%hash THIS=foo THAT=bar:$$1: $(inputs)
+	&template -dv --simple=|<|/>| --multiline=|<|>|</|>| -h '+{%hash, bb => 2}' template.xml -o >>$(output)
+	&template -vS -o >>$(output) -h\\%hash THIS=foo THAT=bar:$$1: $(input 2)
+
+
+# Test &uniq
+# helper function for --compare
+sub c0(\$) { substr ${$_[0]}, 0, 1 }
+uniq.out: uniq.in sed.in
+	&uniq $(input) -o $(output)
+	&uniq -c 'c0( $$a ) ne c0 $$b' $(input) -o >>$(output)
+	&uniq -S $(inputs 2 1) -o >>$(output)
+	&uniq -S $(inputs 1 1) -o >>$(output) # Must reemit file name first time.
+
+install_log:
+	&rm -f .install_log installog
+	&install --directory --mode=750 dest
+	$(IGNINST)&install -v --mode=640 grep.in dest
+	$(IGNINST)&install -vc --log installog --mode=666 sed.in dest/foobar
+	&sed 's/^[^ ].*/date/; s|`[^`]+(?=/dest)|`...|' .install_log installog -o install_log
+	&uninstall -v
+	&uninstall -v installog
+	@perl { <dest/*> and die "uninstall failed\n" }
+
+# Test own command with frame and loaded fom a module
+perl { use mymodule }
+uc.out: uniq.in
+	&uc -v $(input) -o $(output)
+
+preprocess.out: preprocess.test
+	&preprocess -v v4=foobar -h\\%hash preprocess.test -o preprocess.out
+	&preprocess -va v2=xyz preprocess.test -o >>preprocess.out
+###	13	644	1141068683	1140901286	mymodule.pm
+package mymodule;
+require Exporter;
+our @ISA = 'Exporter';
+our @EXPORT = 'c_uc';
+
+sub c_uc {
+  local @ARGV = @_;
+  Makecmds::frame {
+    print "\u\L$_" while <>;
+  } 'f', qw(i I o O r s); # fails in 5.6: qw(f i I o O r s);
+}
+
+1;
+###	-12	644	1134923188	1134923188	cut.in
+  ! " # $ % & ' ( ) * + , - . /
+0 1 2 3 4 5 6 7 8 9 : ; < = > ?
+@ A B C D E F G H I J K L M N O
+P Q R S T U V W X Y Z [ \ ] ^ _
+` a b c d e f g h i j k l m n o
+p q r s t u v w x y z { | } ~
+ !"#	$%&'	()*+	,-./
+0123	4567	89:;	<=>?
+@ABC	DEFG	HIJK	LMNO
+PQRS	TUVW	XYZ[	\]^_
+`abc	defg	hijk	lmno
+pqrs	tuvw	xyz{	|}~
+###	0	644	1107332258	1105783994	dir2
+###	1	644	1107332258	1107331351	grep.in
+aha,foo,bar,with a,without
+###	22	644	1153676973	1181388272	preprocess.test
+
+# empty & comment
+$()
+$()# empty & comment not gone
+
+con- \$()
+    tinuation
+no \
+    continuation
+
+v1 += 5
+override v2 := $(v1)
+define v3
+long var
+enddef
+$()v4 = 1
+show aa = $(aa); v1 = $(v1); v2 = $(v2); v3 = $(v3); v4 = $(v4)
+
+$()include plain text
+ifeq $(v1),5
+    -include $( preprocess.test) # Force expand text, which didn't initially work.
+endif
+###	-1	644	1107332258	1105995922	sed.in
+just some text
+###	7	644	1107332258	1106072810	template.tmpl
+Just a silly test to see if @THIS@ and @aaa@
+all @@THIS@@ and this@@ before here
+@@THAT(stuff)@@
+foo bar
+goner
+@@
+gets replaced. 1 + 2 = @{ 1 + 2 }@
+###	7	644	1113205406	1113205406	template.xml
+<?xml?>
+<doc name="foobar">
+  <aa/><aa=4/> <bb/>
+  <{ 1 + 2 }/> <aa>
+    foo bar
+  </aa> <aa no="go"/>
+</doc>
+###	7	644	1107332258	1106067541	title.tmpl
+@UNDEF@@field=Title@\
+@TITLE?=nothing@\
+@field@\
+@field { ' ' . ($_[0]+1) . " is$_[1]" }@\
+@n=0@\
+@field(@n@,:)@ @TITLE@
+--------------------
+###	5	644	1112771877	1112771877	uniq.in
+aa
+aa
+b
+bb
+bcd
+###	D	755	1107332258	1105873176	c/
+###	D	755	1107332258	1105741386	dir1/
+###	1	644	1107332258	1105741331	dir1/c
+c
+###	1	644	1107332258	1105741386	dir1/d
+d
+###	D	755	1172254968	1172254974	answers/
+###	0	644	1107332258	1105741346	answers/a
+###	0	644	1107332258	1105741350	answers/b
+###	1	644	1107332258	1105873176	answers/c
+c
+###	-10	644	1191603652	1191603922	answers/cat.out
+#line 1 "sed.in"
+just some text
+#line 1 "uniq.in"
+aa
+aa
+b
+bb
+bcd
+#line 1 "sed.in"
+just some text
+###	48	644	1134924208	1217791214	answers/cut.out
+ ! " # $ % & ' ( ) * + , - .
+1 2 3 4 5 6 7 8 9 : ; < = >
+A B C D E F G H I J K L M N
+Q R S T U V W X Y Z [ \ ] ^
+a b c d e f g h i j k l m n
+q r s t u v w x y z { | }
+
+0123	4567	89:;	<=>?
+@ABC	DEFG	HIJK	LMNO
+PQRS	TUVW	XYZ[	\]^_
+`abc	defg	hijk	lmno
+pqrs	tuvw	xyz{	|}~   "  /
+1   3  ?
+A   C  O
+Q   S  _
+a   c  o
+q   s  ~
+/
+ g h i j k l m n o
+g	hijk	lmno
+  " # & ' ( ) * + , - . /
+0 2 3 6 7 8 9 : ; < = > ?
+@ B C F G H I J K L M N O
+P R S V W X Y Z [ \ ] ^ _
+` b c f g h i j k l m n o
+p r s v w x y z { | } ~
+ !	$%)*+	,-./
+01	459:;	<=>?
+@A	DEIJK	LMNO
+PQ	TUYZ[	\]^_
+`a	deijk	lmno
+pq	tuyz{	|}~  ! " # $ % & ' ( ) * + , - . /
+P Q R S T U V W X Y Z [ \ ] ^ _
+p q r s t u v w x y z { | } ~
+ !"#	$%&'	()*+	,-./
+0123	4567	89:;	<=>?
+#line 3 "cut.in"
+ G H I J K L M N O
+#line 9
+G	HIJK	LMNO
+#line 1 "cut.in"
+  ! " # $ % & ' ( ) * + , - . /
+#line 11
+`abc	defg	hijk	lmno
+#line 1 "uniq.in"
+aa
+#line 4
+bb
+###	5	644	1112222831	1112222831	answers/echo.out
+- no options - -n -o echo.out
+aa\tbb # no comment!aa	bb cc dd ee
+005\t5.00:\123:005	5.00:\123:
+Hi there!
+y y
+###	1	644	1107332258	1105998624	answers/expr.out
+0joy
+###	12	644	1139267891	1107332362	answers/grep.out
+aha,bar,with a,4
+foo,without
+ahaar,h a3
+RootMakeppfile
+sed.in
+template.tmpl
+
+RootMakeppfile
+template.tmpl
+
+grep.in
+uniq.in
+###	1	644	1172254973	1172254973	answers/grep.waste
+foo,without
+###	8	644	1135411294	1135030728	answers/install_log
+date
+  create directory `.../dest'
+date
+  move `grep.in' to `.../dest/grep.in'
+  set mode for `.../dest/grep.in'
+date
+  copy `sed.in' to `.../dest/foobar'
+  set mode for `.../dest/foobar'
+###	1	644	1107332258	1106296317	answers/n_files
+24 1 0
+###	27	644	1153678733	1153342165	answers/preprocess.out
+
+# empty & comment not gone
+con- \
+    tinuation
+no  continuation
+v1 += 5
+override v2 := 
+define v3
+long var
+enddef
+v4 = 1
+show aa = 1; v1 = ; v2 = ; v3 = ; v4 = foobar
+include plain text
+
+# empty & comment not gone
+con- \
+    tinuation
+no  continuation
+show aa = ; v1 = 5; v2 = 5; v3 = long var; v4 = 1
+include plain text
+
+# empty & comment not gone
+con- \
+    tinuation
+no  continuation
+show aa = ; v1 = 5 5; v2 = 5 5; v3 = long var; v4 = 1
+include plain text
+###	2	644	1139987227	1217368876	answers/sed.out
+2:10:1|1:01:2
+only some text|txet emos ylno
+###	69	644	1137661544	1134935825	answers/sort.out
+@@
+@@THAT(stuff)@@
+Just a silly test to see if @THIS@ and @aaa@
+all @@THIS@@ and this@@ before here
+foo bar
+gets replaced. 1 + 2 = @{ 1 + 2 }@
+goner
++
+goner
+gets replaced. 1 + 2 = @{ 1 + 2 }@
+foo bar
+all @@THIS@@ and this@@ before here
+Just a silly test to see if @THIS@ and @aaa@
+@@THAT(stuff)@@
+@@
++
+@@
+@@THAT(stuff)@@
+all @@THIS@@ and this@@ before here
+foo bar
+gets replaced. 1 + 2 = @{ 1 + 2 }@
+goner
+Just a silly test to see if @THIS@ and @aaa@
++
+@@
+@@THAT(stuff)@@
+goner
+all @@THIS@@ and this@@ before here
+Just a silly test to see if @THIS@ and @aaa@
+foo bar
+gets replaced. 1 + 2 = @{ 1 + 2 }@
++++
+@@
+@@THAT(stuff)@@
+Just a silly test to see if @THIS@ and @aaa@
+all @@THIS@@ and this@@ before here
+foo bar
+gets replaced. 1 + 2 = @{ 1 + 2 }@
+goner
++
+goner
+gets replaced. 1 + 2 = @{ 1 + 2 }@
+foo bar
+all @@THIS@@ and this@@ before here
+Just a silly test to see if @THIS@ and @aaa@
+@@THAT(stuff)@@
+@@
++
+@@
+@@THAT(stuff)@@
+all @@THIS@@ and this@@ before here
+foo bar
+gets replaced. 1 + 2 = @{ 1 + 2 }@
+goner
+Just a silly test to see if @THIS@ and @aaa@
++
+gets replaced. 1 + 2 = @{ 1 + 2 }@
+foo bar
+Just a silly test to see if @THIS@ and @aaa@
+all @@THIS@@ and this@@ before here
+goner
+@@THAT(stuff)@@
+@@
++
+@@THAT(stuff)@@
+Just a silly test to see if @THIS@ and @aaa@
+all @@THIS@@ and this@@ before here
+foo bar
+goner
+###	20	644	1107332258	1181388408	answers/template.out
+Title 1 is: Test
+--------------------
+Just a silly test to see if foo and 1
+2
+all foo before here
+bar:stuff:
+gets replaced. 1 + 2 = 3
+<?xml?>
+<doc name="foobar">
+  1 2
+  3 4 <aa no="go"/>
+</doc>
+#line 1 "template.tmpl"
+Just a silly test to see if foo and 1
+#line 1
+2
+all foo before here
+#line 6
+bar:stuff:
+gets replaced. 1 + 2 = 3
+###	5	644	1140901721	1140901721	answers/uc.out
+Aa
+Aa
+B
+Bb
+Bcd
+###	26	644	1112771877	1180279531	answers/uniq.out
+aa
+b
+bb
+bcd
+aa
+b
+#line 1 "sed.in"
+just some text
+#line 1 "uniq.in"
+aa
+#line 3
+b
+bb
+bcd
+#line 1 "uniq.in"
+aa
+#line 3
+b
+bb
+bcd
+#line 1
+aa
+#line 3
+b
+bb
+bcd
+###	D	755	1109777984	1109777998	answers/bogus/
+###	0	644	1109777998	1109777998	answers/bogus/file
+###	D	755	1109777984	1109777984	answers/bogus/subdir/
+###	0	644	1109777998	1109777998	answers/bogus/subdir/file
+###	D	755	1107332258	1105873176	answers/dir2/
+###	1	644	1107332258	1105741331	answers/dir2/c
+c
+###	1	644	1107332258	1105741407	answers/dir2/d
+d
+###	D	755	1107332258	1105741407	answers/dir2/subdir/
+###	1	644	1107332258	1105741407	answers/dir2/subdir/c
+c
+###	1	644	1107332258	1105873176	answers/dir2/subdir/d
+d
+###	1	644	1107332258	1105871996	answers/dir2/subdir/d1
+d

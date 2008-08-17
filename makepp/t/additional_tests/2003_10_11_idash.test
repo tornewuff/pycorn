@@ -1,0 +1,123 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	5	755	1067451881	1208283124	is_relevant.pl
+#
+# -I- is supported by gcc, but I don't know what else. We'll just skip unless
+# gcc is in the path, but maybe the scope of the test should be broadened.
+#
+!system 'gcc -v' if exists $ENV{CC} ? $ENV{CC} =~ /\bg[^\/]+(?:\.exe)?$/ : 1;
+###	39	644	1164353916	1208285021	makepp_test_script.pl
+#
+# This test depends entirely on the builtin rules.
+#
+# Tests several things about C compilation:
+# 1) Correctly scanning command lines for include files.
+# 2) Correctly calculating checksums so if files change we do not
+#    rebuild, but we always rebuild when necessary.
+# 3) Tests the builtin rules.
+#
+# This makefile depends on the existence of a C compiler.
+#
+# Replace the .c file multiple times and see which replacements trigger a
+# rebuild.
+#
+
+my @exe_dep = is_windows ? '--no-path-exe-dep' : ();
+for $iter (0 .. 3) {
+  print "**** Iteration $iter\n";
+  wait_timestamp 'compilation.o' if $iter;
+  makepp @exe_dep, 'CPPFLAGS=-I subdir1 -I- -Isubdir2', "ITERATION=$iter", 'compilation_test';
+  open STDOUT, ">iteration_$iter";
+  system '.' . ($^O =~ /^MSWin/ ? '\\' : '/') . 'compilation_test';
+                                # Make sure makepp found x2 in subdir1, not
+                                # in the main directory.
+
+  n_files "n_files_$iter", sub { die if /warning: can.t locate file/ };
+                                # Make sure makepp correctly found all include files.
+  open STDOUT, '>/dev/null';	# placeholder
+}
+if( is_windows ) {
+  for my $n ( '', qw(_0 _1 _2 _3) ) {
+    open my $fh, '+<', "answers/n_files$n" or die $!;
+    my $line = <$fh>;
+    seek $fh, 0, 0;
+    $line =~ s/ 0 / 1 /;	# Extra phony on each test
+    print $fh $line;
+  }
+}
+1;
+###	10	644	1067451881	1065032055	compilation_test.c
+#include <stdio.h>
+#include "x.h"
+#include "y.h"
+#include <z.h>
+
+int main()
+{
+  printf("%d %d %d %d\n", X, Y, Y2, Z);
+  return 0;
+}
+###	D	755	1067451881	1065044637	subdir1
+###	19	644	1067451881	1065042122	subdir1/Makeppfile
+Y2 := 2
+ifeq ($(ITERATION),3)
+ Y2 := 22
+endif
+
+Z := 3
+ifneq ($(ITERATION),0)
+ Z := 23
+endif
+
+x.h:
+	&echo '#define X 1' -o $(output)
+
+y2.h:
+	&echo '#define Y2 $(Y2)' -o $(output)
+
+# Not used
+z.h:
+	&echo '#define Z $(Z)' -o $(output)
+###	D	755	1067451881	1065044637	subdir2
+###	23	644	1067451881	1065042233	subdir2/Makeppfile
+Y2 := 11
+ifneq ($(ITERATION),0)
+ Y2 := 31
+endif
+
+Z := 12
+ifeq ($(ITERATION),2)
+ Z := 32
+endif
+ifeq ($(ITERATION),3)
+ Z := 32
+endif
+
+y.h:
+	&echo '#define Y 10' -o $(output)
+	&echo '#include "y2.h"' -o>>$(output)
+
+# Not used
+y2.h:
+	&echo '#define Y2 $(Y2)' -o $(output)
+
+z.h:
+	&echo '#define Z $(Z)' -o $(output)
+###	D	755	1067451881	1065041959	answers
+###	1	644	1067451881	1190055512	answers/n_files
+3 0 0
+###	1	644	1067451881	1065042284	answers/iteration_0
+1 10 2 12
+###	1	644	1067451881	1065042284	answers/iteration_1
+1 10 2 12
+###	1	644	1067451881	1065042284	answers/iteration_2
+1 10 2 32
+###	1	644	1067451881	1065042284	answers/iteration_3
+1 10 22 32
+###	1	644	1067451881	1190055524	answers/n_files_0
+6 0 0
+###	1	644	1067451881	1190055527	answers/n_files_1
+0 0 0
+###	1	644	1067451881	1190055532	answers/n_files_2
+3 0 0
+###	1	644	1067451881	1190055536	answers/n_files_3
+3 0 0

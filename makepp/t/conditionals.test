@@ -1,0 +1,413 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	381	644	1172615881	1181421762	Makeppfile
+#
+# Test the use of conditionals.
+#
+# This little (non-)rule comes from 2004_12_16_endif.test.  Put it first,
+# so in error makepp would pick it up as the default:
+ifdef FOO
+$(phony foo):
+	perl -e 1
+endif
+
+
+XYZ = abc
+
+ifeq($(XYZ),abc)		# comment with )
+  DEF	:= de
+endif
+ifeq('(XYZ)',"("XYZ\))
+  DEF	:= $(DEF)f
+endif
+
+# Test that it's enough for one of these to be defined.
+ifdef GHI DEF UVW
+  # Test that none of these may be defined.
+  ifndef ABC XYZ		# just a comment
+    XYZ	:= Abc
+  endif
+endif
+
+# Test that none of these may be the current system.
+ifnsys bathtub shower basin
+  # Test that it's enough for one of these to the current system.
+  ifsys sparc power* i[3-6]86 *[a-zA-Z0-9]*
+    ifneq "$(DEF)" 'dsdffasd'	# Another form of ifeq
+	GHI := ghi
+    else
+	GHI := GHI
+    endif
+  endif
+endif
+
+ifdef ABC PDQ
+  JKL	:= JKL
+else
+  JKL	:= jkl
+endif
+
+ifperl $JKL eq 'jkl'
+  P1	:= P1
+else
+  P1	:= p1
+endif
+
+ifmakeperl '$(JKL)' ne 'jkl'
+  MP1	:= MP1
+else
+  MP1	:= mp1
+endif
+
+XX1	:= $(if ,xx1,XX1)
+XX2	:= $(if 0,xx2,XX2)
+XX3	:= $(iftrue 0,xx3,XX3)
+XX4	:= $(iftrue zero,xx4,XX4)
+
+ifdef FOO
+
+# Check that the "else" in the perl_begin block doesn't match up with ifdef
+perl_begin
+if(1) {
+ print "OK\n";
+}
+else
+{
+ print "NOK\n";
+}
+perl_end
+
+endif # FOO
+
+$(phony all): testfile testfile2 testfile3 phonytarget testfile5 x ifeq
+
+testfile:
+ifeq ($(XYZ),abc)  # Here is a comment that should be ignored.
+	&echo abc -o $@
+else
+	&echo ABC -o $@
+endif
+	ifneq $(JKL) 'jkl'
+	&echo JKL -o >>$@
+  else
+	&echo jkl -o>>$@
+	endif
+	&echo $(DEF) -o>>$@
+	&echo $(GHI) -o>>$@
+	&echo $(JKL) -o>>$@
+	&echo $(P1) -o>>$@
+	&echo $(MP1) -o>>$@
+	&echo $(XX1) -o>>$@
+	&echo $(XX2) -o>>$@
+	&echo $(XX3) -o>>$@
+	&echo $(XX4) -o>>$@
+
+#
+# Test some things relating to whitespace and if statements, which are often
+# indented:
+#
+ifeq (,)
+  testfile2:
+	&echo $@ -o $@
+
+        &echo "This is another line." -o>>$@
+  ifeq(,)
+    testfile3:			# Not part of testfile2's action.
+	&echo $@ -o $@
+  endif
+  $(phony phonytarget): testfile4
+
+  ifeq(,)
+    X=5		# This should not be part of phonytarget's action.
+  endif
+
+  testfile4:
+	&echo $@ $(X) -o $@
+endif
+
+# Test else within Perl blocks
+ifeq "a"b, 'a'b
+  testfile5::
+	&echo before -o>>$@
+perl {
+  if (1)
+    { $a = 1 }
+  else
+    { $a = 2 }
+}
+  testfile5::
+	&echo after -o>>$@
+else # this one is for real
+  testfile5::
+	&echo no -o >>$@
+  perl {{
+    if (1)
+      { $a = 1 }
+    else
+      { $a = 2 }
+  }}
+  testfile5::
+	&echo still not -o>>$@
+endif
+
+ifneq 'a', a
+  testfile5::
+	&echo no -o>>$@
+  perl_begin
+    if (1)
+      { $a = 1 }
+    else
+      { $a = 2 }
+  perl_end
+  testfile5::
+	&echo still not -o>>$@
+else # this one is for real
+  testfile5::
+	&echo before -o>>$@
+  perl_begin
+    if (1)
+      { $a = 1 }
+    else
+      { $a = 2 }
+  perl_end
+  testfile5::
+	&echo after -o>>$@
+endif
+
+# This checks that unnecessary tests are not performed, and that we
+# get the right combined truthvalue.
+TRUE = 1
+ifdef FALSE
+  and ifperl die
+or ifdef TRUE
+  and ifdef FALSE
+  and ifperl die
+
+    perl { die }
+
+else ifdef FALSE
+or ifdef TRUE
+  and ifdef FALSE
+
+    perl { die }
+
+else ifdef TRUE
+  and ifdef TRUE
+or ifperl die
+  and ifperl die
+or ifperl die
+
+    testfile5::
+	&echo and or else if -o>>$(output)
+
+else
+
+    perl { die }
+
+endif
+
+# Test that an initial success with else ifxxx, doesn't also do else.
+ifdef TRUE
+    perl { 1 }
+else ifdef FALSE
+    perl { die }
+else
+    perl { die }
+endif
+ifdef FALSE
+    perl { die }
+else ifdef TRUE
+    perl { 1 }
+else ifdef FALSE
+    perl { die }
+else
+    perl { die }
+endif
+
+AAA := .
+BBB := 1
+ifndef BBB
+ ifneq($(AAA),.)
+ endif
+ perl_begin
+  die "NOT BBB $BBB";
+ perl_end
+endif
+
+CCC := 1
+
+# NOTE: This works if you insert a blank line after "ifdef A"
+ifdef CCC
+else
+perl { die }
+endif
+
+# This comes from former 2004_05_13_ifdef.test:
+XX := 0
+
+ifdef XX
+ Y := OK
+endif
+
+x:
+	&echo $(Y) -o $@
+
+# Now check the new 'iftrue' statement:
+ifntrue $(CCC)
+or iftrue $(XX)
+perl { die }
+endif
+
+#
+# Former 2003_10_11_ifeq.test
+#
+# Test of all possible syntaxes of ifeq command (submitted by Anders Johnson).
+# Case PAREN := (1) added on 05/07/2006 to test bug for variables having parentheses
+# to avoid ambiguity, var with parenthesis should be inside outer ifeq parentheses
+# or inside quotes
+#
+PLAIN := 1
+PAREN := (1)
+$(phony ifeq):
+ifeq ("$(PLAIN)","1")
+	@&echo ok1
+else
+	@&expr -n
+endif
+ifeq ($(PLAIN),1)
+	@&echo ok2
+else
+	@&expr -n
+endif
+ifeq $(PLAIN) 1
+	@&echo ok3
+else
+	@&expr -n
+endif
+ifeq ($(PLAIN), 1)
+	@&echo ok4
+else
+	@&expr -n
+endif
+ifeq "$(PLAIN)" "1"
+	@&echo ok5
+else
+	@&expr -n
+endif
+ifeq ("$(PLAIN)", "1")
+	@&echo ok6
+else
+	@&expr -n
+endif
+ifeq ('$(PLAIN)','1')
+	@&echo ok7
+else
+	@&expr -n
+endif
+ifeq ('$(PLAIN)', '1')
+	@&echo ok8
+else
+	@&expr -n
+endif
+ifeq '$(PLAIN)' '1'
+	@&echo ok9
+else
+	@&expr -n
+endif
+ifeq('$(PLAIN)','1')
+	@&echo ok10
+else
+	@&expr -n
+endif
+ifneq ('$(PLAIN)','1')
+	@&expr -n
+else
+	@&echo ok11
+endif
+ifneq($(PLAIN),1)
+	@&expr -n
+else
+	@&echo ok12
+endif
+ifeq (1,1)
+	@&echo ok13
+else
+	@&expr -n
+endif
+ifeq 1 1
+	@&echo ok14
+else
+	@&expr -n
+endif
+ifeq (1 , 1)
+	@&echo ok15
+else
+	@&expr -n
+endif
+ifeq ("$(PAREN)", "(1)")
+	@&echo ok16
+else
+	@&expr -n
+endif
+ifeq ($(PLAIN), 1)
+	@&echo ok17
+else
+	@&expr -n
+endif
+ifeq "(1)" , "$(PAREN)" 
+	@&echo ok18
+else
+	@&expr -n
+endif
+ifeq ($(PAREN) , (1))  # ))
+	@&echo ok19
+else
+	@&expr -n
+endif
+ifeq ('$(PAREN)', '(1)')
+	@&echo ok20
+else    
+	@&expr -n
+endif 
+ifeq '$(PAREN)','(1)'
+	@&echo ok21
+else
+	@&expr -n
+endif
+ifneq ($(PLAIN),1 )
+	@&echo ok22
+else
+	@&expr -n
+endif
+ifnsys MSWin*			# Test that ! is executable
+	! false
+endif
+###	D	755	1172615888	973201896	answers/
+###	1	644	1172615881	1190053819	answers/n_files
+6 3 0
+###	11	644	1172615881	973201862	answers/testfile
+abc
+jkl
+def
+ghi
+jkl
+P1
+mp1
+XX1
+xx2
+XX3
+xx4
+###	2	644	1172615881	973201862	answers/testfile2
+testfile2
+This is another line.
+###	1	644	1172615881	973201862	answers/testfile3
+testfile3
+###	1	644	1172615881	973201862	answers/testfile4
+testfile4 5
+###	5	644	1172615881	973201862	answers/testfile5
+before
+after
+before
+after
+and or else if
+###	1	644	1172615881	1084501218	answers/x
+OK

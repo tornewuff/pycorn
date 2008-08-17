@@ -1,0 +1,82 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	5	755	1067749983	1067749983	is_relevant.pl
+#
+# Test we're not root and if unpacking managed to chmod to a strange value.
+#
+
+$> && ((stat 'Makeppfile')[2] & 0777) == 0421
+###	17	421	1164350872	1058653868	Makeppfile
+#
+# Test ignoring files and directories which are not readable.
+#
+repository .=repository		# Don't incorporate files which are
+				# marked locally unreadable.
+
+$(phony all): list-of-files all_derived
+
+list-of-files:
+	&echo $(wildcard subdirs/**/*) -o $@
+
+%.derived: %: foreach ?
+	&echo -n "derived from " -o $(output)
+	&cat $(input) -o>>$(output)
+
+all_derived: *.derived
+	&sed 's/^/$$ARGV /' $(inputs) -o $(output)
+###	7	644	1067451880	1056845572	cleanup_script.pl
+#
+# This script is run after the test has been executed.
+# We reset the permissions on the directory we made unreadable, or else
+# it will be impossible to delete the directory.
+#
+chmod 0755, 'subdirs/s2';
+chmod 0644, 'subdirs/s1/b', 'h';
+###	1	644	1067451880	1056547287	g
+main dir
+###	0	0	1067451880	1056545590	h
+###	D	755	1067451880	1058653737	repository
+###	1	644	1067451880	1056545548	repository/f
+repository
+###	1	644	1067451880	1056545548	repository/g
+repository
+###	1	644	1067451880	1056545548	repository/h
+repository
+###	D	755	1067451880	1058653737	repository/subdirs
+###	1	644	1067451880	1056545548	repository/subdirs/d
+repository
+###	1	644	1067451880	1056545548	repository/subdirs/e
+repository
+###	D	755	1067451880	1058653737	repository/subdirs/s1
+###	1	644	1067451880	1056545548	repository/subdirs/s1/a
+repository
+###	1	644	1067451880	1056545548	repository/subdirs/s1/b
+repository
+###	D	755	1067451880	1058653737	repository/subdirs/s2
+###	1	644	1067451880	1056545548	repository/subdirs/s2/b
+repository
+###	1	644	1067451880	1056545548	repository/subdirs/s2/c
+repository
+###	D	755	1067451880	1058653737	repository/subdirs/s3
+###	6	644	1067451880	1056842181	repository/subdirs/s3/makefile
+#
+# This makefile tests implicit loading makefiles from repositories when there
+# is no makefile in the main directory.
+#
+z:
+	&touch $@
+###	D	755	1067451880	1058653879	subdirs
+###	D	755	1067451880	1058653879	subdirs/s1
+###	0	0	1067451880	1056547542	subdirs/s1/b
+###	D	0	1067451880	1058653879	subdirs/s2
+###	D	755	1067451880	1058653803	answers
+###	1	644	1067451880	1058653801	answers/f.derived
+derived from repository
+###	2	644	1164350177	1058653801	answers/all_derived
+f.derived derived from repository
+g.derived derived from main dir
+###	1	644	1067451880	1056845682	answers/list-of-files
+subdirs/s1/a subdirs/d subdirs/e subdirs/s3/makefile subdirs/s1 subdirs/s3 subdirs/s3/z
+###	1	644	1067451880	1190053959	answers/n_files
+4 1 0
+###	1	644	1067451880	1058653801	answers/g.derived
+derived from main dir

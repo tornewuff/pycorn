@@ -1,0 +1,780 @@
+=head1 NAME
+
+makepp_rules -- How to tell makepp to build something
+
+=for vc $Id: makepp_rules.pod,v 1.23 2008/02/24 21:38:44 pfeiffer Exp $
+
+=head1 DESCRIPTION
+
+A rule is what tells makepp how to build a file or a class of files.  Makepp
+supports the same rule syntax as other implementations of make, plus some
+additions of its own.
+
+A rule has the general format
+
+    target_expression : dependency_expression  [ : optional arguments]
+ 	actions
+
+The list of targets may not contain any automatic variables (except
+C<$(foreach)>).  The dependency list may contain only automatic variables
+referring to the target (i.e., C<$(output)>, C<$(outputs)>, or their
+synonyms).  The action may contain any automatic variables.
+
+If makepp decides that the rule needs to be executed, each line of the rule is
+executed sequentially, and if any returns a non-zero status, the remainder are
+not executed (and makepp aborts with an error unless you specified the C<-k>
+option on the command line.)  Each action should be only one line.  If an
+action is too long to write conveniently on a single line, you can split it
+into several lines and put a backslash to indicate that the several lines
+should be combined into one.
+
+In order to distinguish actions from the next rule, the action should be
+indented more than the line containing the targets and dependencies.  Unlike
+other implementations of make, makepp doesn't really care how much you indent
+it or whether you use tab characters rather than spaces.  To keep backward
+compatibility with traditional make, the rules makepp uses to decide when
+actions end and the next rule begins are somewhat complicated:
+
+=over 4
+
+=item *
+
+The first action line must be indented more than the line
+containing the target.
+
+=item *
+
+If a line is indented by one tab character or 8 spaces or more,
+then it is considered an action line.
+
+=item *
+
+A blank line or a comment line with the C<#> character at the right margin
+ends the rule, unless the next non-blank line is indented more than 8 spaces
+(or more than one tab).
+
+=item *
+
+If a line is indented as much or more than the first action
+line, then it is considered an additional action line.
+
+=back
+
+There are a few special action items:
+
+=over
+
+=item noecho
+
+=item @
+
+Normally, each shell command is printed as it is executed.  However, if
+the first word of the action is C<noecho>X<noecho> (or if it begins with
+the character C<@>), then the command is not printed.  For example,
+
+    %.o: %.cxx
+ 	  noecho $(LIBTOOL) --mode=compile $(CC) -c $(input)
+
+
+This means that when the libtool command is executed, it is not
+printed.  (Libtool itself usually prints the modified command that
+it executes, so it's redundant to print it twice.)
+
+=item ignore_error
+
+=item -
+
+Normally, if the shell command returns a non-zero status, then makepp
+aborts because the command failed.  However, some programs incorrectly
+set the status on exit, or there may be an error which really isn't
+fatal and shouldn't abort the whole compilation.  You can cause makepp
+to ignore the return status by specifying C<ignore_error>X<ignore_error>
+as the first word of the command line (or C<-> as the first character).
+For example,
+
+    $(phony distribution):
+ 	ignore_error rm -r my_program-$(VERSION) # Get rid of previous junk.
+ 	&mkdir my_program-$(VERSION)
+ 	&cp $(FILES) my_program-$(VERSION)
+ 	tar cf my_program-$(VERSION).tar my_program-$(VERSION)
+
+This command makes a directory, copies a bunch of files into it, and
+then puts everything into a tar file for distribution.  It's a good idea
+to clean out the previous contents of the directory, if there was
+anything there previously, and that's what the first line does.  The
+C<rm> might fail, but its return status is ignored.
+
+=item &
+
+This symbol shall be followed by a command name and any number of arguments.
+Shell syntax is not understood fully here, only single and double quotes and
+backslashed characters within, as throughout makepp.  The command name either
+leads to a function C<c_I<name>> to be called with the remaining strings as
+arguments.  If such a function can not be found, this is identical to calling
+L<makepp_extending/run> from a C<perl> block.
+
+This allows efficiently calling a built-in, makefile-provided or external
+command.  The prefix C<&> has been chosen because it is the function invoker
+in Perl, and because at the beginning it is illegal in Shell.
+
+    $(ROOT)/include/%.h: %.h
+ 	&ln $(input) $(output)
+
+=item perl
+
+=item makeperl
+
+This is essentially the same as the L<perl|makepp_statements/perl> statement,
+but it is performed each time when running the rule, not when reading the
+makefile.  The first variant is plain Perl code, while the second variant
+first passes the statement through Make-style variable expansion.
+
+For the two possibilities of putting the braces of the body, see the
+explanation at L<makepp_statements/perl>.  Note that the third variant
+explained there makes no sence here, because all action lines must be
+indented.  You must signal failure in Perl statements, by calling C<die>.
+
+Per rule the Perl statements are currently evaluated in a common subprocess,
+except on Windows.  That means they have only read access to any makefile
+variables.  It is also the process which executes non-Perl actions.  So
+calling exec or exit will confuse makepp.  But this may change in the future.
+For an efficient way to call Perl scripts, see the previous item C<&> or
+L<makepp_extending/run>.
+
+    $(phony version):
+ 	noecho perl {{	# $(target) & $(VERSION) from Perl:
+ 	  print "This is ".f_target()." $VERSION\n";
+ 	}}
+ 	echo You can mix this with Shell commands
+ 	-makeperl { print "This is $(target) $(VERSION)\n" }
+
+=back
+
+There are several different kinds of rules, each with different purposes.
+
+=head2 Explicit Rules
+
+    target1 target2: dependency1 dependency2 ...
+ 	actions to be performed
+
+
+This syntax specifies that in order to make either F<target1> or
+F<target2>, all the files F<dependency1>, F<dependency2>, etc., must
+already have been made.  Then the given actions are executed by the
+shell to make the targets.
+
+The first explicit rule in a file is the default target, and is made if
+you do not specify any targets on the command line.
+
+Unlike traditional make programs, makepp usually assumes that one
+invocation of the action makes all of the targets (unless there are no
+dependencies).  For example, one invocation of yacc creates both output
+files for this rule:
+
+    y.tab.c y.tab.h : parser.y
+ 	$(YACC) -d parser.y
+
+Note that other implementations of make do not have a concept of a
+single command producing multiple output files, and so when you specify
+multiple targets they will execute the rule once per target.  Makepp
+will revert to this behavior if it looks like this is an old-style
+makefile.  Specifically, it will execute the rule once per target,
+instead of just once overall, if all of the following are true:
+
+=over 4
+
+=item *
+
+The rule action mentions the automatic variable C<$@>.  (The synonymns
+C<$(output)> or C<$(target)> do not trigger this behavior.)
+
+=item *
+
+The rule action does not mention the automatic variable C<$(outputs)> (or its
+synonymn C<$(targets)>).
+
+=item *
+
+This is not a pattern rule, and there is no foreach clause.
+
+=back
+
+For example,
+
+    all test install:
+ 	for subdir in $(SUBDIRS); do cd $$subdir && $(MAKE) $@; cd ..; done
+
+is a common idiom in makefiles, and makepp supports it.  (Note that you
+should never use recursive make in any new makefiles you write--use the
+C<load_makefile> statement, or implicit makefile loading instead.)
+
+If you want to have the same rule executed once for each target (e.g.,
+because the targets have similar commands), it's preferable to use
+either a pattern rule (see below) or a C<foreach> clause.  For example,
+if with a traditional make program you would write:
+
+    a b c d:
+ 	do_something to build $@ > $@
+
+in makepp, you would probably want to write it like this:
+
+    $(foreach) : : foreach a b c d
+ 	do_something to build $(output) > $(output)
+
+=head3 Phony targets
+
+A I<phony target> is a target that will never actually exist in the
+file system; it's just a way of getting makepp to build some targets
+and possibly execute some additional commands.
+
+A typical phony target is C<all>, which usually is used to cause
+everything that can be built to be built, like this:
+
+    all: prog1 prog2 subdir/prog3 subdir2/libmine.a
+ 	  @&echo "All done!"
+
+If you type S<C<makepp all>>, or if you put all as the first explicit
+target in your makefile (which is typical) and just type C<makepp>,
+then it will cause all the dependencies to be built, then it will
+print "All done!".  At this point, makepp will look for the file
+F<./all> and will discover that it doesn't exist.  It will complain
+loudly.
+
+To keep makepp from expecting the file F<./all> to exit, you need to
+tell it that it's a phony target.  Just put a line like the following
+in your makefile (it makes no difference where):X<.PHONY>
+
+    .PHONY: all
+
+An equivalent alternative which is sometimes more convenient is to use
+the S<C<$(phony )>> function, like this:
+
+    $(phony all): prog1 prog2 subdir/prog3 subdir2/libmine.a
+
+Phony targets in one makefile can refer to phony targets in another
+makefile.  This is often done with the C<clean> target, like this:
+
+    # Top level makefile:
+    # lots of rules and stuff here
+    # ....
+    $(phony clean): subdir1/clean subdir2/clean
+ 	&rm -fm my_program
+
+Then in the subdirectories, the makefiles might read like this:
+
+    # Makefile in a subdirectory
+    # ...
+    $(phony clean):
+ 	&rm -fm $(wildcard *.o *.a)
+
+But nowadays you would use the C<makeppclean> command, instead of a clean
+target.
+
+=head3 Wildcards
+
+It is safe to specify wildcards in the dependency list.  Wildcards match not
+only files that exist, but files which can be created given the rules in the
+makefile.  For example, to build a library from all .o files in a directory,
+you could write this:
+
+    libmine.a: *.o
+ 	&rm -f $(output)
+ 	ar cr $(output) $(inputs)
+
+This will work even if none of the C<.o> files have been created yet, because
+makepp's wildcards match files which do not yet exist but can be built.
+
+Makepp supports all the usual shell wildcards (C<*>, C<?>, and C<[]>).  It
+also has a wildcard C<**> which matches any number of intervening directories.
+(This idea was stolen from zsh.)  For example, C<**/*.c> matches all the F<.c>
+files in the entire source tree.  C<objects/**/*.o> matches all the F<.o>
+files contained anywhere in the subdirectory F<objects> or any of its
+subdirectories or any of their subdirectories.  The C<**> wildcard will not
+follow soft links to directories.  It also will never return phony targets.
+
+Makepp's wildcards will ignore files or directories which exist but cannot be
+read.  After all, such files cannot be used in the build process anyway.
+Putting unreadable files in a directory is primarily useful to inhibit the
+automatic import of the given file from a repository.
+
+=head2 Pattern rules
+
+A pattern rule is a rule that is applied based on some textual pattern.  This
+is used to apply the same rule to a whole class of files.  The syntax is the
+same as GNU make's pattern rules:
+
+    %.o: %.c
+ 	$(CC) -c $(input) -o $(output)
+
+
+This says that any file in the current directory which matches C<*.c> can be
+converted into the corresponding .o file using the given command.
+
+Note that several pattern dependencies may be supplied.  For example, if
+your F<xyz.o> file depends on the corresponding F<xyz.cpp> file, and
+also on a file called F<moc_xyz.cflags> which contains the compiler
+options, this could be expressed with:
+
+    %.o: %.cpp %.cflags
+ 	$(CXX) `cat $(stem).cflags` -c $(inputs) -o $(output)
+
+You may also have several pattern targets.  For example,
+
+    %.tab.h %.tab.c : %.y
+ 	yacc -d $(input)
+ 	&mv y.tab.h $(stem).tab.h
+ 	&mv y.tab.c $(stem).tab.c
+
+X<makepp_percent_subdirs>Ordinarily, pattern rules only look for files in the
+current directories.  You can force them to search in the current
+directory and all directories beneath it by setting
+
+    makepp_percent_subdirs := 1
+
+before the first pattern rule in your makefile or on the command line for example.
+
+=head2 Static pattern rules
+
+A static pattern rule is a pattern rule that is applied only to a
+limited set of files:
+
+    $(SPECIAL_MODULES).o : %.o : %.cpp
+ 	$(CXX) -c $(input) -o $(output)
+
+This says that the pattern rule applies only to the files in
+S<C<$(SPECIAL_MODULES).o>>.
+
+This is mostly for compatibility with GNU make; foreach rules (see
+below) are a more powerful way of doing the same thing.
+
+=head2 Foreach rules
+
+The above pattern rule syntax is powerful enough to support almost all builds,
+but occasionally it is necessary to do something more complicated.  Makepp
+provides a more powerful syntax: the C<:foreach> clause for the rule.
+
+    target_expression : dependency_expression : foreach file-list
+ 	actions
+
+The simplest kind of foreach rule is just a pattern rule whose
+application is restricted to a specific list of files.  For example,
+suppose you have a pattern rule that tells makepp how to compile all
+F<.c> files.  However, you have a list of F<.c> files for which you want
+to do something different.  You could do something like this:
+
+    # Here's the rule that applies to everything:
+    %.o : %.c
+ 	$(CC) $(CFLAGS) -c $(input) -o $(output)
+ 
+    %.o : %.c : foreach $(SPECIAL_MODULES)
+ 	$(CC) $(SPECIAL_CFLAGS) -c $(input) -o $(output)
+
+An even more powerful use of foreach rules takes advantage of the fact
+that the variable C<$(foreach)> is set in turn to each file matching the
+file list and the target and dependency expressions are evaluated.  The
+file-list may contain wildcards, and these match even files which don't
+exist yet but which can be built (see L<makepp_rules/Wildcards>).
+
+This is an unwieldy syntax but it is extremely flexible, because the
+C<$(foreach)> variable may appear in any way in the expression.  First,
+note that pattern rules are in fact a special case of foreach rules; the
+pattern rule
+
+     %.o : %.c
+ 	$(CC) $(CFLAGS) -c $(input) -o $(output)
+
+is exactly equivalent to:
+
+    $(patsubst %.c, %.o, $(foreach)) : $(foreach) : foreach *.c
+ 	$(CC) $(CFLAGS) -c $(input) -o $(output)
+
+(In fact, it's converted to approximately that internally.)
+
+As an example of how you would use a C<:foreach> clause where a pattern
+rule isn't sufficient, suppose you have some F<.c> files which are built
+using some kind of preprocessor which takes as input files with a F<.k>
+extension.  You want to compile those F<.c> files with a different set
+of compilation options than the usual F<.c> files which are ordinary
+source files.  You could do something like this:
+
+    # Rule for ordinary .c files:
+    %.o : %.c
+ 	$(CC) $(CFLAGS) -c $(input) -o $(output)
+ 
+    # Rule to make .c files from .k files:
+    %.c : %.k
+ 	$(preprocessor) $(input) > $(output)
+ 
+    # Special build rules for .c files which are made from .k files:
+    $(foreach:%.k=%.o) : $(foreach:%.c=%.k) : foreach *.k
+ 	$(CC) $(SPECIAL_CFLAGS) -c $(input) -o $(output)
+
+(This uses the slightly more concise substitution reference syntax
+rather than calling C<patsubst> explicitly.)
+
+Note that if all you want to do is to change the value of a variable
+(C<CFLAGS> in this case) it's sometimes more convenient to use
+L<target-specific variables|makepp_variables/Target-specific assignments>.
+
+=head2 Legacy suffix rules
+
+For backward compatibility, makepp supports the old-style
+suffix rules.
+
+    .suffix1.suffix2:
+ 	actions
+
+is equivalent to
+
+    %.suffix2: %.suffix1
+ 	actions
+
+but much harder to remember.  (Which suffix comes first?)  Typically,
+a rule will appear in a legacy makefile like this:
+
+    .c.o:
+ 	$(CC) $(CFLAGS) -c $*.c -o $*.o
+
+which is exactly equivalent to
+
+    %.o : %.c
+ 	$(CC) $(CFLAGS) -c $(input) -o $(output)
+
+=head2 Conflicting rules
+
+When there is more than one way to make a file, makepp
+uses a simple procedure to determine which rule to use.
+
+=over 4
+
+=item *
+
+It is an error to have conflicting explicit rules for building a file.
+
+=item *
+
+Pattern rules and foreach rules with wildcards never override explicit
+rules.  Thus explicit rules can be used to specify exceptions for
+pattern rules.  (Note that simply using a C<:foreach> clause doesn't
+make something a pattern rule.  It must have a wildcard (like "*" or
+"?") as part of the filename in the C<:foreach> clause.  If it is just
+an explicit list of files, it is treated as an explicit rule for each of
+those files.)
+
+=item *
+
+When conflicting pattern rules come from different makefiles, rules from
+"nearer" makefiles override rules from "farther" makefiles.  "Nearer"
+means that the makefile is located closer to the target in the directory
+hierarchy (i.e., the file name of the target relative to the directory
+the makefile is run from is shorter).  If this doesn't distinguish the
+makefiles, then the rule from the makefile which is loaded latest is
+used.
+
+This means that you can specify a pattern rule that applies to all files
+in your entire directory tree in just the top-level makefile, but then
+you can override it in a lower-level makefile.  For example, your
+top-level makefile could contain:
+
+    %.o : %.c : foreach **/*.c
+ 	$(CC) $(CFLAGS) -c $(input) -o $(output)
+
+and you could have a makefile in one of the subdirectories that says:
+
+    %.o : %.c
+ 	$(CC) $(SPECIAL_CFLAGS) -c $(input) -o $(output)
+
+=item *
+
+Pattern rules that have a shorter chain of inference are preferred over
+other pattern rules.  For example, if you had the following rules (based
+on an example from the linux kernel):
+
+    %.s: %.c
+ 	$(CC) -s $(input) -o $(output)
+ 
+    %.o: %.s
+ 	$(AS) $(input) -o $(output)
+ 
+    %.o: %.c
+ 	$(CC) -c $(input) -o $(output)
+
+
+If we need to build C<xyz.o>, we could either build the intermediate
+C<.s> file and then run that through the assembler using the first two
+rules, or we could go directly to a C<.o> file using the last rule.  The
+last rule is preferred because there are fewer steps in the chain of
+inference (one instead of two).
+
+=item *
+
+Pattern rules later in a makefile override pattern rules that are
+earlier.  (This is backwards from GNU make.)  This means that you should
+put your more general rules earlier, and your more specific rules later.
+For example,
+
+    %.o: %.c                            # General compilation rule.
+ 	action
+ 
+    special_%.o: special_%.c            # Special rule for files with a
+ 	different action                # "special_" prefix.
+
+=back
+
+=head2 Rule options
+
+Sometimes it is necessary to supply additional options to modify how
+makepp executes the rule.  These options are specified as C<:optionname
+value>, either on the line containing the dependencies, or on the next
+line.
+
+Supplying the options on separate lines may make it possible for
+you to use the same makefile with makepp and a traditional
+make.  For example,
+
+    target : dependencies
+ 	   : signature target_newer
+ 	actions
+
+will work fine with a traditional unix make, because it interprets the
+S<C<: signature>> line as a shell command, and a command beginning with
+a colon does nothing.
+
+=head3 build_cache /path/to/build/cache X<build_cache>
+
+     target : dependencies
+ 	    : build_cache /put/cache/files/over/there
+ 	  actions
+
+Specifies the path to a build cache to be used for files produced by
+this rule.  This overrides the effect of the C<build_cache> statement or
+the C<--build-cache> command line option for this rule.  See
+L<makepp_build_cache> for details about build caches.
+
+If you specify C<none> instead of a path, you disable the build cache
+for this particular rule.  This can be useful to avoid wasting disk
+space on files that you know aren't useful to cache, either because you
+are very sure they will never be reused or because they are built so
+fast that it's not worth caching them.
+
+=head3 build_check build_check_method X<build_check>
+
+     target : dependencies
+ 	    : build_check target_newer
+ 	  actions
+
+This tells makepp what algorithm to use to decide if the targets need to
+be rebuilt.  See L<makepp_build_check> for more details.  This overrides
+any build check method specified with the C<--build-check-method>
+command line option or with the C<build_check> statement.
+
+=head3 signature signature_method X<signature>
+
+     target : dependencies
+ 	    : signature md5
+ 	  actions
+
+This tells makepp what algorithm to use to determine if the dependencies have
+changed.  See L<makepp_signatures> for more details.  Signature methods which
+are included with the makepp distribution are are C<plain>, C<md5>,
+C<c_compilation_md5>, and C<shared_object>.  This overrides any signature
+method specified with the C<-m> or C<--signature-method> command line options,
+or with the C<signature> statement.
+
+=head3 scanner name X<scanner>
+
+This tells makepp how to scan for include files.  Usually, makepp
+guesses how to do this based on the words in the command itself (see
+L<makepp_scanning> for details).  However, if makepp guesses wrongly,
+you may want to explicitly indicate the scanner, like this:
+
+    %.o: %.abc
+ 	: scanner c_compilation
+ 	action here
+
+This causes makepp to perform the same scanning that it does for C/C++
+build commands, even if it doesn't recognize the action as a C
+compilation.
+
+Legal values for C<:scanner> are (currently):
+
+=over 4
+
+=item none
+
+Don't bother scanning the command or any files at all.  Makepp will not
+know about any dependencies or targets other than those explicitly
+listed in the rule.  This is the default for all commands that makepp
+does not recognize.
+
+=item c_compilation
+
+Uses the scanner for C/C++ compilation, which looks for include files.
+
+=item esqlc_compilation
+
+Uses the scanner for Embedded SQL in C/C++ (pre)compilation, which looks for
+include files.  If you use Oracle Pro*C, it also understands the config
+parameter, parsing the file and also depending on it.  So, if you have
+C<config=whatever.oracfg>, you can give a more readable variant, by simply
+adding a rule to generate it, like:
+
+    %.oracfg: %.cfg
+	&grep '/^[^#\n]/' $(input) -o $(output)
+
+
+=back
+
+The default scanner depends on the command.  If you do not specify a
+C<:scanner> option, then the first word of the command is examined.  If
+it looks like a compile or link command, then makepp will use the
+C<c_compilation> scanner; otherwise it usese the C<none> scanner.  For
+more details on this, or if you want to write your own scanner or change
+makepp's default scanners, see L<makepp_scanning>.
+
+=head3 env VARIABLE ... X<env>
+
+Add a dependency on the values of the named environment variables.  If
+any of them differ from the previous build, then the targets are considered
+out of date, if the build_check method so dictates.  (All of the built-in
+build check methods except for target_newer respect this.)
+
+VARIABLE may be of the form "filename in PATH_VARIABLE" (in quotes), in
+which case the targets are considered out of date if the first directory
+from the colon-delimited value of PATH_VARIABLE in which filename exists
+is different from the last build.  This can be used to avoid rebuilding
+the targets when PATH_VARIABLE changes in an irrelevant way.
+
+=head3 dispatch command ... X<dispatch>
+
+Enclose each shell action (but not perl actions nor perl commands) in a
+C<sh -c '...'> and prefix it with command, but assume that the target doesn't
+depend on command.
+This is useful if you want to send actions to a job queuing system, but
+the result is assumed to be independent of the queueing parameters, as well
+as to whether the queueing system is used at all.
+
+=head3 last_chance X<last_chance>
+
+Enable an open-ended rule, such as
+
+    %.foo foo%.bar: :last_chance
+ 	&echo $@ -o $@
+ 	&cp $(outputs)
+
+Because a rule such as this could generate an essentially infinite number of
+targets, a target of this rule will not match a $(wildcard) function or
+pattern rule unless something else has already instanced the rule by
+referencing the target specifically.
+Furthermore, if C<--rm-stale> is specified, then a target left over from a
+previous makepp run will appear stale if the only way to build it is via
+a last_chance rule that hasn't been instanced for the target yet,
+which is a desirable behavior because the build will fail more consistently
+when it erroneously relies on a wildcard to match targets from a previous run.
+
+The C<:last_chance> option is intended to call attention to the special
+behavior of the rule with respect to matching wildcards.
+
+=head2 Special characters
+
+Makepp can support filenames that have special characters
+in them like a colon or a space.  Suppose, for example, you want to
+create a file called C<a:thing> from the file
+C<b:thing>.  You can't write the rule this way:
+
+    a:thing : b:thing       # This is a syntax error
+ 	&cat $(input) -o $(output)
+
+because makepp won't know which colons separate targets from
+dependencies and which are part of the filenames.  Instead, simply
+enclose the name in quotes, like this:
+
+    "a:thing" : "b:thing"
+ 	&cat $(input) -o $(output)
+
+Now the rule is unambiguous.
+
+Makepp's quoting syntax is quite similar to the shell's.  You can, for
+example, use single quotes instead of double quotes, or you can escape special
+characters with a backslash:
+
+    a\:thing : 'b:thing'
+ 	&cat $(input) -o $(output)
+
+Suppose, for example, that your filename is C<'"!;\$>.  Now why you'd want
+such a filename I don't know, but here are several ways you could specify it
+to makepp (and the shell):
+
+    \''"!;\$$'
+    "'\"!;\\$$"
+
+Pay attention as to when makepp strips quotes and when the shell does.  Makepp
+looks at quotes only in the following cases:
+
+=over
+
+=item *
+
+in the C<ifeq> family of tests
+
+=item *
+
+before and after the rule colon
+
+=item *
+
+in a makepp builtin command
+
+=item *
+
+in a function that pertains to files
+
+=back
+
+Unlike the shell, makepp doesn't expand quotes while assigning them to a
+variable.  Thus the following rules are identical:
+
+    FILE = 'name with spaces'
+    x := $(print $(FILE))	# just to check that quotes are still there
+    $(FILE):			# quotes around single file stripped by makepp
+	&echo hello -o$(FILE)	# quotes around single file stripped by makepp
+ 	echo there >>$(FILE)	# quotes around single file stripped by Shell
+    'name with spaces':
+	&echo hello -o'name with spaces'
+ 	echo there >>'$(output)' # quotes were stripped above, add them again
+
+Note that (unlike the Shell) variables beginning with C<$> are expanded even
+inside single quotes.  Dollar signs cannot be protected by quotes or
+backslashes.  To get a literal dollar sign, use a double dollar sign,
+e.g.,
+
+    $(phony all):
+ 	@&echo This is a dollar sign: $$
+ 	@for val in a b c d; do echo $$val; done
+
+Generally, you should be able to deal with just about any special character by
+quoting it in some way.  This includes spaces, control characters, etc.
+However, be aware that at present, makepp's comment stripping is somewhat
+simplistic, and any C<#> characters preceded by whitespace will be interpreted
+as comments no matter how they are quoted.
+
+When a target or dependency name is put into an automatic variable like
+L<C<$(output)>|makepp_variables/output>, then the quotes and any backslashes
+are stripped.  This means that if you want to reference the filename in the
+actions, you will probably have to quote it again, like this:
+
+    "a file name with spaces":
+ 	echo "Special contents" > "$@"
+
+If you don't put the quotes around C<$@>, then the
+shell will see the command
+
+    echo "Special contents" > a file name with spaces
+
+which writes the string "Special contents file name with spaces" to the file
+called F<a>.  This is probably not what you want.
+
+=head1 AUTHOR
+
+Gary Holt (holt-makepp@gholt.net)
+

@@ -1,0 +1,42 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	18	644	1079481382	1079481376	Makeppfile
+register_scanner ./nop scanner_skip_word
+CC := .$/nop $(CC)
+
+$(phony default): main.o
+	perl { Makecmds::c_cp 'answers/x' unless -e x }
+
+$(phony main.o): main.c
+	: smartscan
+	-$(CC) $(CFLAGS) $(CPPFLAGS) -c $(input) -o $(output) && echo "NOK" > x
+
+perl_begin
+  use Scanner::Verilog;
+  my $s = new Scanner::Verilog(
+    FileInfo::file_info('main.o')->get_rule, '.'
+  );
+  $s->continue_scanning;
+  $s->get_context;
+perl_end
+###	2	755	1079480259	1079480254	nop
+#!/bin/sh
+exec "$@"
+###	1	755	1079480259	1208539324	nop.bat
+@%1 %2 %3 %4 %5 %6 %7 %8 %9
+###	4	644	1079480259	1079480254	a.h
+#if 1
+# include "a.h"
+#endif
+#define A 1
+###	8	644	1079480259	1079140626	main.c
+#include "a.h"
+
+int main() {
+#if A
+	return 0;
+#endif
+	return 1;
+}
+###	D	755	1079481394	1079144618	answers
+###	1	644	1079144793	1079144618	answers/x
+OK

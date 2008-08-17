@@ -1,0 +1,27 @@
+Prerequistes for installation:
+  You must have perl 5.6 or newer somewhere on your system.
+
+Installation instructions:
+
+If you want to test makepp out, you can run makepp without installing
+it.  To run the test suite, cd to the makepp directory and type "make
+test".  If you want to run makepp on your own makefiles, either put the
+directory you unpacked it in your path, or else run it explicitly like
+this:
+
+	perl /where/you/unpacked/it/makepp
+
+If you want to install it, then cd to the directory you unpacked the
+distribution into and type:
+
+	perl install.pl
+
+This will ask you where you want to put the various pieces, and will then
+install them as requested.
+
+Or you can also do:
+
+        configure --prefix=/usr/local
+	make install
+
+which will run the regression tests as well.

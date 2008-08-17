@@ -1,0 +1,95 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	48	644	1103567918	1103567911	Makeppfile
+perl_begin
+ warn 0;
+ sub f_foo {
+  warn 1;
+  "foo"
+ }
+perl_end
+
+sub f_bar {
+  warn 2;
+  "bar"
+}
+
+perl {
+ sub f_fubar {
+  warn 3;
+  "fubar"
+ }
+}
+
+X := $(perl sub f_foobar { warn 4; "foobar" })
+
+$(phony default): input_check foo
+	&echo $(foo 2)
+	&echo $(bar)
+	&echo $(fubar 2)
+	&echo $(foobar)
+	&echo a $(warning 5) b
+	perl {{
+		warn 6;
+	}}
+
+include dir/foo.mk
+
+input_check: nothing
+	perl {{
+		my ($input, $output) =
+		 (f_input(undef, @Cxt), f_output(undef, @Cxt));
+		open(OUT, ">$output") or die;
+		print OUT "$input\n";
+		close(OUT);
+	}}
+
+$(phony nothing):
+
+ifeq $(warning 8)
+  Y := $(warning 9)
+endif
+###	D	755	1103567444	1103567383	answers
+###	10	644	1119250783	1103567928	answers/warnings
+*** warning: 0 at Makeppfile line 2.
+*** warning: 8 at `Makeppfile:46'
+*** warning: 9 at `Makeppfile:47'
+*** warning: 1 at Makeppfile line 4.
+*** warning: 2 at Makeppfile line 10.
+*** warning: 3 at Makeppfile line 16.
+*** warning: 4 at Makeppfile line 21.
+*** warning: 5 at `Makeppfile:23'
+*** warning: 7 at foo.mk line 2.
+*** warning: 6 at Makeppfile line 24.
+###	1	644	1103567804	1103567928	answers/input_check
+nothing
+###	D	755	1103567444	1103567383	dir
+###	4	644	1103567804	1103567928	dir/foo.mk
+$(phony foo):
+	perl {{
+		warn 7;
+	}}
+###	24	755	1164209909	1103567781	makepp_test_script.pl
+makepp;
+
+my $good = '';
+
+{
+  open my $log, '<', '.makepp/log';
+  open my $warn, '>', 'warnings';
+  while( <$log> ) {
+    if( /warning:/ ) {
+      tr/\02//d;
+      # Windows makepp downcases filename.
+      s/at \S*[Mm]akeppfile:/at `Makeppfile:/ or
+	s/at \S*[Mm]akeppfile /at Makeppfile / or
+	s!(?:[A-Za-z]:)?/.*/dir/!!;
+      print $warn $_;
+    } else {
+      $good .= $_;
+    }
+  }
+}
+
+# Eliminate warnings from log.
+open my $log, '>', '.makepp/log';
+print $log $good;

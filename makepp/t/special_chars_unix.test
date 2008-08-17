@@ -1,0 +1,34 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	20	644	1067451879	965515310	Makeppfile
+#
+# A test of makepp's handling of files with special characters in them.
+#
+
+.PHONY: all
+
+all: '%\' "a file with spaces" "a:b"
+
+"%\\" : "a;b"
+	&echo -E '$@' -o '$@'
+	&cat '$<' -o>>'$@'
+
+"a;b":
+	&echo "$@" -o '$@'
+
+"a file with spaces":
+	&echo "$@" -o '$@'
+
+"a:b":
+	&echo "$@" -o "$@"
+###	D	755	1067451879	965515332	answers
+###	2	644	1067451879	965514355	answers/%\
+%\
+a;b
+###	1	644	1067451879	965515317	answers/a:b
+a:b
+###	1	644	1067451879	965514355	answers/a;b
+a;b
+###	1	644	1067451879	1190053938	answers/n_files
+4 1 0
+###	1	644	1067451879	965514355	answers/a file with spaces
+a file with spaces

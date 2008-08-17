@@ -1,0 +1,24 @@
+Begin4
+Title: makepp
+Version: 1.19
+Entered-date: 2003-08-03
+Description: A syntax-compatible replacement for GNU make with numerous
+   enhancements for build reliability.  Remembers last build command and
+   rebuilds if build command or any file changed.  Vastly improved
+   system for handling makefiles from different directories.
+   Automatically scans for include files.  Won't rebuild if only
+   comments or whitespace changed.  Wildcards match not only files which
+   exist, but also those which can be built.  Can automatically separate
+   source and object directories and keep variant builds in different
+   directories, all without modifying makefiles.  User can write
+   arbitrary perl functions for particularly complicated textual
+   transformations.
+Keywords: make, build, compile, variant build
+Author: holt-makepp@gholt.net (Gary Holt)
+Maintained-by: holt-makepp@gholt.net (Gary Holt)
+Primary-site: http://makepp.sourceforge.net
+Alternate-site: 
+Original-site:  
+Platforms: unix with perl 5.005_03 or newer
+Copying-policy: Artistic License
+End

@@ -1,0 +1,90 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	1	775	1168790726	1186229258	is_relevant.pl
+is_windows ? makepp( '-n' ) : 1; # Let makepp test if it uses a symlink capable compiler.
+###	59	644	1159479798	1210071503	makepp_test_script.pl
+sub sed_17($) {
+  # Make sure that the foo.c timestamp changes
+  wait_timestamp 'foo.c';
+
+  open my $in, 'foo/f.c';
+  open my $out, '>foo/foo.c';
+  while( <$in> ) {
+    s/17/$_[0]/;
+    print $out $_;
+  }
+}
+
+sub from_rep($) {
+  cp 'foo/bar/x', $_[0];
+  open my $in, 'foo/bar/.makepp/foo.c.mk';
+  /FROM_REPOSITORY/ and return while <$in>;
+
+  open my $out, ">>$_[0]";
+  print $out "Lost repository\n";
+}
+
+cp qw(M foo/Makeppfile);
+makepp qw(-R foo/bar=foo foo/bar/nothing);
+
+unlink 'foo/Makeppfile';
+makepp qw(-R foo/bar=foo);
+
+cp qw(M foo/Makeppfile);
+cp qw(foo/f.c foo/foo.c);
+makepp qw(-R foo/bar=foo foo/bar/x);
+
+sed_17 18;
+makepp qw(-R foo/bar=foo foo/bar/x);
+
+from_rep 'x';
+
+cp qw(foo/f.c foo/foo.c);
+makepp 'foo/x';
+makepp \'clean', '--only-repository-links', 'foo/bar';
+
+# This should pick up x from foo/
+makepp qw(-R foo/bar=foo foo/bar/x);
+
+sed_17 18;
+makepp 'foo/x';
+makepp \'clean', '--only-repository-links', 'foo/bar';
+
+# This should pick up x from foo/
+makepp qw(-R foo/bar=foo foo/bar/x);
+
+from_rep 'y';
+
+sed_17 19;
+# Now it should recompile, but still remember that foo.c comes from a repos
+makepp qw(-R foo/bar=foo foo/bar/x);
+
+from_rep 'z';
+
+1;
+###	5	644	1077141637	1186229250	Makeppfile
+$(phony x):
+
+iftrue $(filter %cl %cl.exe %bcc32 %bcc32.exe, $(CC))
+  perl { die }
+endif
+###	5	644	1077143366	1077143363	M
+$(phony nothing):
+	@perl {}
+
+x: foo
+	.$/foo > $@
+###	D	755	1077216823	1077216823	foo
+###	5	644	1077143391	1077143389	foo/f.c
+#include <stdio.h>
+int main() {
+	printf("17\n");
+	return 0;
+}
+###	D	755	1077216767	1077216766	foo/bar
+###	D	755	1077216766	1077216761	answers
+###	1	644	1077144030	1077144018	answers/x
+18
+###	1	644	1077216767	1077216761	answers/y
+18
+###	1	644	1077216767	1077216761	answers/z
+19

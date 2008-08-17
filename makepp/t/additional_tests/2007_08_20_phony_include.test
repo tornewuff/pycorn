@@ -1,0 +1,16 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	7	644	1103567918	1103567911	Makeppfile
+# Make sure that we don't consider dir/incfile.makepp as a possible source,
+# even though we don't learn that it's phony until after we find out that there
+# is a rule to build it.  (Was broken as of 2007-08-19.)
+include dir/incfile
+
+$(phony default): 
+	@&echo "nothing to build"
+###	D	755	1103567918	1103567911	dir
+###	5	644	1103567918	1103567911	dir/Makeppfile
+$(phony incfile.makepp):
+	@&echo -n
+
+incfile:
+	&touch $@

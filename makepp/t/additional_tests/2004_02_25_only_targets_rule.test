@@ -1,0 +1,49 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	6	755	1164318052	1078114112	makepp_test_script.pl
+makepp;
+n_files 'n_files_0';
+
+rename 'libshared.sl', 'libshared.sl_0';
+unlink <*.o *.co>;
+makepp 'working';
+###	30	644	1164354017	1078114267	Makeppfile
+########################################
+#
+# Run this makeppfile with some randomly
+# named .cpp files in the same directory
+#
+#
+makepp_no_builtin = 1
+
+# Make some nice pattern rules
+%.o : %.cpp : scanner none
+	&touch $(output)
+
+# And another pattern rule involving .o files
+%.co : %.o
+	&touch $(output)
+
+#
+# Note that the two rules below differ only
+# in the order of the dependencies!
+#
+
+$(phony default) : aother_tgt libshared.sl
+$(phony working) : libshared.sl aother_tgt
+
+
+$(phony aother_tgt) : $(only_targets **/*.co)
+	@&echo Other_tgt dependencies are [ $(inputs) ]
+
+libshared.sl : $(only_targets **/*.o)
+	&echo Compiling libshared.sl with [ $(inputs) ] -o $(output)
+###	0	644	1078113901	1078113901	x.cpp
+###	D	755	1078114191	10781140241	answers
+###	1	644	1078114206	1190055587	answers/n_files
+3 2 0
+###	1	644	1078114177	1190055595	answers/n_files_0
+3 2 0
+###	1	644	1078114184	1078114184	answers/libshared.sl
+Compiling libshared.sl with [ x.o ]
+###	1	644	1078114183	1078114183	answers/libshared.sl_0
+Compiling libshared.sl with [ x.o ]

@@ -1,0 +1,6 @@
+#!/bin/sh
+# $Id: configure,v 1.2 2003/09/07 03:14:54 grholt Exp $
+#
+# Make makepp install more like most packages.
+#
+perl config.pl $*
