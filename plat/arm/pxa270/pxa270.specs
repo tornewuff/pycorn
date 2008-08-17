@@ -1,0 +1,8 @@
+%rename link                old_link
+
+*link:
+%(old_link) -T pxa270.ld%s
+
+*startfile:
+pxa270_crt0%O%s crti%O%s crtbegin%O%s
+

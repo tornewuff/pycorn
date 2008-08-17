@@ -1,0 +1,3 @@
+$(phony all): hello/hello.uimage
+
+include common.mk

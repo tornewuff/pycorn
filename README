@@ -1,0 +1,46 @@
+Well, this is Pycorn.
+
+HOW IT ALL FITS TOGETHER
+========================
+
+Pycorn currently uses devkitARM to build python, part of wintermute's excellent
+devkitpro project (http://www.devkitpro.org/). devkitARM includes a
+cross-compiling gcc targetted at generic ARM platforms, a build of the newlib
+embedded C library, and wintermute's libsysbase file IO abstraction library.
+This provides enough 'stuff' to compile the python interpreter into a library.
+
+To actually make a bootable image a linkscript and crt0 are required which are
+implemented by pycorn. These are platform specific: the link script currently
+uses physical addresses and thus must be adjusted per target, and the crt0 is
+written in assembly to do things like stack setup. Right now we only have them
+for Marvell's PXA270 system-on-chip, as used in the Gumstix Verdex development
+board (http://www.gumstix.com). This board can be simulated by QEMU. A main
+program entry point is also required which invokes the python interpreter with
+some arguments, and though this is written in C it is portable.
+
+Of course, it won't actually do anything visible; newlib has no actual IO
+facilities. A platform-specific serial driver is used for now, hooked up to
+libsysbase's stdin/stdout/stderr handles.
+
+And.. that's it for now. There is no way to import any modules which aren't
+built into the interpreter as all file access fails right now, and Python's
+builtin readline is really stupid so you can't even backspace.. but it works!
+
+BUILDING
+========
+
+0) Download devkitARM from
+http://sourceforge.net/project/showfiles.php?group_id=114505&package_id=124207
+and unpack it somewhere. Add devkitARM/bin to your PATH. You should now be able
+to run arm-eabi-gcc and friends.
+
+1) Add the makepp directory in the pycorn source tree to your PATH. makepp is a
+nice make replacement with lots of nifty features; used primarily because I
+hate make's handling of subdirectories. See http://makepp.sourceforge.net/ for
+their project page.
+
+2) Install u-boot's mkimage utility. This is in Debian as package
+"uboot-mkimage", or you can compile it from u-boot's source.
+
+3) Run "makepp hello/hello.uimage". This is a "hello world" program which
+should load into u-boot and print on the default platform serial port.
