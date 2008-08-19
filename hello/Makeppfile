@@ -1,4 +1,3 @@
-TARGET := hello
 OBJECTS := hello.o
 
 include common.mk
