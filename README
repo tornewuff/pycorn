@@ -44,3 +44,11 @@ their project page.
 
 3) Run "makepp hello/hello.uimage". This is a "hello world" program which
 should load into u-boot and print on the default platform serial port.
+
+4a) If you have an actual Gumstix Verdex board you should be able to load this
+by serial, tftp, or MMC, and execute it with bootm.
+
+4b) If you don't, you can simulate it under QEMU by doing "makepp hello/run",
+assuming you have QEMU installed. The bootloader will be configured
+automatically so it should just run. Hit C-a x (C-a a x under screen) to kill
+QEMU.
