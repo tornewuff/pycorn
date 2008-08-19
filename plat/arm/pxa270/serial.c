@@ -41,6 +41,8 @@ const devoptab_t dotab_serial =
   serial_read
 };
 
+void serial_init() __attribute__((constructor));
+
 void serial_init()
 {
   devoptab_list[STD_IN] = &dotab_serial;
