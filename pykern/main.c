@@ -8,7 +8,7 @@ char *Py_GetExecPrefix() { return "/"; }
 char *Py_GetProgramFullPath() { return "/python"; }
 
 //char *pyargs[] = { "python", "-c", "import sys\nwhile True: print 'You pressed %s' % (ord(sys.stdin.read(1)))", NULL };
-char *pyargs[] = { "python", "-v", "-i", NULL };
+char *pyargs[] = { "python", "-v", "-S", "-i", NULL };
 
 int main()
 {
