@@ -13,6 +13,7 @@ MKIMAGE := mkimage
 
 # Flags
 CFLAGS := -g -Wall -O2 -fomit-frame-pointer
+PYCFLAGS := -fomit-frame-pointer
 BOARDPATH := $(ROOT)/plat/$(ARCH)/$(BOARD)
 LDFLAGS := -B$(BOARDPATH) -specs=$(BOARD).specs
 LDDEPS := $(BOARDPATH)/$(BOARD)$( .specs .ld _crt0.o)

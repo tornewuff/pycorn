@@ -1,3 +1,5 @@
-$(phony all): hello/hello.flash
+$(phony all): hello/hello.flash pykern/pykern.flash
+
+$(phony run): pykern/run
 
 include common.mk

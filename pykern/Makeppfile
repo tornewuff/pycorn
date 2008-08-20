@@ -1,0 +1,40 @@
+OBJECTS := main.o targetpy/libpython2.5.a
+LIBS := -lm
+
+HOSTPGEN := $(CURDIR)/hostpy/Parser/pgen
+
+targetpy/libpython2.5.a: $(HOSTPGEN) targetpy/Makefile
+	cd targetpy; make HOSTPGEN=$(HOSTPGEN) EXTRA_CFLAGS="$(PYCFLAGS)" libpython2.5.a
+
+targetpy/Makefile: Python-2.5.2/configure targetpy
+	cd targetpy; ../Python-2.5.2/configure --host=arm-eabi --prefix=/ --disable-shared --without-threads --without-cxx --without-signal-module
+
+targetpy: Python-2.5.2
+	rm -rf $(output)
+	&mkdir $(output)
+
+$(HOSTPGEN): hostpy/Makefile
+	cd hostpy; make Parser/pgen
+
+hostpy/Makefile: Python-2.5.2/configure hostpy
+	cd hostpy; ../Python-2.5.2/configure
+
+hostpy: Python-2.5.2
+	rm -rf $(output) 
+	&mkdir $(output)
+
+Python-2.5.2/configure: Python-2.5.2 Python-2.5.2/configure.in
+	cd Python-2.5.2; autoconf
+
+Python-2.5.2: Python-2.5.2.tar.bz2 patches/*
+	rm -rf $(output)
+	tar jxf $(input)
+	cd $(output); for p in `cat ../patches/series`; do patch -p1 < ../patches/$$p; done
+
+Python-2.5.2.tar.bz2:
+	&rm -f $(output)
+	wget http://www.python.org/ftp/python/2.5.2/Python-2.5.2.tar.bz2
+
+no_implicit_load Python-2.5.2 hostpy targetpy
+
+include common.mk
