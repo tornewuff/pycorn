@@ -7,7 +7,7 @@ targetpy/libpython2.5.a: $(HOSTPGEN) targetpy/Makefile
 	cd targetpy; make HOSTPGEN=$(HOSTPGEN) EXTRA_CFLAGS="$(PYCFLAGS)" libpython2.5.a
 
 targetpy/Makefile: Python-2.5.2/configure targetpy
-	cd targetpy; ../Python-2.5.2/configure --host=arm-eabi --prefix=/ --disable-shared --without-threads --without-cxx --without-signal-module
+	cd targetpy; ../Python-2.5.2/configure --host=arm-eabi --without-signal-module
 
 targetpy: Python-2.5.2
 	rm -rf $(output)
