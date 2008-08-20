@@ -24,13 +24,13 @@ include $(ROOT)/plat/$(ARCH)/$(BOARD)/$(BOARD).mk
 
 # Rules
 
+ifdef OBJECTS
 %.uimage: %.bin
 	$(MKIMAGE) -C none $(KERNELMKIMAGE) -n $(basename $(input)) -d $(input) $(output)
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $(input) $(output)
 
-ifdef OBJECTS
 $(notdir $(CURDIR)).elf: $(OBJECTS) $(BOARDPATH)/$(BOARDOBJECTS) $(LDDEPS)
 	$(CC) $(OBJECTS) $(BOARDPATH)/$(BOARDOBJECTS) $(LDFLAGS) $(LIBS) -o $(output)
 endif
