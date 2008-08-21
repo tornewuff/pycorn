@@ -7,3 +7,4 @@ pykern/Python-2.5.2
 pykern/Python-2.5.2.tar.bz2
 pykern/hostpy
 pykern/targetpy
+pykern/frozen.c
