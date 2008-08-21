@@ -14,13 +14,15 @@ MKIMAGE := mkimage
 # Flags
 CFLAGS := -g -Wall -O2 -fomit-frame-pointer
 PYCFLAGS := -fomit-frame-pointer
+ARCHPATH := $(ROOT)/plat/$(ARCH)
 BOARDPATH := $(ROOT)/plat/$(ARCH)/$(BOARD)
-LDFLAGS := -B$(BOARDPATH) -specs=$(BOARD).specs
-LDDEPS := $(BOARDPATH)/$(BOARD)$( .specs .ld _crt0.o)
+LDFLAGS := -B$(BOARDPATH) -B$(ARCHPATH) -specs=$(BOARD).specs
+LDDEPS := $(BOARDPATH)/$(BOARD)$( .specs .ld) $(ARCHPATH)/crt0.o
 MKIMAGEFLAGS := -A $(ARCH) -O linux
 KERNELMKIMAGE := $(MKIMAGEFLAGS) -T kernel
 
 # Get board-specific stuff
+include $(ROOT)/plat/$(ARCH)/$(ARCH).mk
 include $(ROOT)/plat/$(ARCH)/$(BOARD)/$(BOARD).mk
 
 # Rules
@@ -32,8 +34,8 @@ ifdef OBJECTS
 %.bin: %.elf
 	$(OBJCOPY) -O binary $(input) $(output)
 
-$(notdir $(CURDIR)).elf: $(OBJECTS) $(BOARDPATH)/$(BOARDOBJECTS) $(LDDEPS)
-	$(CC) $(OBJECTS) $(BOARDPATH)/$(BOARDOBJECTS) $(LDFLAGS) $(LIBS) -o $(output)
+$(notdir $(CURDIR)).elf: $(OBJECTS) $(BOARDPATH)/$( $(BOARDOBJECTS)) $(ARCHPATH)/$( $(ARCHOBJECTS)) $(LDDEPS)
+	$(CC) $(OBJECTS) $(BOARDPATH)/$( $(BOARDOBJECTS)) $(ARCHPATH)/$( $(ARCHOBJECTS)) $(LDFLAGS) $(LIBS) -o $(output)
 endif
 
 %.o: %.S
