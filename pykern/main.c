@@ -1,8 +1,18 @@
+/*
+ * Copyright 2008 Torne Wuff
+ *
+ * This file is part of Pycorn.
+ *
+ * Pycorn is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ */
+
 #include <stdio.h>
 
 extern int Py_Main(int, char*[]);
 
-//char *pyargs[] = { "python", "-c", "import sys\nwhile True: print 'You pressed %s' % (ord(sys.stdin.read(1)))", NULL };
 char *pyargs[] = { "python", "-v", "-S", "-i", NULL };
 
 int main()

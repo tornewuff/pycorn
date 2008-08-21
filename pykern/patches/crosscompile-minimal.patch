@@ -1,3 +1,6 @@
+This patch is based on openembedded's crosscompilation patch. Original is
+(C) by Michael 'Mickey' Lauer <mlauer@vanille-media.de>
+
 Index: Python-2.5.2/Makefile.pre.in
 ===================================================================
 --- Python-2.5.2.orig/Makefile.pre.in	2007-12-05 20:43:57.000000000 +0000
