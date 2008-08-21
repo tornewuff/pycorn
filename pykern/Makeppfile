@@ -1,4 +1,4 @@
-OBJECTS := main.o targetpy/libpython2.5.a
+OBJECTS := main.o getpath.o targetpy/libpython2.5.a
 LIBS := -lm
 
 HOSTPGEN := $(CURDIR)/hostpy/Parser/pgen
