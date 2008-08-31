@@ -3,6 +3,8 @@ LIBS := -lm
 
 HOSTPGEN := $(CURDIR)/hostpy/Parser/pgen
 
+$(phony all): pykern.flash
+
 frozen.o: CFLAGS += -IPython-2.5.2/Include -Itargetpy
 
 frozen.c: frozen/**/*.py freeze.py

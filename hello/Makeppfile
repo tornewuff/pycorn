@@ -1,3 +1,5 @@
 OBJECTS := hello.o
 
+$(phony all): hello.flash
+
 include common.mk
