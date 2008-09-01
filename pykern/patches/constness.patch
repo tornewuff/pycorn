@@ -1,0 +1,52 @@
+Index: quilted/Include/Python.h
+===================================================================
+--- quilted.orig/Include/Python.h	2008-09-01 16:00:58.000000000 +0100
++++ quilted/Include/Python.h	2008-09-01 16:01:57.000000000 +0100
+@@ -162,7 +162,7 @@
+ #endif
+ 
+ /* Define macros for inline documentation. */
+-#define PyDoc_VAR(name) static char name[]
++#define PyDoc_VAR(name) static const char name[]
+ #define PyDoc_STRVAR(name,str) PyDoc_VAR(name) = PyDoc_STR(str)
+ #ifdef WITH_DOC_STRINGS
+ #define PyDoc_STR(str) str
+Index: quilted/Objects/longobject.c
+===================================================================
+--- quilted.orig/Objects/longobject.c	2008-09-01 16:00:58.000000000 +0100
++++ quilted/Objects/longobject.c	2008-09-01 16:01:57.000000000 +0100
+@@ -1340,7 +1340,7 @@
+  * Note that when converting a base B string, a char c is a legitimate
+  * base B digit iff _PyLong_DigitValue[Py_CHARMASK(c)] < B.
+  */
+-int _PyLong_DigitValue[256] = {
++const int _PyLong_DigitValue[256] = {
+ 	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
+ 	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
+ 	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
+Index: quilted/Python/getcopyright.c
+===================================================================
+--- quilted.orig/Python/getcopyright.c	2008-09-01 16:00:58.000000000 +0100
++++ quilted/Python/getcopyright.c	2008-09-01 16:01:57.000000000 +0100
+@@ -2,7 +2,7 @@
+ 
+ #include "Python.h"
+ 
+-static char cprt[] = 
++static const char cprt[] = 
+ "\
+ Copyright (c) 2001-2008 Python Software Foundation.\n\
+ All Rights Reserved.\n\
+Index: quilted/Include/longobject.h
+===================================================================
+--- quilted.orig/Include/longobject.h	2008-09-01 16:00:58.000000000 +0100
++++ quilted/Include/longobject.h	2008-09-01 16:01:57.000000000 +0100
+@@ -25,7 +25,7 @@
+ PyAPI_FUNC(Py_ssize_t) _PyLong_AsSsize_t(PyObject *);
+ PyAPI_FUNC(PyObject *) _PyLong_FromSize_t(size_t);
+ PyAPI_FUNC(PyObject *) _PyLong_FromSsize_t(Py_ssize_t);
+-PyAPI_DATA(int) _PyLong_DigitValue[256];
++PyAPI_DATA(const int) _PyLong_DigitValue[256];
+ 
+ /* _PyLong_AsScaledDouble returns a double x and an exponent e such that
+    the true value is approximately equal to x * 2**(SHIFT*e).  e is >= 0.
