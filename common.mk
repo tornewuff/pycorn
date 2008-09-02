@@ -11,11 +11,11 @@ CC := $(PREFIX)gcc
 OBJCOPY := $(PREFIX)objcopy
 MKIMAGE := mkimage
 
-# Flags
-CFLAGS := -g -Wall -O2 -fomit-frame-pointer
-PYCFLAGS := -fomit-frame-pointer
+# Flags and paths
 ARCHPATH := $(ROOT)/plat/$(ARCH)
 BOARDPATH := $(ROOT)/plat/$(ARCH)/$(BOARD)
+CFLAGS := -g -Wall -O2 -fomit-frame-pointer -I$(ARCHPATH) -I$(BOARDPATH)
+PYCFLAGS := -fomit-frame-pointer
 LDFLAGS := -B$(BOARDPATH) -B$(ARCHPATH) -specs=$(BOARD).specs
 LDDEPS := $(BOARDPATH)/$(BOARD)$( .specs .ld) $(ARCHPATH)/crt0.o
 MKIMAGEFLAGS := -A $(ARCH) -O linux
