@@ -1,7 +1,7 @@
 Index: quilted/Python/bltinmodule.c
 ===================================================================
---- quilted.orig/Python/bltinmodule.c	2008-09-04 16:48:29.000000000 +0100
-+++ quilted/Python/bltinmodule.c	2008-09-04 16:48:59.000000000 +0100
+--- quilted.orig/Python/bltinmodule.c	2008-02-14 11:26:18.000000000 +0000
++++ quilted/Python/bltinmodule.c	2008-09-04 21:38:16.000000000 +0100
 @@ -2230,7 +2230,7 @@
  in length to the length of the shortest argument sequence.");
  
@@ -13,8 +13,8 @@ Index: quilted/Python/bltinmodule.c
   	{"all",		builtin_all,        METH_O, all_doc},
 Index: quilted/Modules/gcmodule.c
 ===================================================================
---- quilted.orig/Modules/gcmodule.c	2008-09-04 17:30:56.000000000 +0100
-+++ quilted/Modules/gcmodule.c	2008-09-04 17:31:05.000000000 +0100
+--- quilted.orig/Modules/gcmodule.c	2006-10-09 20:42:33.000000000 +0100
++++ quilted/Modules/gcmodule.c	2008-09-04 21:38:16.000000000 +0100
 @@ -1188,7 +1188,7 @@
  "get_referrers() -- Return the list of objects that refer to an object.\n"
  "get_referents() -- Return the list of objects that an object refers to.\n");
@@ -26,8 +26,8 @@ Index: quilted/Modules/gcmodule.c
  	{"isenabled",	   gc_isenabled,  METH_NOARGS,  gc_isenabled__doc__},
 Index: quilted/Objects/codeobject.c
 ===================================================================
---- quilted.orig/Objects/codeobject.c	2008-09-04 17:29:18.000000000 +0100
-+++ quilted/Objects/codeobject.c	2008-09-04 17:29:27.000000000 +0100
+--- quilted.orig/Objects/codeobject.c	2006-07-12 06:27:46.000000000 +0100
++++ quilted/Objects/codeobject.c	2008-09-04 21:38:16.000000000 +0100
 @@ -110,7 +110,7 @@
  
  #define OFF(x) offsetof(PyCodeObject, x)
@@ -39,8 +39,8 @@ Index: quilted/Objects/codeobject.c
  	{"co_stacksize",T_INT,		OFF(co_stacksize),	READONLY},
 Index: quilted/Objects/dictobject.c
 ===================================================================
---- quilted.orig/Objects/dictobject.c	2008-09-04 17:30:18.000000000 +0100
-+++ quilted/Objects/dictobject.c	2008-09-04 17:30:24.000000000 +0100
+--- quilted.orig/Objects/dictobject.c	2007-11-29 18:33:04.000000000 +0000
++++ quilted/Objects/dictobject.c	2008-09-04 22:24:14.000000000 +0100
 @@ -1981,7 +1981,7 @@
  PyDoc_STRVAR(iteritems__doc__,
  "D.iteritems() -> an iterator over the (key, value) items of D");
@@ -50,10 +50,19 @@ Index: quilted/Objects/dictobject.c
  	{"__contains__",(PyCFunction)dict_has_key,      METH_O | METH_COEXIST,
  	 contains__doc__},
  	{"__getitem__", (PyCFunction)dict_subscript,	METH_O | METH_COEXIST,
+@@ -2251,7 +2251,7 @@
+ 
+ PyDoc_STRVAR(length_hint_doc, "Private method returning an estimate of len(list(it)).");
+ 
+-static PyMethodDef dictiter_methods[] = {
++static const PyMethodDef dictiter_methods[] = {
+ 	{"__length_hint__", (PyCFunction)dictiter_len, METH_NOARGS, length_hint_doc},
+  	{NULL,		NULL}		/* sentinel */
+ };
 Index: quilted/Objects/fileobject.c
 ===================================================================
---- quilted.orig/Objects/fileobject.c	2008-09-04 17:30:32.000000000 +0100
-+++ quilted/Objects/fileobject.c	2008-09-04 17:30:42.000000000 +0100
+--- quilted.orig/Objects/fileobject.c	2007-05-07 20:25:38.000000000 +0100
++++ quilted/Objects/fileobject.c	2008-09-04 22:18:39.000000000 +0100
 @@ -1749,7 +1749,7 @@
  PyDoc_STRVAR(exit_doc,
  	     "__exit__(*excinfo) -> None.  Closes the file.");
@@ -63,10 +72,28 @@ Index: quilted/Objects/fileobject.c
  	{"readline",  (PyCFunction)file_readline, METH_VARARGS, readline_doc},
  	{"read",      (PyCFunction)file_read,     METH_VARARGS, read_doc},
  	{"write",     (PyCFunction)file_write,    METH_VARARGS, write_doc},
+@@ -1773,7 +1773,7 @@
+ 
+ #define OFF(x) offsetof(PyFileObject, x)
+ 
+-static PyMemberDef file_memberlist[] = {
++static const PyMemberDef file_memberlist[] = {
+ 	{"softspace",	T_INT,		OFF(f_softspace), 0,
+ 	 "flag indicating that a space needs to be printed; used by print"},
+ 	{"mode",	T_OBJECT,	OFF(f_mode),	RO,
 Index: quilted/Objects/setobject.c
 ===================================================================
---- quilted.orig/Objects/setobject.c	2008-09-04 17:28:50.000000000 +0100
-+++ quilted/Objects/setobject.c	2008-09-04 17:28:58.000000000 +0100
+--- quilted.orig/Objects/setobject.c	2007-04-18 03:02:15.000000000 +0100
++++ quilted/Objects/setobject.c	2008-09-04 22:25:22.000000000 +0100
+@@ -816,7 +816,7 @@
+ 
+ PyDoc_STRVAR(length_hint_doc, "Private method returning an estimate of len(list(it)).");
+ 
+-static PyMethodDef setiter_methods[] = {
++static const PyMethodDef setiter_methods[] = {
+ 	{"__length_hint__", (PyCFunction)setiter_len, METH_NOARGS, length_hint_doc},
+  	{NULL,		NULL}		/* sentinel */
+ };
 @@ -1835,7 +1835,7 @@
  All is well if assertions don't fail.");
  #endif
@@ -76,10 +103,19 @@ Index: quilted/Objects/setobject.c
  	{"add",		(PyCFunction)set_add,		METH_O,
  	 add_doc},
  	{"clear",	(PyCFunction)set_clear,		METH_NOARGS,
+@@ -1969,7 +1969,7 @@
+ /* frozenset object ********************************************************/
+ 
+ 
+-static PyMethodDef frozenset_methods[] = {
++static const PyMethodDef frozenset_methods[] = {
+ 	{"__contains__",(PyCFunction)set_direct_contains,	METH_O | METH_COEXIST,
+ 	 contains_doc},
+ 	{"copy",	(PyCFunction)frozenset_copy,	METH_NOARGS,
 Index: quilted/Objects/stringobject.c
 ===================================================================
---- quilted.orig/Objects/stringobject.c	2008-09-04 17:28:01.000000000 +0100
-+++ quilted/Objects/stringobject.c	2008-09-04 17:28:20.000000000 +0100
+--- quilted.orig/Objects/stringobject.c	2007-11-07 01:19:49.000000000 +0000
++++ quilted/Objects/stringobject.c	2008-09-04 21:38:16.000000000 +0100
 @@ -3841,7 +3841,7 @@
  }
  
@@ -91,8 +127,17 @@ Index: quilted/Objects/stringobject.c
  	   string.maketrans(). */
 Index: quilted/Objects/unicodeobject.c
 ===================================================================
---- quilted.orig/Objects/unicodeobject.c	2008-09-04 17:27:22.000000000 +0100
-+++ quilted/Objects/unicodeobject.c	2008-09-04 17:27:29.000000000 +0100
+--- quilted.orig/Objects/unicodeobject.c	2007-11-02 22:46:38.000000000 +0000
++++ quilted/Objects/unicodeobject.c	2008-09-04 22:26:25.000000000 +0100
+@@ -3228,7 +3228,7 @@
+                           128*map->count3);
+ }
+ 
+-static PyMethodDef encoding_map_methods[] = {
++static const PyMethodDef encoding_map_methods[] = {
+ 	{"size", encoding_map_size, METH_NOARGS, 
+          PyDoc_STR("Return the size (in bytes) of this object") },
+         { 0 }
 @@ -7009,7 +7009,7 @@
  }
  
@@ -104,8 +149,8 @@ Index: quilted/Objects/unicodeobject.c
         appear first, since lookup is done sequentially. */
 Index: quilted/Python/import.c
 ===================================================================
---- quilted.orig/Python/import.c	2008-09-04 17:29:52.000000000 +0100
-+++ quilted/Python/import.c	2008-09-04 17:30:02.000000000 +0100
+--- quilted.orig/Python/import.c	2007-08-23 19:08:33.000000000 +0100
++++ quilted/Python/import.c	2008-09-04 22:33:53.000000000 +0100
 @@ -2933,7 +2933,7 @@
  Release the interpreter's import lock.\n\
  On platforms without threads, this function does nothing.");
@@ -115,10 +160,19 @@ Index: quilted/Python/import.c
  	{"find_module",	 imp_find_module,  METH_VARARGS, doc_find_module},
  	{"get_magic",	 imp_get_magic,	   METH_NOARGS,  doc_get_magic},
  	{"get_suffixes", imp_get_suffixes, METH_NOARGS,  doc_get_suffixes},
+@@ -3024,7 +3024,7 @@
+ 	Py_RETURN_NONE;
+ }
+ 
+-static PyMethodDef NullImporter_methods[] = {
++static const PyMethodDef NullImporter_methods[] = {
+ 	{"find_module", (PyCFunction)NullImporter_find_module, METH_VARARGS,
+ 	 "Always return None"
+ 	},
 Index: quilted/Python/sysmodule.c
 ===================================================================
---- quilted.orig/Python/sysmodule.c	2008-09-04 17:28:34.000000000 +0100
-+++ quilted/Python/sysmodule.c	2008-09-04 17:28:42.000000000 +0100
+--- quilted.orig/Python/sysmodule.c	2007-04-16 07:12:02.000000000 +0100
++++ quilted/Python/sysmodule.c	2008-09-04 21:38:16.000000000 +0100
 @@ -733,7 +733,7 @@
  }
  #endif
@@ -128,3 +182,474 @@ Index: quilted/Python/sysmodule.c
  	/* Might as well keep this in alphabetic order */
  	{"callstats", (PyCFunction)PyEval_GetCallStats, METH_NOARGS,
  	 callstats_doc},
+Index: quilted/Objects/classobject.c
+===================================================================
+--- quilted.orig/Objects/classobject.c	2008-09-04 22:16:48.000000000 +0100
++++ quilted/Objects/classobject.c	2008-09-04 22:18:45.000000000 +0100
+@@ -2208,7 +2208,7 @@
+ 
+ #define OFF(x) offsetof(PyMethodObject, x)
+ 
+-static PyMemberDef instancemethod_memberlist[] = {
++static const PyMemberDef instancemethod_memberlist[] = {
+ 	{"im_class",	T_OBJECT,	OFF(im_class),	READONLY|RESTRICTED,
+ 	 "the class associated with a method"},
+ 	{"im_func",	T_OBJECT,	OFF(im_func),	READONLY|RESTRICTED,
+Index: quilted/Objects/complexobject.c
+===================================================================
+--- quilted.orig/Objects/complexobject.c	2008-09-04 22:23:01.000000000 +0100
++++ quilted/Objects/complexobject.c	2008-09-04 22:23:40.000000000 +0100
+@@ -652,13 +652,13 @@
+ 	return Py_BuildValue("(D)", &v->cval);
+ }
+ 
+-static PyMethodDef complex_methods[] = {
++static const PyMethodDef complex_methods[] = {
+ 	{"conjugate",	(PyCFunction)complex_conjugate,	METH_NOARGS},
+ 	{"__getnewargs__",	(PyCFunction)complex_getnewargs,	METH_NOARGS},
+ 	{NULL,		NULL}		/* sentinel */
+ };
+ 
+-static PyMemberDef complex_members[] = {
++static const PyMemberDef complex_members[] = {
+ 	{"real", T_DOUBLE, offsetof(PyComplexObject, cval.real), READONLY,
+ 	 "the real part of a complex number"},
+ 	{"imag", T_DOUBLE, offsetof(PyComplexObject, cval.imag), READONLY,
+Index: quilted/Objects/descrobject.c
+===================================================================
+--- quilted.orig/Objects/descrobject.c	2008-09-04 22:23:01.000000000 +0100
++++ quilted/Objects/descrobject.c	2008-09-04 22:29:50.000000000 +0100
+@@ -317,7 +317,7 @@
+ 	return PyString_FromString(descr->d_method->ml_doc);
+ }
+ 
+-static PyMemberDef descr_members[] = {
++static const PyMemberDef descr_members[] = {
+ 	{"__objclass__", T_OBJECT, offsetof(PyDescrObject, d_type), READONLY},
+ 	{"__name__", T_OBJECT, offsetof(PyDescrObject, d_name), READONLY},
+ 	{0}
+@@ -760,7 +760,7 @@
+ 	return PyObject_CallMethod(pp->dict, "copy", NULL);
+ }
+ 
+-static PyMethodDef proxy_methods[] = {
++static const PyMethodDef proxy_methods[] = {
+ 	{"has_key",   (PyCFunction)proxy_has_key,    METH_O,
+ 	 PyDoc_STR("D.has_key(k) -> True if D has a key k, else False")},
+ 	{"get",       (PyCFunction)proxy_get,        METH_VARARGS,
+@@ -934,7 +934,7 @@
+ 				   wp->self);
+ }
+ 
+-static PyMemberDef wrapper_members[] = {
++static const PyMemberDef wrapper_members[] = {
+ 	{"__self__", T_OBJECT, offsetof(wrapperobject, self), READONLY},
+ 	{0}
+ };
+@@ -1107,7 +1107,7 @@
+ 	PyObject *prop_doc;
+ } propertyobject;
+ 
+-static PyMemberDef property_members[] = {
++static const PyMemberDef property_members[] = {
+ 	{"fget", T_OBJECT, offsetof(propertyobject, prop_get), READONLY},
+ 	{"fset", T_OBJECT, offsetof(propertyobject, prop_set), READONLY},
+ 	{"fdel", T_OBJECT, offsetof(propertyobject, prop_del), READONLY},
+Index: quilted/Objects/enumobject.c
+===================================================================
+--- quilted.orig/Objects/enumobject.c	2008-09-04 22:23:01.000000000 +0100
++++ quilted/Objects/enumobject.c	2008-09-04 22:24:23.000000000 +0100
+@@ -247,7 +247,7 @@
+ 
+ PyDoc_STRVAR(length_hint_doc, "Private method returning an estimate of len(list(it)).");
+ 
+-static PyMethodDef reversediter_methods[] = {
++static const PyMethodDef reversediter_methods[] = {
+ 	{"__length_hint__", (PyCFunction)reversed_len, METH_NOARGS, length_hint_doc},
+  	{NULL,		NULL}		/* sentinel */
+ };
+Index: quilted/Objects/exceptions.c
+===================================================================
+--- quilted.orig/Objects/exceptions.c	2008-09-04 22:23:01.000000000 +0100
++++ quilted/Objects/exceptions.c	2008-09-04 22:30:16.000000000 +0100
+@@ -178,7 +178,7 @@
+ }
+ 
+ 
+-static PyMethodDef BaseException_methods[] = {
++static const PyMethodDef BaseException_methods[] = {
+    {"__reduce__", (PyCFunction)BaseException_reduce, METH_NOARGS },
+    {"__setstate__", (PyCFunction)BaseException_setstate, METH_O },
+    {NULL, NULL, 0, NULL},
+@@ -212,7 +212,7 @@
+     0                       /* sq_inplace_repeat; */
+ };
+ 
+-static PyMemberDef BaseException_members[] = {
++static const PyMemberDef BaseException_members[] = {
+     {"message", T_OBJECT, offsetof(PyBaseExceptionObject, message), 0,
+         PyDoc_STR("exception message")},
+     {NULL}  /* Sentinel */
+@@ -461,7 +461,7 @@
+     return BaseException_traverse((PyBaseExceptionObject *)self, visit, arg);
+ }
+ 
+-static PyMemberDef SystemExit_members[] = {
++static const PyMemberDef SystemExit_members[] = {
+     {"message", T_OBJECT, offsetof(PySystemExitObject, message), 0,
+         PyDoc_STR("exception message")},
+     {"code", T_OBJECT, offsetof(PySystemExitObject, code), 0,
+@@ -663,7 +663,7 @@
+     return rtnval;
+ }
+ 
+-static PyMemberDef EnvironmentError_members[] = {
++static const PyMemberDef EnvironmentError_members[] = {
+     {"message", T_OBJECT, offsetof(PyEnvironmentErrorObject, message), 0,
+         PyDoc_STR("exception message")},
+     {"errno", T_OBJECT, offsetof(PyEnvironmentErrorObject, myerrno), 0,
+@@ -710,7 +710,7 @@
+ }
+ 
+ 
+-static PyMethodDef EnvironmentError_methods[] = {
++static const PyMethodDef EnvironmentError_methods[] = {
+     {"__reduce__", (PyCFunction)EnvironmentError_reduce, METH_NOARGS},
+     {NULL}
+ };
+@@ -896,7 +896,7 @@
+     return rtnval;
+ }
+ 
+-static PyMemberDef WindowsError_members[] = {
++static const PyMemberDef WindowsError_members[] = {
+     {"message", T_OBJECT, offsetof(PyWindowsErrorObject, message), 0,
+         PyDoc_STR("exception message")},
+     {"errno", T_OBJECT, offsetof(PyWindowsErrorObject, myerrno), 0,
+@@ -1128,7 +1128,7 @@
+     return result;
+ }
+ 
+-static PyMemberDef SyntaxError_members[] = {
++static const PyMemberDef SyntaxError_members[] = {
+     {"message", T_OBJECT, offsetof(PySyntaxErrorObject, message), 0,
+         PyDoc_STR("exception message")},
+     {"msg", T_OBJECT, offsetof(PySyntaxErrorObject, msg), 0,
+@@ -1564,7 +1564,7 @@
+     return BaseException_traverse((PyBaseExceptionObject *)self, visit, arg);
+ }
+ 
+-static PyMemberDef UnicodeError_members[] = {
++static const PyMemberDef UnicodeError_members[] = {
+     {"message", T_OBJECT, offsetof(PyUnicodeErrorObject, message), 0,
+         PyDoc_STR("exception message")},
+     {"encoding", T_OBJECT, offsetof(PyUnicodeErrorObject, encoding), 0,
+@@ -1960,7 +1960,7 @@
+ PyObject *PyExc_MemoryErrorInst=NULL;
+ 
+ /* module global functions */
+-static PyMethodDef functions[] = {
++static const PyMethodDef functions[] = {
+     /* Sentinel */
+     {NULL, NULL}
+ };
+Index: quilted/Objects/floatobject.c
+===================================================================
+--- quilted.orig/Objects/floatobject.c	2008-09-04 22:23:01.000000000 +0100
++++ quilted/Objects/floatobject.c	2008-09-04 22:24:37.000000000 +0100
+@@ -1106,7 +1106,7 @@
+ "Overrides the automatic determination of C-level floating point type.\n"
+ "This affects how floats are converted to and from binary strings.");
+ 
+-static PyMethodDef float_methods[] = {
++static const PyMethodDef float_methods[] = {
+ 	{"__getnewargs__",	(PyCFunction)float_getnewargs,	METH_NOARGS},
+ 	{"__getformat__",	(PyCFunction)float_getformat,	
+ 	 METH_O|METH_CLASS,		float_getformat_doc},
+Index: quilted/Objects/frameobject.c
+===================================================================
+--- quilted.orig/Objects/frameobject.c	2008-09-04 22:19:00.000000000 +0100
++++ quilted/Objects/frameobject.c	2008-09-04 22:19:05.000000000 +0100
+@@ -14,7 +14,7 @@
+ 
+ #define OFF(x) offsetof(PyFrameObject, x)
+ 
+-static PyMemberDef frame_memberlist[] = {
++static const PyMemberDef frame_memberlist[] = {
+ 	{"f_back",	T_OBJECT,	OFF(f_back),	RO},
+ 	{"f_code",	T_OBJECT,	OFF(f_code),	RO},
+ 	{"f_builtins",	T_OBJECT,	OFF(f_builtins),RO},
+Index: quilted/Objects/funcobject.c
+===================================================================
+--- quilted.orig/Objects/funcobject.c	2008-09-04 22:16:47.000000000 +0100
++++ quilted/Objects/funcobject.c	2008-09-04 22:18:22.000000000 +0100
+@@ -158,7 +158,7 @@
+ 
+ #define OFF(x) offsetof(PyFunctionObject, x)
+ 
+-static PyMemberDef func_memberlist[] = {
++static const PyMemberDef func_memberlist[] = {
+         {"func_closure",  T_OBJECT,     OFF(func_closure),
+ 	 RESTRICTED|READONLY},
+         {"func_doc",      T_OBJECT,     OFF(func_doc), WRITE_RESTRICTED},
+Index: quilted/Objects/genobject.c
+===================================================================
+--- quilted.orig/Objects/genobject.c	2008-09-04 22:16:48.000000000 +0100
++++ quilted/Objects/genobject.c	2008-09-04 22:24:44.000000000 +0100
+@@ -288,13 +288,13 @@
+ }
+ 
+ 
+-static PyMemberDef gen_memberlist[] = {
++static const PyMemberDef gen_memberlist[] = {
+ 	{"gi_frame",	T_OBJECT, offsetof(PyGenObject, gi_frame),	RO},
+ 	{"gi_running",	T_INT,    offsetof(PyGenObject, gi_running),	RO},
+ 	{NULL}	/* Sentinel */
+ };
+ 
+-static PyMethodDef gen_methods[] = {
++static const PyMethodDef gen_methods[] = {
+ 	{"send",(PyCFunction)gen_send, METH_O, send_doc},
+ 	{"throw",(PyCFunction)gen_throw, METH_VARARGS, throw_doc},
+ 	{"close",(PyCFunction)gen_close, METH_NOARGS, close_doc},
+Index: quilted/Objects/intobject.c
+===================================================================
+--- quilted.orig/Objects/intobject.c	2008-09-04 22:23:01.000000000 +0100
++++ quilted/Objects/intobject.c	2008-09-04 22:24:50.000000000 +0100
+@@ -1058,7 +1058,7 @@
+ 	return Py_BuildValue("(l)", v->ob_ival);
+ }
+ 
+-static PyMethodDef int_methods[] = {
++static const PyMethodDef int_methods[] = {
+ 	{"__getnewargs__",	(PyCFunction)int_getnewargs,	METH_NOARGS},
+ 	{NULL,		NULL}		/* sentinel */
+ };
+Index: quilted/Objects/iterobject.c
+===================================================================
+--- quilted.orig/Objects/iterobject.c	2008-09-04 22:23:01.000000000 +0100
++++ quilted/Objects/iterobject.c	2008-09-04 22:24:55.000000000 +0100
+@@ -88,7 +88,7 @@
+ 
+ PyDoc_STRVAR(length_hint_doc, "Private method returning an estimate of len(list(it)).");
+ 
+-static PyMethodDef seqiter_methods[] = {
++static const PyMethodDef seqiter_methods[] = {
+ 	{"__length_hint__", (PyCFunction)iter_len, METH_NOARGS, length_hint_doc},
+  	{NULL,		NULL}		/* sentinel */
+ };
+Index: quilted/Objects/listobject.c
+===================================================================
+--- quilted.orig/Objects/listobject.c	2008-09-04 22:23:01.000000000 +0100
++++ quilted/Objects/listobject.c	2008-09-04 22:32:29.000000000 +0100
+@@ -2432,7 +2432,7 @@
+ 
+ static PyObject *list_subscript(PyListObject*, PyObject*);
+ 
+-static PyMethodDef list_methods[] = {
++static const PyMethodDef list_methods[] = {
+ 	{"__getitem__", (PyCFunction)list_subscript, METH_O|METH_COEXIST, getitem_doc},
+ 	{"__reversed__",(PyCFunction)list_reversed, METH_NOARGS, reversed_doc},
+ 	{"append",	(PyCFunction)listappend,  METH_O, append_doc},
+@@ -2727,7 +2727,7 @@
+ 
+ PyDoc_STRVAR(length_hint_doc, "Private method returning an estimate of len(list(it)).");
+ 
+-static PyMethodDef listiter_methods[] = {
++static const PyMethodDef listiter_methods[] = {
+ 	{"__length_hint__", (PyCFunction)listiter_len, METH_NOARGS, length_hint_doc},
+  	{NULL,		NULL}		/* sentinel */
+ };
+Index: quilted/Objects/longobject.c
+===================================================================
+--- quilted.orig/Objects/longobject.c	2008-09-04 22:23:01.000000000 +0100
++++ quilted/Objects/longobject.c	2008-09-04 22:25:05.000000000 +0100
+@@ -3365,7 +3365,7 @@
+ 	return Py_BuildValue("(N)", _PyLong_Copy(v));
+ }
+ 
+-static PyMethodDef long_methods[] = {
++static const PyMethodDef long_methods[] = {
+ 	{"__getnewargs__",	(PyCFunction)long_getnewargs,	METH_NOARGS},
+ 	{NULL,		NULL}		/* sentinel */
+ };
+Index: quilted/Objects/methodobject.c
+===================================================================
+--- quilted.orig/Objects/methodobject.c	2008-09-04 22:29:30.000000000 +0100
++++ quilted/Objects/methodobject.c	2008-09-04 22:30:50.000000000 +0100
+@@ -179,7 +179,7 @@
+ 
+ #define OFF(x) offsetof(PyCFunctionObject, x)
+ 
+-static PyMemberDef meth_members[] = {
++static const PyMemberDef meth_members[] = {
+ 	{"__module__",    T_OBJECT,     OFF(m_module), WRITE_RESTRICTED},
+ 	{NULL}
+ };
+Index: quilted/Objects/moduleobject.c
+===================================================================
+--- quilted.orig/Objects/moduleobject.c	2008-09-04 22:29:30.000000000 +0100
++++ quilted/Objects/moduleobject.c	2008-09-04 22:30:55.000000000 +0100
+@@ -9,7 +9,7 @@
+ 	PyObject *md_dict;
+ } PyModuleObject;
+ 
+-static PyMemberDef module_members[] = {
++static const PyMemberDef module_members[] = {
+ 	{"__dict__", T_OBJECT, offsetof(PyModuleObject, md_dict), READONLY},
+ 	{0}
+ };
+Index: quilted/Objects/rangeobject.c
+===================================================================
+--- quilted.orig/Objects/rangeobject.c	2008-09-04 22:23:01.000000000 +0100
++++ quilted/Objects/rangeobject.c	2008-09-04 22:25:13.000000000 +0100
+@@ -143,7 +143,7 @@
+ PyDoc_STRVAR(reverse_doc,
+ "Returns a reverse iterator.");
+ 
+-static PyMethodDef range_methods[] = {
++static const PyMethodDef range_methods[] = {
+ 	{"__reversed__",	(PyCFunction)range_reverse, METH_NOARGS, reverse_doc},
+  	{NULL,		NULL}		/* sentinel */
+ };
+@@ -216,7 +216,7 @@
+ 
+ PyDoc_STRVAR(length_hint_doc, "Private method returning an estimate of len(list(it)).");
+ 
+-static PyMethodDef rangeiter_methods[] = {
++static const PyMethodDef rangeiter_methods[] = {
+ 	{"__length_hint__", (PyCFunction)rangeiter_len, METH_NOARGS, length_hint_doc},
+  	{NULL,		NULL}		/* sentinel */
+ };
+Index: quilted/Objects/sliceobject.c
+===================================================================
+--- quilted.orig/Objects/sliceobject.c	2008-09-04 22:23:01.000000000 +0100
++++ quilted/Objects/sliceobject.c	2008-09-04 22:25:30.000000000 +0100
+@@ -240,7 +240,7 @@
+ 	return s;
+ }
+ 
+-static PyMemberDef slice_members[] = {
++static const PyMemberDef slice_members[] = {
+ 	{"start", T_OBJECT, offsetof(PySliceObject, start), READONLY},
+ 	{"stop", T_OBJECT, offsetof(PySliceObject, stop), READONLY},
+ 	{"step", T_OBJECT, offsetof(PySliceObject, step), READONLY},
+@@ -274,7 +274,7 @@
+ S. Out of bounds indices are clipped in a manner consistent with the\n\
+ handling of normal slices.");
+ 
+-static PyMethodDef slice_methods[] = {
++static const PyMethodDef slice_methods[] = {
+ 	{"indices",	(PyCFunction)slice_indices,
+ 	 METH_O,	slice_indices_doc},
+ 	{NULL, NULL}
+Index: quilted/Objects/structseq.c
+===================================================================
+--- quilted.orig/Objects/structseq.c	2008-09-04 22:23:01.000000000 +0100
++++ quilted/Objects/structseq.c	2008-09-04 22:25:40.000000000 +0100
+@@ -298,7 +298,7 @@
+ 	(objobjproc)structseq_contains,	        /* sq_contains */
+ };
+ 
+-static PyMethodDef structseq_methods[] = {
++static const PyMethodDef structseq_methods[] = {
+ 	{"__reduce__", (PyCFunction)structseq_reduce, 
+ 	 METH_NOARGS, NULL},
+ 	{NULL, NULL}
+Index: quilted/Objects/tupleobject.c
+===================================================================
+--- quilted.orig/Objects/tupleobject.c	2008-09-04 22:23:01.000000000 +0100
++++ quilted/Objects/tupleobject.c	2008-09-04 22:25:49.000000000 +0100
+@@ -633,7 +633,7 @@
+ 	
+ }
+ 
+-static PyMethodDef tuple_methods[] = {
++static const PyMethodDef tuple_methods[] = {
+ 	{"__getnewargs__",	(PyCFunction)tuple_getnewargs,	METH_NOARGS},
+ 	{NULL,		NULL}		/* sentinel */
+ };
+@@ -831,7 +831,7 @@
+ 
+ PyDoc_STRVAR(length_hint_doc, "Private method returning an estimate of len(list(it)).");
+ 
+-static PyMethodDef tupleiter_methods[] = {
++static const PyMethodDef tupleiter_methods[] = {
+ 	{"__length_hint__", (PyCFunction)tupleiter_len, METH_NOARGS, length_hint_doc},
+  	{NULL,		NULL}		/* sentinel */
+ };
+Index: quilted/Objects/typeobject.c
+===================================================================
+--- quilted.orig/Objects/typeobject.c	2008-09-04 22:23:01.000000000 +0100
++++ quilted/Objects/typeobject.c	2008-09-04 22:27:53.000000000 +0100
+@@ -5,7 +5,7 @@
+ 
+ #include <ctype.h>
+ 
+-static PyMemberDef type_members[] = {
++static const PyMemberDef type_members[] = {
+ 	{"__basicsize__", T_INT, offsetof(PyTypeObject,tp_basicsize),READONLY},
+ 	{"__itemsize__", T_INT, offsetof(PyTypeObject, tp_itemsize), READONLY},
+ 	{"__flags__", T_LONG, offsetof(PyTypeObject, tp_flags), READONLY},
+@@ -2273,7 +2273,7 @@
+ 	return list;
+ }
+ 
+-static PyMethodDef type_methods[] = {
++static const PyMethodDef type_methods[] = {
+ 	{"mro", (PyCFunction)mro_external, METH_NOARGS,
+ 	 PyDoc_STR("mro() -> list\nreturn a type's method resolution order")},
+ 	{"__subclasses__", (PyCFunction)type_subclasses, METH_NOARGS,
+@@ -2875,7 +2875,7 @@
+ 	return _common_reduce(self, proto);
+ }
+ 
+-static PyMethodDef object_methods[] = {
++static const PyMethodDef object_methods[] = {
+ 	{"__reduce_ex__", object_reduce_ex, METH_VARARGS,
+ 	 PyDoc_STR("helper for pickle")},
+ 	{"__reduce__", object_reduce, METH_VARARGS,
+@@ -4105,7 +4105,7 @@
+ 	return res;
+ }
+ 
+-static struct PyMethodDef tp_new_methoddef[] = {
++static const struct PyMethodDef tp_new_methoddef[] = {
+ 	{"__new__", (PyCFunction)tp_new_wrapper, METH_KEYWORDS,
+ 	 PyDoc_STR("T.__new__(S, ...) -> "
+ 	 	   "a new object with type S, a subtype of T")},
+@@ -5674,7 +5674,7 @@
+ 	PyTypeObject *obj_type;
+ } superobject;
+ 
+-static PyMemberDef super_members[] = {
++static const PyMemberDef super_members[] = {
+ 	{"__thisclass__", T_OBJECT, offsetof(superobject, type), READONLY,
+ 	 "the class invoking super()"},
+ 	{"__self__",  T_OBJECT, offsetof(superobject, obj), READONLY,
+Index: quilted/Python/marshal.c
+===================================================================
+--- quilted.orig/Python/marshal.c	2008-09-04 22:33:44.000000000 +0100
++++ quilted/Python/marshal.c	2008-09-04 22:33:59.000000000 +0100
+@@ -1226,7 +1226,7 @@
+ 	return result;
+ }
+ 
+-static PyMethodDef marshal_methods[] = {
++static const PyMethodDef marshal_methods[] = {
+ 	{"dump",	marshal_dump,	METH_VARARGS},
+ 	{"load",	marshal_load,	METH_O},
+ 	{"dumps",	marshal_dumps,	METH_VARARGS},
+Index: quilted/Python/symtable.c
+===================================================================
+--- quilted.orig/Python/symtable.c	2008-09-04 22:33:44.000000000 +0100
++++ quilted/Python/symtable.c	2008-09-04 22:34:12.000000000 +0100
+@@ -105,7 +105,7 @@
+ 
+ #define OFF(x) offsetof(PySTEntryObject, x)
+ 
+-static PyMemberDef ste_memberlist[] = {
++static const PyMemberDef ste_memberlist[] = {
+ 	{"id",       T_OBJECT, OFF(ste_id), READONLY},
+ 	{"name",     T_OBJECT, OFF(ste_name), READONLY},
+ 	{"symbols",  T_OBJECT, OFF(ste_symbols), READONLY},
