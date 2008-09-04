@@ -1,0 +1,13 @@
+Index: quilted/Python/getcopyright.c
+===================================================================
+--- quilted.orig/Python/getcopyright.c	2008-02-21 11:53:40.000000000 +0000
++++ quilted/Python/getcopyright.c	2008-09-04 15:57:24.000000000 +0100
+@@ -2,7 +2,7 @@
+ 
+ #include "Python.h"
+ 
+-static char cprt[] = 
++static const char cprt[] = 
+ "\
+ Copyright (c) 2001-2008 Python Software Foundation.\n\
+ All Rights Reserved.\n\
