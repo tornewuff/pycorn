@@ -6,8 +6,9 @@ HOSTPGEN := $(CURDIR)/hostpy/Parser/pgen
 $(phony all): pykern.flash
 
 frozen.o: CFLAGS += -IPython-2.5.2/Include -Itargetpy
+	:scanner none
 
-frozen.c: frozen/**/*.py freeze.py
+frozen.c: frozen/**/*.py freeze.py targetpy/pyconfig.h
 	cd frozen; python ../freeze.py $(relative_to $(wildcard frozen/**/*.py),frozen)
 	&mv frozen/frozen.c $(output)
 
@@ -34,14 +35,10 @@ hostpy: Python-2.5.2
 Python-2.5.2/configure: Python-2.5.2 Python-2.5.2/configure.in
 	cd Python-2.5.2; autoconf
 
-Python-2.5.2: Python-2.5.2.tar.bz2 patches/*
+Python-2.5.2: $(ROOT)/downloads/Python-2.5.2.tar.bz2 patches/*
 	rm -rf $(output)
 	tar jxf $(input)
 	cd $(output); for p in `cat ../patches/series`; do patch -p1 < ../patches/$$p; done
-
-Python-2.5.2.tar.bz2:
-	&rm -f $(output)
-	wget http://www.python.org/ftp/python/2.5.2/Python-2.5.2.tar.bz2
 
 no_implicit_load Python-2.5.2 hostpy targetpy
 

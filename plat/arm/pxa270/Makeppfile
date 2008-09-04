@@ -1,5 +1,1 @@
-u-boot.bin:
-	&rm -f $(output)
-	wget http://www.gumstix.net/feeds/u-boot/u-boot-verdex-600-r1604.bin -O $(output)
-
 include common.mk

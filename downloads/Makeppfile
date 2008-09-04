@@ -1,0 +1,7 @@
+u-boot-verdex-600-r1604.bin:
+	&rm -f $(output)
+	wget http://www.gumstix.net/feeds/u-boot/$(output)
+
+Python-2.5.2.tar.bz2:
+	&rm -f $(output)
+	wget http://www.python.org/ftp/python/2.5.2/$(output)
