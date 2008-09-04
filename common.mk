@@ -15,7 +15,7 @@ MKIMAGE := mkimage
 ARCHPATH := $(ROOT)/plat/$(ARCH)
 BOARDPATH := $(ROOT)/plat/$(ARCH)/$(BOARD)
 CFLAGS := -g -Wall -O2 -fomit-frame-pointer -I$(ARCHPATH) -I$(BOARDPATH)
-PYCFLAGS := -fomit-frame-pointer
+PYCFLAGS := -fomit-frame-pointer -Werror -Wno-error=strict-aliasing -Wno-error=char-subscripts
 LDFLAGS := -B$(BOARDPATH) -B$(ARCHPATH) -specs=$(BOARD).specs
 LDDEPS := $(BOARDPATH)/$(BOARD)$( .specs .ld) $(ARCHPATH)/crt0.o
 MKIMAGEFLAGS := -A $(ARCH) -O linux
