@@ -1,0 +1,336 @@
+Index: quilted/Include/methodobject.h
+===================================================================
+--- quilted.orig/Include/methodobject.h	2008-09-04 16:54:38.000000000 +0100
++++ quilted/Include/methodobject.h	2008-09-04 16:56:25.000000000 +0100
+@@ -46,7 +46,7 @@
+ PyAPI_FUNC(PyObject *) Py_FindMethod(PyMethodDef[], PyObject *, const char *);
+ 
+ #define PyCFunction_New(ML, SELF) PyCFunction_NewEx((ML), (SELF), NULL)
+-PyAPI_FUNC(PyObject *) PyCFunction_NewEx(PyMethodDef *, PyObject *, 
++PyAPI_FUNC(PyObject *) PyCFunction_NewEx(const PyMethodDef *, PyObject *, 
+ 					 PyObject *);
+ 
+ /* Flag passed to newmethodobject */
+@@ -80,7 +80,7 @@
+ 
+ typedef struct {
+     PyObject_HEAD
+-    PyMethodDef *m_ml; /* Description of the C function to call */
++    const PyMethodDef *m_ml; /* Description of the C function to call */
+     PyObject    *m_self; /* Passed as 'self' arg to the C func, can be NULL */
+     PyObject    *m_module; /* The __module__ attribute, can be anything */
+ } PyCFunctionObject;
+Index: quilted/Include/modsupport.h
+===================================================================
+--- quilted.orig/Include/modsupport.h	2008-09-04 16:49:31.000000000 +0100
++++ quilted/Include/modsupport.h	2008-09-04 16:50:36.000000000 +0100
+@@ -113,7 +113,8 @@
+  #endif
+ #endif
+ 
+-PyAPI_FUNC(PyObject *) Py_InitModule4(const char *name, PyMethodDef *methods,
++PyAPI_FUNC(PyObject *) Py_InitModule4(const char *name,
++                                      const PyMethodDef *methods,
+                                       const char *doc, PyObject *self,
+                                       int apiver);
+ 
+Index: quilted/Objects/methodobject.c
+===================================================================
+--- quilted.orig/Objects/methodobject.c	2008-09-04 16:55:05.000000000 +0100
++++ quilted/Objects/methodobject.c	2008-09-04 16:55:37.000000000 +0100
+@@ -7,7 +7,7 @@
+ static PyCFunctionObject *free_list = NULL;
+ 
+ PyObject *
+-PyCFunction_NewEx(PyMethodDef *ml, PyObject *self, PyObject *module)
++PyCFunction_NewEx(const PyMethodDef *ml, PyObject *self, PyObject *module)
+ {
+ 	PyCFunctionObject *op;
+ 	op = free_list;
+Index: quilted/Python/bltinmodule.c
+===================================================================
+--- quilted.orig/Python/bltinmodule.c	2008-09-04 16:48:29.000000000 +0100
++++ quilted/Python/bltinmodule.c	2008-09-04 16:48:59.000000000 +0100
+@@ -2230,7 +2230,7 @@
+ in length to the length of the shortest argument sequence.");
+ 
+ 
+-static PyMethodDef builtin_methods[] = {
++static const PyMethodDef builtin_methods[] = {
+  	{"__import__",	(PyCFunction)builtin___import__, METH_VARARGS | METH_KEYWORDS, import_doc},
+  	{"abs",		builtin_abs,        METH_O, abs_doc},
+  	{"all",		builtin_all,        METH_O, all_doc},
+Index: quilted/Python/modsupport.c
+===================================================================
+--- quilted.orig/Python/modsupport.c	2008-09-04 16:50:44.000000000 +0100
++++ quilted/Python/modsupport.c	2008-09-04 16:54:12.000000000 +0100
+@@ -29,11 +29,11 @@
+  This Python has API version %d, module %.100s has version %d.";
+ 
+ PyObject *
+-Py_InitModule4(const char *name, PyMethodDef *methods, const char *doc,
++Py_InitModule4(const char *name, const PyMethodDef *methods, const char *doc,
+ 	       PyObject *passthrough, int module_api_version)
+ {
+ 	PyObject *m, *d, *v, *n;
+-	PyMethodDef *ml;
++	const PyMethodDef *ml;
+ 	if (!Py_IsInitialized())
+ 	    Py_FatalError("Interpreter not initialized (version mismatch?)");
+ 	if (module_api_version != PYTHON_API_VERSION) {
+Index: quilted/Modules/gcmodule.c
+===================================================================
+--- quilted.orig/Modules/gcmodule.c	2008-09-04 17:30:56.000000000 +0100
++++ quilted/Modules/gcmodule.c	2008-09-04 17:31:05.000000000 +0100
+@@ -1188,7 +1188,7 @@
+ "get_referrers() -- Return the list of objects that refer to an object.\n"
+ "get_referents() -- Return the list of objects that an object refers to.\n");
+ 
+-static PyMethodDef GcMethods[] = {
++static const PyMethodDef GcMethods[] = {
+ 	{"enable",	   gc_enable,	  METH_NOARGS,  gc_enable__doc__},
+ 	{"disable",	   gc_disable,	  METH_NOARGS,  gc_disable__doc__},
+ 	{"isenabled",	   gc_isenabled,  METH_NOARGS,  gc_isenabled__doc__},
+Index: quilted/Objects/codeobject.c
+===================================================================
+--- quilted.orig/Objects/codeobject.c	2008-09-04 17:29:18.000000000 +0100
++++ quilted/Objects/codeobject.c	2008-09-04 17:29:27.000000000 +0100
+@@ -110,7 +110,7 @@
+ 
+ #define OFF(x) offsetof(PyCodeObject, x)
+ 
+-static PyMemberDef code_memberlist[] = {
++static const PyMemberDef code_memberlist[] = {
+ 	{"co_argcount",	T_INT,		OFF(co_argcount),	READONLY},
+ 	{"co_nlocals",	T_INT,		OFF(co_nlocals),	READONLY},
+ 	{"co_stacksize",T_INT,		OFF(co_stacksize),	READONLY},
+Index: quilted/Objects/dictobject.c
+===================================================================
+--- quilted.orig/Objects/dictobject.c	2008-09-04 17:30:18.000000000 +0100
++++ quilted/Objects/dictobject.c	2008-09-04 17:30:24.000000000 +0100
+@@ -1981,7 +1981,7 @@
+ PyDoc_STRVAR(iteritems__doc__,
+ "D.iteritems() -> an iterator over the (key, value) items of D");
+ 
+-static PyMethodDef mapp_methods[] = {
++static const PyMethodDef mapp_methods[] = {
+ 	{"__contains__",(PyCFunction)dict_has_key,      METH_O | METH_COEXIST,
+ 	 contains__doc__},
+ 	{"__getitem__", (PyCFunction)dict_subscript,	METH_O | METH_COEXIST,
+Index: quilted/Objects/fileobject.c
+===================================================================
+--- quilted.orig/Objects/fileobject.c	2008-09-04 17:30:32.000000000 +0100
++++ quilted/Objects/fileobject.c	2008-09-04 17:30:42.000000000 +0100
+@@ -1749,7 +1749,7 @@
+ PyDoc_STRVAR(exit_doc,
+ 	     "__exit__(*excinfo) -> None.  Closes the file.");
+ 
+-static PyMethodDef file_methods[] = {
++static const PyMethodDef file_methods[] = {
+ 	{"readline",  (PyCFunction)file_readline, METH_VARARGS, readline_doc},
+ 	{"read",      (PyCFunction)file_read,     METH_VARARGS, read_doc},
+ 	{"write",     (PyCFunction)file_write,    METH_VARARGS, write_doc},
+Index: quilted/Objects/setobject.c
+===================================================================
+--- quilted.orig/Objects/setobject.c	2008-09-04 17:28:50.000000000 +0100
++++ quilted/Objects/setobject.c	2008-09-04 17:28:58.000000000 +0100
+@@ -1835,7 +1835,7 @@
+ All is well if assertions don't fail.");
+ #endif
+ 
+-static PyMethodDef set_methods[] = {
++static const PyMethodDef set_methods[] = {
+ 	{"add",		(PyCFunction)set_add,		METH_O,
+ 	 add_doc},
+ 	{"clear",	(PyCFunction)set_clear,		METH_NOARGS,
+Index: quilted/Objects/stringobject.c
+===================================================================
+--- quilted.orig/Objects/stringobject.c	2008-09-04 17:28:01.000000000 +0100
++++ quilted/Objects/stringobject.c	2008-09-04 17:28:20.000000000 +0100
+@@ -3841,7 +3841,7 @@
+ }
+ 
+ 
+-static PyMethodDef
++static const PyMethodDef
+ string_methods[] = {
+ 	/* Counterparts of the obsolete stropmodule functions; except
+ 	   string.maketrans(). */
+Index: quilted/Objects/unicodeobject.c
+===================================================================
+--- quilted.orig/Objects/unicodeobject.c	2008-09-04 17:27:22.000000000 +0100
++++ quilted/Objects/unicodeobject.c	2008-09-04 17:27:29.000000000 +0100
+@@ -7009,7 +7009,7 @@
+ }
+ 
+ 
+-static PyMethodDef unicode_methods[] = {
++static const PyMethodDef unicode_methods[] = {
+ 
+     /* Order is according to common usage: often used methods should
+        appear first, since lookup is done sequentially. */
+Index: quilted/Python/import.c
+===================================================================
+--- quilted.orig/Python/import.c	2008-09-04 17:29:52.000000000 +0100
++++ quilted/Python/import.c	2008-09-04 17:30:02.000000000 +0100
+@@ -2933,7 +2933,7 @@
+ Release the interpreter's import lock.\n\
+ On platforms without threads, this function does nothing.");
+ 
+-static PyMethodDef imp_methods[] = {
++static const PyMethodDef imp_methods[] = {
+ 	{"find_module",	 imp_find_module,  METH_VARARGS, doc_find_module},
+ 	{"get_magic",	 imp_get_magic,	   METH_NOARGS,  doc_get_magic},
+ 	{"get_suffixes", imp_get_suffixes, METH_NOARGS,  doc_get_suffixes},
+Index: quilted/Python/sysmodule.c
+===================================================================
+--- quilted.orig/Python/sysmodule.c	2008-09-04 17:28:34.000000000 +0100
++++ quilted/Python/sysmodule.c	2008-09-04 17:28:42.000000000 +0100
+@@ -733,7 +733,7 @@
+ }
+ #endif
+ 
+-static PyMethodDef sys_methods[] = {
++static const PyMethodDef sys_methods[] = {
+ 	/* Might as well keep this in alphabetic order */
+ 	{"callstats", (PyCFunction)PyEval_GetCallStats, METH_NOARGS,
+ 	 callstats_doc},
+Index: quilted/Include/descrobject.h
+===================================================================
+--- quilted.orig/Include/descrobject.h	2008-09-04 17:37:22.000000000 +0100
++++ quilted/Include/descrobject.h	2008-09-04 17:40:21.000000000 +0100
+@@ -48,12 +48,12 @@
+ 
+ typedef struct {
+ 	PyDescr_COMMON;
+-	PyMethodDef *d_method;
++	const PyMethodDef *d_method;
+ } PyMethodDescrObject;
+ 
+ typedef struct {
+ 	PyDescr_COMMON;
+-	struct PyMemberDef *d_member;
++	const struct PyMemberDef *d_member;
+ } PyMemberDescrObject;
+ 
+ typedef struct {
+@@ -69,10 +69,11 @@
+ 
+ PyAPI_DATA(PyTypeObject) PyWrapperDescr_Type;
+ 
+-PyAPI_FUNC(PyObject *) PyDescr_NewMethod(PyTypeObject *, PyMethodDef *);
+-PyAPI_FUNC(PyObject *) PyDescr_NewClassMethod(PyTypeObject *, PyMethodDef *);
++PyAPI_FUNC(PyObject *) PyDescr_NewMethod(PyTypeObject *, const PyMethodDef *);
++PyAPI_FUNC(PyObject *) PyDescr_NewClassMethod(PyTypeObject *,
++					       const PyMethodDef *);
+ PyAPI_FUNC(PyObject *) PyDescr_NewMember(PyTypeObject *,
+-					       struct PyMemberDef *);
++					       const struct PyMemberDef *);
+ PyAPI_FUNC(PyObject *) PyDescr_NewGetSet(PyTypeObject *,
+ 					       struct PyGetSetDef *);
+ PyAPI_FUNC(PyObject *) PyDescr_NewWrapper(PyTypeObject *,
+Index: quilted/Include/object.h
+===================================================================
+--- quilted.orig/Include/object.h	2008-09-04 17:33:50.000000000 +0100
++++ quilted/Include/object.h	2008-09-04 17:34:28.000000000 +0100
+@@ -314,8 +314,8 @@
+ 	iternextfunc tp_iternext;
+ 
+ 	/* Attribute descriptor and subclassing stuff */
+-	struct PyMethodDef *tp_methods;
+-	struct PyMemberDef *tp_members;
++	const struct PyMethodDef *tp_methods;
++	const struct PyMemberDef *tp_members;
+ 	struct PyGetSetDef *tp_getset;
+ 	struct _typeobject *tp_base;
+ 	PyObject *tp_dict;
+Index: quilted/Include/structmember.h
+===================================================================
+--- quilted.orig/Include/structmember.h	2008-09-04 17:41:20.000000000 +0100
++++ quilted/Include/structmember.h	2008-09-04 17:41:38.000000000 +0100
+@@ -83,8 +83,8 @@
+ PyAPI_FUNC(int) PyMember_Set(char *, struct memberlist *, const char *, PyObject *);
+ 
+ /* Current API, use this */
+-PyAPI_FUNC(PyObject *) PyMember_GetOne(const char *, struct PyMemberDef *);
+-PyAPI_FUNC(int) PyMember_SetOne(char *, struct PyMemberDef *, PyObject *);
++PyAPI_FUNC(PyObject *) PyMember_GetOne(const char *, const struct PyMemberDef *);
++PyAPI_FUNC(int) PyMember_SetOne(char *, const struct PyMemberDef *, PyObject *);
+ 
+ 
+ #ifdef __cplusplus
+Index: quilted/Objects/descrobject.c
+===================================================================
+--- quilted.orig/Objects/descrobject.c	2008-09-04 17:31:21.000000000 +0100
++++ quilted/Objects/descrobject.c	2008-09-04 17:39:53.000000000 +0100
+@@ -591,7 +591,7 @@
+ }
+ 
+ PyObject *
+-PyDescr_NewMethod(PyTypeObject *type, PyMethodDef *method)
++PyDescr_NewMethod(PyTypeObject *type, const PyMethodDef *method)
+ {
+ 	PyMethodDescrObject *descr;
+ 
+@@ -603,7 +603,7 @@
+ }
+ 
+ PyObject *
+-PyDescr_NewClassMethod(PyTypeObject *type, PyMethodDef *method)
++PyDescr_NewClassMethod(PyTypeObject *type, const PyMethodDef *method)
+ {
+ 	PyMethodDescrObject *descr;
+ 
+@@ -615,7 +615,7 @@
+ }
+ 
+ PyObject *
+-PyDescr_NewMember(PyTypeObject *type, PyMemberDef *member)
++PyDescr_NewMember(PyTypeObject *type, const PyMemberDef *member)
+ {
+ 	PyMemberDescrObject *descr;
+ 
+Index: quilted/Objects/typeobject.c
+===================================================================
+--- quilted.orig/Objects/typeobject.c	2008-09-04 17:36:05.000000000 +0100
++++ quilted/Objects/typeobject.c	2008-09-04 17:36:39.000000000 +0100
+@@ -2931,7 +2931,7 @@
+ /* Initialize the __dict__ in a type object */
+ 
+ static int
+-add_methods(PyTypeObject *type, PyMethodDef *meth)
++add_methods(PyTypeObject *type, const PyMethodDef *meth)
+ {
+ 	PyObject *dict = type->tp_dict;
+ 
+@@ -2968,7 +2968,7 @@
+ }
+ 
+ static int
+-add_members(PyTypeObject *type, PyMemberDef *memb)
++add_members(PyTypeObject *type, const PyMemberDef *memb)
+ {
+ 	PyObject *dict = type->tp_dict;
+ 
+Index: quilted/Python/structmember.c
+===================================================================
+--- quilted.orig/Python/structmember.c	2008-09-04 17:41:54.000000000 +0100
++++ quilted/Python/structmember.c	2008-09-04 17:42:16.000000000 +0100
+@@ -51,7 +51,7 @@
+ }
+ 
+ PyObject *
+-PyMember_GetOne(const char *addr, PyMemberDef *l)
++PyMember_GetOne(const char *addr, const PyMemberDef *l)
+ {
+ 	PyObject *v;
+ 	if ((l->flags & READ_RESTRICTED) &&
+@@ -154,7 +154,7 @@
+ }
+ 
+ int
+-PyMember_SetOne(char *addr, PyMemberDef *l, PyObject *v)
++PyMember_SetOne(char *addr, const PyMemberDef *l, PyObject *v)
+ {
+ 	PyObject *oldv;
+ 
