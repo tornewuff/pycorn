@@ -76,3 +76,29 @@ Index: quilted/Parser/tokenizer.c
  	"ENDMARKER",
  	"NAME",
  	"NUMBER",
+Index: quilted/Include/grammar.h
+===================================================================
+--- quilted.orig/Include/grammar.h	2008-09-04 16:18:31.000000000 +0100
++++ quilted/Include/grammar.h	2008-09-04 16:18:57.000000000 +0100
+@@ -76,7 +76,7 @@
+ 
+ int addlabel(labellist *ll, int type, char *str);
+ int findlabel(labellist *ll, int type, char *str);
+-char *PyGrammar_LabelRepr(label *lb);
++const char *PyGrammar_LabelRepr(label *lb);
+ void translatelabels(grammar *g);
+ 
+ void addfirstsets(grammar *g);
+Index: quilted/Parser/grammar1.c
+===================================================================
+--- quilted.orig/Parser/grammar1.c	2008-09-04 16:18:02.000000000 +0100
++++ quilted/Parser/grammar1.c	2008-09-04 16:18:19.000000000 +0100
+@@ -30,7 +30,7 @@
+ #endif
+ }
+ 
+-char *
++const char *
+ PyGrammar_LabelRepr(label *lb)
+ {
+ 	static char buf[100];
