@@ -3,14 +3,14 @@ libpython2.5.a: stamp-sources hostpgen
 	&mkdir targetpy
 	cd targetpy; MACHDEP=pycorn ../Python-2.5.2/configure --host=arm-eabi --without-signal-module
 	cd targetpy; make HOSTPGEN=$(CURDIR)/hostpgen EXTRA_CFLAGS="$(PYCFLAGS)" $(output)
-	&cp targetpy/$(output) $(output)
+	cp -p targetpy/$(output) $(output)
 
 hostpgen: stamp-sources
 	rm -rf hostpy 
 	&mkdir hostpy
 	cd hostpy; ../Python-2.5.2/configure
 	cd hostpy; make Parser/pgen
-	&cp hostpy/Parser/pgen $(output)
+	cp -p hostpy/Parser/pgen $(output)
 
 stamp-quilt: $(ROOT)/downloads/Python-2.5.2.tar.bz2
 	rm -rf quilt

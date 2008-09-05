@@ -3,8 +3,10 @@
 *.bin
 *.uimage
 *.flash
-pykern/Python-2.5.2
+stamp-*
+libs/python/Python-2.5.2
 downloads/Python-2.5.2.tar.bz2
-pykern/hostpy
-pykern/targetpy
+libs/python/hostpy
+libs/python/targetpy
 pykern/frozen.c
+libs/python/hostpgen
