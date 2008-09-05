@@ -1,4 +1,4 @@
-$(phony all): hello/hello.flash pykern/pykern.flash
+$(phony all): hello/all pykern/all
 
 $(phony run): pykern/run
 
