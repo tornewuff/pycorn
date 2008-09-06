@@ -9,9 +9,8 @@
  * (at your option) any later version.
  */
 
+#include "Python.h"
 #include <stdio.h>
-
-extern int Py_Main(int, char*[]);
 
 char *pyargs[] = { "python", "-v", "-S", "-i", NULL };
 
