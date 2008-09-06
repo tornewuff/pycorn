@@ -1,3 +1,5 @@
+build_check only_action
+
 u-boot-verdex-600-r1604.bin:
 	&rm -f $(output)
 	wget http://www.gumstix.net/feeds/u-boot/$(output)
