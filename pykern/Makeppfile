@@ -1,15 +1,13 @@
-OBJS := main.o getpath.o frozen.o
-OBJECTS := $(OBJS) $(ROOT)/libs/python/targetpy/libpython2.5.a
+OBJECTS := main.o getpath.o frozen.o $(ROOT)/libs/python/targetpy/libpython2.5.a
 LIBS := -lm
 
 $(phony all): pykern.flash
 
-$(OBJS): $(ROOT)/libs/python/stamp-include
+%.o: %.c $(ROOT)/libs/python/stamp-include : scanner none
+	$(CC) $(CFLAGS) -I$(ROOT)/libs/python/include $(CPPFLAGS) -c $(input) -o $(output)
 
 frozen.c: frozen/**/*.py freeze.py
 	cd frozen; python ../freeze.py $(relative_to $(wildcard frozen/**/*.py),frozen)
 	&mv frozen/frozen.c $(output)
 
 include common.mk
-
-CFLAGS += -I$(ROOT)/libs/python/include
