@@ -1,16 +1,29 @@
-libpython2.5.a: stamp-sources hostpgen
+libpython2.5.a: stamp-target
+	cp -p targetpy/$(output) $(output)
+
+stamp-include: stamp-target stamp-sources
+  rm -rf include
+  &mkdir include
+  cp -p Python-2.5.2/Include/*.h include
+  cp -p targetpy/pyconfig.h include
+  &touch stamp-include
+
+stamp-target: stamp-sources hostpgen
 	rm -rf targetpy
 	&mkdir targetpy
 	cd targetpy; MACHDEP=pycorn ../Python-2.5.2/configure --host=arm-eabi --without-signal-module
-	cd targetpy; make HOSTPGEN=$(CURDIR)/hostpgen EXTRA_CFLAGS="$(PYCFLAGS)" $(output)
-	cp -p targetpy/$(output) $(output)
+	cd targetpy; make HOSTPGEN=$(CURDIR)/hostpgen EXTRA_CFLAGS="$(PYCFLAGS)" libpython2.5.a
+	&touch stamp-target
 
-hostpgen: stamp-sources
+hostpgen: stamp-host
+	cp -p hostpy/Parser/pgen $(output)
+
+stamp-host: stamp-sources
 	rm -rf hostpy 
 	&mkdir hostpy
 	cd hostpy; ../Python-2.5.2/configure
 	cd hostpy; make Parser/pgen
-	cp -p hostpy/Parser/pgen $(output)
+	&touch stamp-host
 
 stamp-quilt: $(ROOT)/downloads/Python-2.5.2.tar.bz2
 	rm -rf quilt
@@ -18,14 +31,14 @@ stamp-quilt: $(ROOT)/downloads/Python-2.5.2.tar.bz2
 	cd quilt; tar jxf ../$(input)
 	&ln -s ../../patches quilt/Python-2.5.2
 	cd quilt/Python-2.5.2; quilt push -a
-	touch $(output)
+	&touch $(output)
 
 stamp-sources Python-2.5.2/configure: $(ROOT)/downloads/Python-2.5.2.tar.bz2 patches/*
 	rm -rf Python-2.5.2
 	tar jxf $(input)
 	cd Python-2.5.2; for p in `cat ../patches/series`; do patch -p1 < ../patches/$$p; done
 	cd Python-2.5.2; autoconf
-	touch $(output)
+	&touch $(output)
 
 no_implicit_load Python-2.5.2 hostpy targetpy
 

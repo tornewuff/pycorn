@@ -10,3 +10,4 @@ libs/python/hostpy
 libs/python/targetpy
 pykern/frozen.c
 libs/python/hostpgen
+libs/python/include
