@@ -40,8 +40,7 @@ $(notdir $(CURDIR)).elf: $(OBJECTS) $(BOARDPATH)/$( $(BOARDOBJECTS)) $(ARCHPATH)
 	$(CC) $(OBJECTS) $(BOARDPATH)/$( $(BOARDOBJECTS)) $(ARCHPATH)/$( $(ARCHOBJECTS)) $(LDFLAGS) $(LIBOBJECTS) $(SYSLIBS) -o $(output)
 endif
 
-# we disable the scanner because it causes problems with the dynamically created includes from our libs
-%.o: %.c $(ROOT)/libs/$( $(dir $(LIBS)))stamp-include : scanner none
+%.o: %.c $(ROOT)/libs/$( $(dir $(LIBS)))stamp-include
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $(input) -o $(output)
 
 %.o: %.S
