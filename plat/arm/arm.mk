@@ -1,0 +1,1 @@
+ARCHOBJECTS := start.o

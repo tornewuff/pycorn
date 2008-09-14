@@ -14,18 +14,6 @@
 \name:
 .endm
 
-    .section .start,"ax",%progbits
-    .code 32
-    .align 2
-
-    FUNC_START  _start
-    ldr sp, .Lstack
-    b   _mainCRTStartup
-
-    .align 2
-.Lstack:    
-    .word   __stack
-
     .text
     .code 32
     .align 2
