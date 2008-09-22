@@ -12,32 +12,104 @@
 #include <Python.h>
 
 static PyObject *
-metal_peek(PyObject *self, PyObject *args)
+metal_peek32(PyObject *self, PyObject *args)
 {
     unsigned addr;
     unsigned val;
 
     if (!PyArg_ParseTuple(args, "I", &addr))
         return NULL;
+    if ((addr & 0x3) != 0)
+    {
+        PyErr_SetString(PyExc_ValueError, "32-bit access must be 4-byte aligned");
+        return NULL;
+    }
     val = *(unsigned*)addr;
     return Py_BuildValue("I", val);
 }
 
 static PyObject *
-metal_poke(PyObject *self, PyObject *args)
+metal_poke32(PyObject *self, PyObject *args)
 {
     unsigned addr;
     unsigned val;
 
     if (!PyArg_ParseTuple(args, "II", &addr, &val))
         return NULL;
+    if ((addr & 0x3) != 0)
+    {
+        PyErr_SetString(PyExc_ValueError, "32-bit access must be 4-byte aligned");
+        return NULL;
+    }
     *(unsigned*)addr = val;
     Py_RETURN_NONE;
 }
 
+static PyObject *
+metal_peek16(PyObject *self, PyObject *args)
+{
+    unsigned addr;
+    unsigned short val;
+
+    if (!PyArg_ParseTuple(args, "I", &addr))
+        return NULL;
+    if ((addr & 0x1) != 0)
+    {
+        PyErr_SetString(PyExc_ValueError, "16-bit access must be 2-byte aligned");
+        return NULL;
+    }
+    val = *(unsigned short*)addr;
+    return Py_BuildValue("H", val);
+}
+
+static PyObject *
+metal_poke16(PyObject *self, PyObject *args)
+{
+    unsigned addr;
+    unsigned short val;
+
+    if (!PyArg_ParseTuple(args, "IH", &addr, &val))
+        return NULL;
+    if ((addr & 0x1) != 0)
+    {
+        PyErr_SetString(PyExc_ValueError, "16-bit access must be 2-byte aligned");
+        return NULL;
+    }
+    *(unsigned short*)addr = val;
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+metal_peek8(PyObject *self, PyObject *args)
+{
+    unsigned addr;
+    unsigned char val;
+
+    if (!PyArg_ParseTuple(args, "I", &addr))
+        return NULL;
+    val = *(unsigned char*)addr;
+    return Py_BuildValue("B", val);
+}
+
+static PyObject *
+metal_poke8(PyObject *self, PyObject *args)
+{
+    unsigned addr;
+    unsigned char val;
+
+    if (!PyArg_ParseTuple(args, "IB", &addr, &val))
+        return NULL;
+    *(unsigned char*)addr = val;
+    Py_RETURN_NONE;
+}
+
 static const PyMethodDef MetalMethods[] = {
-    {"peek", metal_peek, METH_VARARGS, "Read memory at the given address."},
-    {"poke", metal_poke, METH_VARARGS, "Write memory at the given address."},
+    {"peek32", metal_peek32, METH_VARARGS, "Read a 32-bit word at the given address."},
+    {"poke32", metal_poke32, METH_VARARGS, "Write a 32-bit word at the given address."},
+    {"peek16", metal_peek16, METH_VARARGS, "Read a 16-bit halfword at the given address."},
+    {"poke16", metal_poke16, METH_VARARGS, "Write a 16-bit halfword at the given address."},
+    {"peek8", metal_peek8, METH_VARARGS, "Read an 8-bit byte at the given address."},
+    {"poke8", metal_poke8, METH_VARARGS, "Write an 8-bit byte at the given address."},
     {NULL, NULL, 0, NULL}
 };
 
