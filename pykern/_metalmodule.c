@@ -103,6 +103,27 @@ metal_poke8(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+static PyObject *
+metal_membuf(PyObject *self, PyObject *args)
+{
+    unsigned addr;
+    Py_ssize_t len;
+    int writable = 0;
+
+    if (!PyArg_ParseTuple(args, "In|i", &addr, &len, &writable))
+        return NULL;
+    if (addr + len < addr)
+    {
+        PyErr_SetString(PyExc_ValueError, "buffer is too long for address space");
+        return NULL;
+    }
+    
+    if (writable)
+        return PyBuffer_FromReadWriteMemory((void*)addr, len);
+    else
+        return PyBuffer_FromMemory((void*)addr, len);
+}
+
 static const PyMethodDef MetalMethods[] = {
     {"peek32", metal_peek32, METH_VARARGS, "Read a 32-bit word at the given address."},
     {"poke32", metal_poke32, METH_VARARGS, "Write a 32-bit word at the given address."},
@@ -110,6 +131,7 @@ static const PyMethodDef MetalMethods[] = {
     {"poke16", metal_poke16, METH_VARARGS, "Write a 16-bit halfword at the given address."},
     {"peek8", metal_peek8, METH_VARARGS, "Read an 8-bit byte at the given address."},
     {"poke8", metal_poke8, METH_VARARGS, "Write an 8-bit byte at the given address."},
+    {"membuf", metal_membuf, METH_VARARGS, "Create a buffer object pointing at the given address"},
     {NULL, NULL, 0, NULL}
 };
 
