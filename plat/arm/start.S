@@ -19,9 +19,29 @@
     .align 2
 
     FUNC_START  _start
-    ldr sp, .Lstack
-    b   _mainCRTStartup
+    /* Save the parameters passed by the bootloader */
+    cmp     r0, #0
+    bne     1f
+    ldr     r0, .Lmachtype
+    cmp     r0, #0
+    strne   r1, [r0]
+    ldr     r0, .Ltaglist
+    cmp     r0, #0
+    strne   r2, [r0]
+
+1:
+    /* Load a stack pointer */
+    ldr     sp, .Lstack
+
+    /* Branch to the C library entry point */
+    b       _mainCRTStartup
 
     .align 2
 .Lstack:    
     .word   __stack
+.Lmachtype:
+    .word   machtype
+    .weak   machtype
+.Ltaglist:
+    .word   taglist_ptr
+    .weak   taglist_ptr
