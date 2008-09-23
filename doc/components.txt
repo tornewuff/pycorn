@@ -1,0 +1,99 @@
+COMPONENTS
+==========
+
+Pycorn is made up of a number of parts written in various languages. This is an
+attempt to explain what those parts are, and how they fit together. It also
+explains the boot process, in vague terms.
+
+1 - The bootloader
+==================
+
+This isn't actually part of Pycorn, but it's the first part of the boot
+process. For the current supported ARM targets, this is u-boot. It's
+responsible for several things:
+
+1) Setting up the SDRAM controller
+2) Initialising a serial port
+3) Loading the Pycorn kernel from somewhere into RAM
+4) Detecting machine type and setting up a taglist, describing the RAM layout
+   and boot parameters - this is part of the ARM Linux boot protocol
+5) Branching to Pycorn's entry point function, _start
+
+2 - The Pycorn kernel, pykern
+=============================
+
+The Pycorn kernel is a C application, with some assembly for initial setup. It
+links to libpython.a to provide it with a Python interpreter. It contains
+several parts:
+
+2a - The native bootstrap, _start
+=================================
+
+The native bootstrap is written in assembler, and is platform-specific. It's
+assembled from plat/$(ARCH)/start.S and produces the executable section .start
+which contains the function _start. The link script places .start at the
+beginning of the final binary, which means that the entry point is always the
+first instruction - also part of the ARM Linux boot protocol. It's responsible
+for doing chip-specific hardware setup:
+
+1) Saving the machine type and taglist pointer in global variables (the
+   bootloader passes them in registers r0-r2 which will be overwritten)
+2) Setting the stack pointer to a valid value (the top of RAM, currently)
+3) Branching to newlib's entry point function, _mainCRTStartup
+
+2b - The C library entry point, _mainCRTStartup
+===============================================
+
+Now that we have a stack, we can start to execute code in a more normal C
+environment. The C library entry point is still written in assembler, though,
+and is still platform-specific - but no longer depends on particular chip
+details, only on the architecture in question. It's assembled from
+plat/$(ARCH)/crt0.S and produces _mainCRTStartup in the .text section. It's
+responsible for doing the "normal" parts of starting a C application, which are
+largely the same whether you are running on a real OS or in a selfhosted
+environment:
+
+1) Zeroing the memory for the .bss section
+2) Registering the global object destructor handler as an atexit() function
+3) Calling global object constructors
+4) Calling main()
+5) Calling exit() if main returns
+
+Global object constructors/destructors are required to support C++ binaries,
+and so that pykern code can use __attribute__((constructor)) to have functions
+automatically called on startup.
+
+2c - The boot debug serial driver
+=================================
+
+To aid porting and debugging, a serial driver written in native C code exists
+which uses the serial port that u-boot set up for us. It's platform-specific,
+naturally, compiled from plat/$(ARCH)/$(BOARD)/serial.c. It includes a function
+tagged as a constructor which installs the serial driver as the IO handler for
+stdin, stdout and stderr - thus, debug output can be accomplished by simply
+printf() or any other ordinary C library mechanism once main() is called.
+
+2d - Python extension modules
+=============================
+
+pykern provides several builtin Python extension modules, to allow direct
+hardware access. These are the same as any normal Python extension module, with
+an additional function tagged as a constructor which is responsible for adding
+them to the builtin module table before the interpreter is run. These are
+compiled from pykern/*module.c, and produce various modules whose names start
+with an underscore.
+
+2e - The pykern main function, main
+===================================
+
+pykern's main function is ordinary portable C code. It simply invokes the
+Python interpreter with a set of fixed parameters. The standard IO handles will
+be attached to the boot debug serial driver, so the interpreter will use that
+serial port initially, and for any messages produced in a crash situation.
+
+3 - The Rest
+============
+
+Right now that's it - the interpreter produced by pykern simply provides a
+prompt using the serial debug port. It is not possible to import any modules
+that are not built in, as no filesystem support exists.
