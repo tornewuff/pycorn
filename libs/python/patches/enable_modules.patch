@@ -1,0 +1,13 @@
+Index: Python-2.5.2/Modules/Setup.dist
+===================================================================
+--- Python-2.5.2.orig/Modules/Setup.dist	2008-09-23 22:28:55.000000000 +0100
++++ Python-2.5.2/Modules/Setup.dist	2008-09-23 22:29:02.000000000 +0100
+@@ -167,7 +167,7 @@
+ #array arraymodule.c	# array objects
+ #cmath cmathmodule.c # -lm # complex math library functions
+ #math mathmodule.c # -lm # math library functions, e.g. sin()
+-#_struct _struct.c	# binary structure packing/unpacking
++_struct _struct.c	# binary structure packing/unpacking
+ #time timemodule.c # -lm # time operations and variables
+ #operator operator.c	# operator.add() and similar goodies
+ #_weakref _weakref.c	# basic weak reference support

@@ -6,3 +6,4 @@ const-longdigits.patch
 const-tokens.patch
 const-methods.patch
 const-modulemethods.patch
+enable_modules.patch
