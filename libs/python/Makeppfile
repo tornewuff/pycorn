@@ -2,11 +2,11 @@ libpython2.5.a: stamp-target
 	cp -p targetpy/$(output) $(output)
 
 stamp-include: stamp-target stamp-sources
-  rm -rf include
-  &mkdir include
-  cp -p Python-2.5.2/Include/*.h include
-  cp -p targetpy/pyconfig.h include
-  &touch stamp-include
+	rm -rf include
+	&mkdir include
+	cp -p Python-2.5.2/Include/*.h include
+	cp -p targetpy/pyconfig.h include
+	&touch stamp-include
 
 stamp-target: stamp-sources hostpgen
 	rm -rf targetpy

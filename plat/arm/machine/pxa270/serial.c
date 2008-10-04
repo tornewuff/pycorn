@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 #include <sys/iosupport.h>
-#include "pycorn_board.h"
+#include "pycorn_mach.h"
 
 int serial_write(struct _reent *r, int fd, const char* ptr, int len)
 {

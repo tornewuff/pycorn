@@ -68,10 +68,11 @@ automatically called on startup.
 
 To aid porting and debugging, a serial driver written in native C code exists
 which uses the serial port that u-boot set up for us. It's platform-specific,
-naturally, compiled from plat/$(ARCH)/$(BOARD)/serial.c. It includes a function
-tagged as a constructor which installs the serial driver as the IO handler for
-stdin, stdout and stderr - thus, debug output can be accomplished by simply
-printf() or any other ordinary C library mechanism once main() is called.
+naturally, compiled from plat/$(ARCH)/machine/$(MACH)/serial.c. It includes a
+function tagged as a constructor which installs the serial driver as the IO
+handler for stdin, stdout and stderr - thus, debug output can be accomplished
+by simply printf() or any other ordinary C library mechanism once main() is
+called.
 
 2d - Python extension modules
 =============================

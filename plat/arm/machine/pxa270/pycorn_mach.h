@@ -1,5 +1,5 @@
-#ifndef __PYCORN_BOARD_H
-#define __PYCORN_BOARD_H
+#ifndef __PYCORN_MACH_H
+#define __PYCORN_MACH_H
 
 #include "pycorn_arch.h"
 
