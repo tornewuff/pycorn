@@ -65,7 +65,7 @@ def writecode(outfp, mod, str):
 
 mods = {}
 
-def addfile(path, namelist):
+def addfile(path, shortpath, namelist):
     package = False
     if namelist[-1] == "__init__":
         package = True
@@ -74,18 +74,19 @@ def addfile(path, namelist):
     f = open(path)
     text = f.read() + '\n'
     f.close()
-    code = compile(text, path, "exec")
+    code = compile(text, shortpath, "exec")
     mods[modname] = {'code': code, 'package': package}
 
-def scandir(dir, modprefix):
+def scandir(dir, shortdir, modprefix):
     for entry in os.listdir(dir):
         path = os.path.join(dir, entry)
+        shortpath = os.path.join(shortdir, entry)
         if os.path.isdir(path):
-            scandir(path, modprefix + [entry])
+            scandir(path, shortpath, modprefix + [entry])
         elif os.path.isfile(path) and fnmatch.fnmatch(entry, '*.py'):
-            addfile(path, modprefix + [entry[:-3]])
+            addfile(path, shortpath, modprefix + [entry[:-3]])
 
 for dir in sys.argv[1:]:
-    scandir(dir, [])
+    scandir(dir, "", [])
 
 makefreeze(mods)
