@@ -40,7 +40,7 @@ $(notdir $(CURDIR)).elf: $(OBJECTS) $(MACHPATH)/$( $(MACHOBJECTS)) $(ARCHPATH)/$
 	$(CC) $(OBJECTS) $(MACHPATH)/$( $(MACHOBJECTS)) $(ARCHPATH)/$( $(ARCHOBJECTS)) $(LDFLAGS) $(LIBOBJECTS) $(SYSLIBS) -o $(output)
 endif
 
-%.o: %.c $(ROOT)/libs/$( $(dir $(LIBS)))stamp-include
+%.o: %.c $(prebuild $(ROOT)/libs/$( $(dir $(LIBS)))stamp-include)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $(input) -o $(output)
 
 %.o: %.S
