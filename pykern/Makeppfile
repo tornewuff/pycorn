@@ -5,7 +5,6 @@ SYSLIBS := -lm
 $(phony all): pykern.flash
 
 frozen.c: frozen/**/*.py freeze.py
-	cd frozen; python ../freeze.py $(relative_to $(wildcard frozen/**/*.py),frozen)
-	&mv frozen/frozen.c $(output)
+	python freeze.py frozen
 
 include common.mk

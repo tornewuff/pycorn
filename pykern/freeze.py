@@ -13,6 +13,7 @@
 
 import os
 import sys
+import fnmatch
 import marshal
 
 header = """\
@@ -29,14 +30,14 @@ trailer = """\
 struct _frozen *PyImport_FrozenModules = _PyImport_FrozenModules;
 """
 
-def makefreeze(dict):
+def makefreeze(moddict):
     outfp = open('frozen.c', 'w')
     outfp.write(header)
     done = []
-    mods = dict.keys()
+    mods = moddict.keys()
     mods.sort()
     for mod in mods:
-        m = dict[mod]
+        m = moddict[mod]
         mangled = "__".join(mod.split("."))
         print "freezing", mod, "..."
         str = marshal.dumps(m['code'])
@@ -62,26 +63,29 @@ def writecode(outfp, mod, str):
             outfp.write('%d,' % ord(c))
     outfp.write('\n};\n')
 
-
-
 mods = {}
 
-for modfile in sys.argv[1:]:
+def addfile(path, namelist):
     package = False
-    namein = modfile[:-3]
-    nameout = []
-    while namein:
-        temp = os.path.split(namein)
-        nameout.insert(0, temp[1])
-        namein = temp[0]
-    if nameout[-1] == "__init__":
+    if namelist[-1] == "__init__":
         package = True
-        del nameout[-1]
-    modname = '.'.join(nameout)
-    f = open(modfile)
+        del namelist[-1]
+    modname = '.'.join(namelist)
+    f = open(path)
     text = f.read() + '\n'
     f.close()
-    code = compile(text, modfile, "exec")
+    code = compile(text, path, "exec")
     mods[modname] = {'code': code, 'package': package}
+
+def scandir(dir, modprefix):
+    for entry in os.listdir(dir):
+        path = os.path.join(dir, entry)
+        if os.path.isdir(path):
+            scandir(path, modprefix + [entry])
+        elif os.path.isfile(path) and fnmatch.fnmatch(entry, '*.py'):
+            addfile(path, modprefix + [entry[:-3]])
+
+for dir in sys.argv[1:]:
+    scandir(dir, [])
 
 makefreeze(mods)
