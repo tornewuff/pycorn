@@ -4,7 +4,7 @@ SYSLIBS := -lm
 
 $(phony all): pykern.flash
 
-frozen.c: frozen/**/*.py freeze.py
-	python freeze.py frozen
+frozen.c: frozen/**/*.py $(ROOT)/libs/python/stamp-frozen freeze.py
+	python freeze.py frozen $(ROOT)/libs/python/frozen
 
 include common.mk

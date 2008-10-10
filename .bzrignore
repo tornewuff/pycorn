@@ -12,3 +12,4 @@ pykern/frozen.c
 libs/python/hostpgen
 libs/python/include
 libs/python/quilt
+libs/python/frozen

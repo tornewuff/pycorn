@@ -1,6 +1,14 @@
 libpython2.5.a: stamp-target
 	cp -p targetpy/$(output) $(output)
 
+FREEZEMODS := $(&cat freezelist)
+
+stamp-frozen: stamp-sources
+	rm -rf frozen
+	&mkdir frozen
+	cp -p Python-2.5.2/Lib/$(FREEZEMODS) frozen
+	&touch stamp-frozen
+
 stamp-include: stamp-target stamp-sources
 	rm -rf include
 	&mkdir include
