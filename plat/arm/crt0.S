@@ -19,9 +19,6 @@
     .align 2
 
     FUNC_START  _mainCRTStartup
-    /* Annotation for EABI unwinding tables.  */
-    .fnstart
-
     /* Zero the memory in the .bss section.  */
     mov a2, #0          /* Second arg: fill value */
     mov fp, a2          /* Null frame pointer */
@@ -41,10 +38,6 @@
     bl  main
 
     bl  exit        /* Should not return.  */
-
-    /* Protect against unhandled exceptions.  */
-    .cantunwind
-    .fnend
 
     .align 2
 .LC1:
