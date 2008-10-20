@@ -12,18 +12,20 @@ OBJCOPY := $(PREFIX)objcopy
 MKIMAGE := mkimage
 
 # Flags and paths
+SHAREDPATH := $(ROOT)/shared
 ARCHPATH := $(ROOT)/plat/$(ARCH)
 MACHPATH := $(ROOT)/plat/$(ARCH)/machine/$(MACH)
 CFLAGS := -g -Wall -O2 -fomit-frame-pointer -Werror
 CPPFLAGS := -I$(ARCHPATH) -I$(MACHPATH) -I$(ROOT)/libs/$( $(dir $(LIBS)))include
 PYCFLAGS := -fomit-frame-pointer -Werror -Wno-error=strict-aliasing -Wno-error=char-subscripts
-LDFLAGS := -B$(MACHPATH) -B$(ARCHPATH) -specs=$(MACH).specs
+LDFLAGS := -B$(MACHPATH) -B$(ARCHPATH) -specs=$(MACH).specs -nodefaultlibs -lc -lgcc
 LDDEPS := $(MACHPATH)/$(MACH)$( .specs .ld) $(ARCHPATH)/crt0.o
 MKIMAGEFLAGS := -A $(ARCH) -O linux
 KERNELMKIMAGE := $(MKIMAGEFLAGS) -T kernel
 LIBOBJECTS := $(ROOT)/libs/$( $(LIBS))
 
 # Get machine-specific stuff
+include $(SHAREDPATH)/shared.mk
 include $(ARCHPATH)/$(ARCH).mk
 include $(MACHPATH)/$(MACH).mk
 
@@ -36,8 +38,8 @@ ifdef OBJECTS
 %.bin: %.elf
 	$(OBJCOPY) -O binary $(input) $(output)
 
-$(notdir $(CURDIR)).elf: $(OBJECTS) $(MACHPATH)/$( $(MACHOBJECTS)) $(ARCHPATH)/$( $(ARCHOBJECTS)) $(LIBOBJECTS) $(LDDEPS)
-	$(CC) $(OBJECTS) $(MACHPATH)/$( $(MACHOBJECTS)) $(ARCHPATH)/$( $(ARCHOBJECTS)) $(LDFLAGS) $(LIBOBJECTS) $(SYSLIBS) -o $(output)
+$(notdir $(CURDIR)).elf: $(OBJECTS) $(MACHPATH)/$( $(MACHOBJECTS)) $(ARCHPATH)/$( $(ARCHOBJECTS)) $(SHAREDPATH)/$( $(SHAREDOBJECTS)) $(LIBOBJECTS) $(LDDEPS)
+	$(CC) $(OBJECTS) $(MACHPATH)/$( $(MACHOBJECTS)) $(ARCHPATH)/$( $(ARCHOBJECTS)) $(SHAREDPATH)/$( $(SHAREDOBJECTS)) $(LIBOBJECTS) $(LDFLAGS) $(SYSLIBS) -o $(output)
 endif
 
 %.o: %.c $(prebuild $(ROOT)/libs/$( $(dir $(LIBS)))stamp-include)

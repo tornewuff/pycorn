@@ -10,10 +10,9 @@
  */
 
 #include <stdio.h>
-#include <sys/iosupport.h>
 #include "pycorn_mach.h"
 
-int serial_write(struct _reent *r, int fd, const char* ptr, int len)
+int serial_write(const char* ptr, int len)
 {
   int i;
   for (i = 0; i < len; ++i)
@@ -24,7 +23,7 @@ int serial_write(struct _reent *r, int fd, const char* ptr, int len)
   return len;
 }
 
-int serial_read(struct _reent *r, int fd, char* ptr, int len)
+int serial_read(char* ptr, int len)
 {
   if (len == 0)
     return 0;
@@ -33,25 +32,6 @@ int serial_read(struct _reent *r, int fd, char* ptr, int len)
   ptr[0] = FFRBR;
   if (ptr[0] == '\r')
     ptr[0] = '\n';
-  serial_write(NULL, 0, ptr, 1);
+  serial_write(ptr, 1);
   return 1;
-}
-
-const devoptab_t dotab_serial =
-{
-  "serial",
-  0,
-  NULL,
-  NULL,
-  serial_write,
-  serial_read
-};
-
-void serial_init() __attribute__((constructor));
-
-void serial_init()
-{
-  devoptab_list[STD_IN] = &dotab_serial;
-  devoptab_list[STD_OUT] = &dotab_serial;
-  devoptab_list[STD_ERR] = &dotab_serial;
 }

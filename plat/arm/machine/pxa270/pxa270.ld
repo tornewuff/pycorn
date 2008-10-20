@@ -201,6 +201,8 @@ SECTIONS
     __stack = .;
     *(.stack)
   }
+  __heap_start__ = 0xa2000000;
+  __heap_end__ = 0xa3000000;
   .ARM.attributes 0 : { KEEP (*(.ARM.attributes)) KEEP (*(.gnu.attributes)) }
   .note.gnu.arm.ident 0 : { KEEP (*(.note.gnu.arm.ident)) }
   /DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) }
