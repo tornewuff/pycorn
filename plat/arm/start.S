@@ -38,7 +38,7 @@
 
     .align 2
 .Lstack:    
-    .word   __stack
+    .word   __stack_end__
 .Lmachtype:
     .word   machtype
     .weak   machtype
