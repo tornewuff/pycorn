@@ -14,34 +14,54 @@
 \name:
 .endm
 
+.macro DEBUGMSG str:vararg
+    adr     lr, 9f
+    mov     r0, pc
+    b       BootPutStr
+    .asciz  "\str\n"
+    .align  2
+9:
+.endm
+
+.macro DEBUGREG r:req, str:vararg
+    adr     lr, 9f
+    mov     r0, pc
+    b       BootPutStr
+    .asciz  "\str: "
+    .align  2
+9:  mov     r0, \r
+    bl      BootPutInt
+    mov     r0, #'\n
+    bl      BootPutChar
+.endm
+
     .section .start,"ax",%progbits
     .code 32
     .align 2
 
     FUNC_START  _start
-    /* Save the parameters passed by the bootloader */
+    // Save the parameters passed by the bootloader
     cmp     r0, #0
     bne     1f
-    ldr     r0, .Lmachtype
+    .weak   machtype
+    ldr     r0, =machtype
     cmp     r0, #0
     strne   r1, [r0]
-    ldr     r0, .Ltaglist
+    .weak   taglist_ptr
+    ldr     r0, =taglist_ptr
     cmp     r0, #0
     strne   r2, [r0]
+1:  // r0-r2 are now free to overwrite
 
-1:
-    /* Load a stack pointer */
-    ldr     sp, .Lstack
+    DEBUGMSG    Bootstrap entered.
 
-    /* Branch to the C library entry point */
+    // Load a stack pointer
+    ldr     sp, =__stack_end__
+
+    DEBUGMSG    Leaving bootstrap for CRT entry point.
+
+    // Branch to the C library entry point
     b       _mainCRTStartup
 
     .align 2
-.Lstack:    
-    .word   __stack_end__
-.Lmachtype:
-    .word   machtype
-    .weak   machtype
-.Ltaglist:
-    .word   taglist_ptr
-    .weak   taglist_ptr
+    .pool
