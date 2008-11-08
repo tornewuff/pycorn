@@ -14,6 +14,27 @@
 \name:
 .endm
 
+.macro DEBUGMSG str:vararg
+    adr     lr, 9f
+    mov     r0, pc
+    b       BootPutStr
+    .asciz  "\str\n"
+    .align  2
+9:
+.endm
+
+.macro DEBUGREG r:req, str:vararg
+    adr     lr, 9f
+    mov     r0, pc
+    b       BootPutStr
+    .asciz  "\str: "
+    .align  2
+9:  mov     r0, \r
+    bl      BootPutInt
+    mov     r0, #'\n
+    bl      BootPutChar
+.endm
+
     .section .start,"ax",%progbits
     .code 32
     .align 2
@@ -32,8 +53,12 @@
     strne   r2, [r0]
 1:  // r0-r2 are now free to overwrite
 
+    DEBUGMSG    Bootstrap entered.
+
     // Load a stack pointer
     ldr     sp, =__stack
+
+    DEBUGMSG    Leaving bootstrap for CRT entry point.
 
     // Branch to the C library entry point
     b       _mainCRTStartup
