@@ -1,7 +1,7 @@
 %rename link                old_link
 
 *link:
-%(old_link) -T pxa270.ld%s
+%(old_link) -T arm.ld%s
 
 *startfile:
 crt0%O%s crti%O%s
