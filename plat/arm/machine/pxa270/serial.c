@@ -17,7 +17,7 @@ int serial_write(const char* ptr, int len)
   int i;
   for (i = 0; i < len; ++i)
   {
-    while((FFLSR & LSR_TEMT) == 0);
+    while((FFLSR & LSR_TDRQ) == 0);
     FFTHR = ptr[i];
   }
   return len;
