@@ -56,7 +56,7 @@
     DEBUGMSG    Bootstrap entered.
 
     // Load a stack pointer
-    ldr     sp, =__stack
+    ldr     sp, =__stack_end__
 
     DEBUGMSG    Leaving bootstrap for CRT entry point.
 
