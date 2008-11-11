@@ -3,12 +3,12 @@ OUTPUT_FORMAT("elf32-littlearm", "elf32-bigarm",
 	      "elf32-littlearm")
 OUTPUT_ARCH(arm)
 ENTRY(_start)
-MEMORY
-{
-  ram   : ORIGIN = 0xa0008000, LENGTH = 32736K
-}
+__image_loads_to__  = 0xa0008000;
+__init_heap_size__  = 0x400000;
+__stack_end__       = 0xa4000000;
 SECTIONS
 {
+  . = __image_loads_to__;
   .text :
   {
     __text_start__ = .;
@@ -22,7 +22,7 @@ SECTIONS
     *(.rodata .rodata.* .gnu.linkonce.r.*)
     . = ALIGN(0x1000); /* make .text a whole number of pages */
     __text_end__ = .;
-  } >ram
+  }
   .data :
   {
     __data_start__ = .;
@@ -40,7 +40,7 @@ SECTIONS
     *(.data .data.* .gnu.linkonce.d.*)
     . = ALIGN(0x1000); /* make .data a whole number of pages */
     __data_end__ = .;
-  } >ram
+  }
   .bss :
   {
     __bss_start__ = .;
@@ -49,7 +49,6 @@ SECTIONS
     . = ALIGN(0x1000); /* make .bss a whole number of pages */
     __bss_end__ = .;
     __heap_start__ = .;
-    __heap_end__ = __heap_start__ + 0x400000;
-  } >ram
-  __stack_end__ = 0xa4000000;
+    __heap_end__ = __heap_start__ + __init_heap_size__;
+  }
 }
