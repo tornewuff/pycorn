@@ -5,8 +5,8 @@ OUTPUT_ARCH(arm)
 ENTRY(_start)
 SECTIONS
 {
-  . = __image_loads_to__;
-  .text :
+  .text (DEFINED(__rom_map_start__) ? __rom_map_start__ : __image_loads_to__) :
+    AT(DEFINED(__rom_map_start__) ? 0 : __image_loads_to__)
   {
     __text_start__ = .;
     *(.start)
@@ -20,7 +20,8 @@ SECTIONS
     . = ALIGN(0x1000); /* make .text a whole number of pages */
     __text_end__ = .;
   }
-  .data :
+  .data (DEFINED(__ram_map_start__) ? __ram_map_start__ : . ) :
+    AT((DEFINED(__ram_map_start__) ? 0 : __image_loads_to__) + SIZEOF(.text))
   {
     __data_start__ = .;
     PROVIDE_HIDDEN (__preinit_array_start = .);
@@ -46,6 +47,8 @@ SECTIONS
     . = ALIGN(0x1000); /* make .bss a whole number of pages */
     __bss_end__ = .;
     __heap_start__ = .;
-    __heap_end__ = __heap_start__ + __init_heap_size__;
+    __heap_end__ = __heap_start__ + __heap_size_min__;
   }
+  __stack_end__ = DEFINED(__ram_map_end__) ? __ram_map_end__ : __ram_end__;
+  __stack_start__ = __stack_end__ - __stack_size_min__;
 }
