@@ -1,8 +1,3 @@
-%rename link                old_link
-
-*link:
-%(old_link) -T arm.ld%s
-
 *startfile:
 crt0%O%s crti%O%s
 

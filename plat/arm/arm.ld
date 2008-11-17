@@ -3,15 +3,10 @@ OUTPUT_FORMAT("elf32-littlearm", "elf32-bigarm",
 	      "elf32-littlearm")
 OUTPUT_ARCH(arm)
 ENTRY(_start)
-MEMORY
-{
-  rom   : ORIGIN = 0xf0008000, LENGTH = 32736K
-  data  : ORIGIN = 0x00010000, LENGTH = 16320K
-  phys  : ORIGIN = 0x00000000, LENGTH = 32736K
-}
 SECTIONS
 {
-  .text :
+  .text (DEFINED(__rom_map_start__) ? __rom_map_start__ : __image_loads_to__) :
+    AT(DEFINED(__rom_map_start__) ? 0 : __image_loads_to__)
   {
     __text_start__ = .;
     *(.start)
@@ -24,8 +19,9 @@ SECTIONS
     *(.rodata .rodata.* .gnu.linkonce.r.*)
     . = ALIGN(0x1000); /* make .text a whole number of pages */
     __text_end__ = .;
-  } >rom AT>phys
-  .data :
+  }
+  .data (DEFINED(__ram_map_start__) ? __ram_map_start__ : . ) :
+    AT((DEFINED(__ram_map_start__) ? 0 : __image_loads_to__) + SIZEOF(.text))
   {
     __data_start__ = .;
     PROVIDE_HIDDEN (__preinit_array_start = .);
@@ -42,7 +38,7 @@ SECTIONS
     *(.data .data.* .gnu.linkonce.d.*)
     . = ALIGN(0x1000); /* make .data a whole number of pages */
     __data_end__ = .;
-  } >data AT>phys
+  }
   .bss :
   {
     __bss_start__ = .;
@@ -51,8 +47,8 @@ SECTIONS
     . = ALIGN(0x1000); /* make .bss a whole number of pages */
     __bss_end__ = .;
     __heap_start__ = .;
-    __heap_end__ = __heap_start__ + 0x400000;
-  } >data AT>phys
-  __stack_end__ = 0x02000000;
-  __stack_start__ = __stack_end__ - 0x20000;
+    __heap_end__ = __heap_start__ + __heap_size_min__;
+  }
+  __stack_end__ = DEFINED(__ram_map_end__) ? __ram_map_end__ : __ram_end__;
+  __stack_start__ = __stack_end__ - __stack_size_min__;
 }

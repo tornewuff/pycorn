@@ -18,8 +18,8 @@ MACHPATH := $(ROOT)/plat/$(ARCH)/machine/$(MACH)
 CFLAGS := -g -Wall -O2 -fomit-frame-pointer -Werror
 CPPFLAGS := -I$(ARCHPATH) -I$(MACHPATH) -I$(ROOT)/libs/$( $(dir $(LIBS)))include
 PYCFLAGS := -fomit-frame-pointer -Werror -Wno-error=strict-aliasing -Wno-error=char-subscripts
-LDFLAGS := -B$(ARCHPATH) -specs=$(ARCH).specs -nodefaultlibs -lc -lgcc
-LDDEPS := $(ARCHPATH)/$( crt0.o $(ARCH).ld $(ARCH).specs)
+LDFLAGS := -B$(MACHPATH) -B$(ARCHPATH) -specs=$(ARCH).specs -nodefaultlibs -lc -lgcc -T $(MACH).ld
+LDDEPS := $(MACHPATH)/$(MACH).ld $(ARCHPATH)/$( crt0.o $(ARCH).ld $(ARCH).specs)
 MKIMAGEFLAGS := -A $(ARCH) -O linux
 KERNELMKIMAGE := $(MKIMAGEFLAGS) -T kernel
 LIBOBJECTS := $(ROOT)/libs/$( $(LIBS))
