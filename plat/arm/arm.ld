@@ -16,7 +16,7 @@ SECTIONS
     __text_start__ = .;
     *(.start)
     KEEP (*(.init))
-    *(.text .stub .text.* .gnu.linkonce.t.*)*/
+    *(.text .stub .text.* .gnu.linkonce.t.*)
     /* .gnu.warning sections are handled specially by elf32.em.  */
     *(.gnu.warning)
     *(.glue_7t) *(.glue_7) *(.vfp11_veneer) *(.v4_bx)
@@ -47,11 +47,12 @@ SECTIONS
   {
     __bss_start__ = .;
     *(.bss .bss.* .gnu.linkonce.b.*)
+    *(COMMON)
     . = ALIGN(0x1000); /* make .bss a whole number of pages */
     __bss_end__ = .;
+    __heap_start__ = .;
+    __heap_end__ = __heap_start__ + 0x400000;
   } >data AT>phys
-  __heap_start__ = .;
-  __heap_end__ = __heap_start__ + 0x400000;
   __stack_end__ = 0x02000000;
   __stack_start__ = __stack_end__ - 0x20000;
 }
