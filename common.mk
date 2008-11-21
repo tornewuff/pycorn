@@ -13,8 +13,8 @@ MKIMAGE := mkimage
 
 # Flags and paths
 SHAREDPATH := $(ROOT)/shared
-ARCHPATH := $(ROOT)/plat/$(ARCH)
-MACHPATH := $(ROOT)/plat/$(ARCH)/machine/$(MACH)
+ARCHPATH := $(ROOT)/arch/$(ARCH)
+MACHPATH := $(ROOT)/arch/$(ARCH)/machine/$(MACH)
 CFLAGS := -g -Wall -O2 -fomit-frame-pointer -Werror
 CPPFLAGS := -I$(ARCHPATH) -I$(MACHPATH) -I$(ROOT)/libs/$( $(dir $(LIBS)))include
 PYCFLAGS := -fomit-frame-pointer -Werror -Wno-error=strict-aliasing -Wno-error=char-subscripts
