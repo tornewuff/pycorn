@@ -30,7 +30,7 @@ several parts:
 =================================
 
 The native bootstrap is written in assembler, and is platform-specific. It's
-assembled from plat/$(ARCH)/start.S and produces the executable section .start
+assembled from arch/$(ARCH)/start.S and produces the executable section .start
 which contains the function _start. The link script places .start at the
 beginning of the final binary, which means that the entry point is always the
 first instruction - also part of the ARM Linux boot protocol. It's responsible
@@ -38,20 +38,19 @@ for doing chip-specific hardware setup:
 
 1) Saving the machine type and taglist pointer in global variables (the
    bootloader passes them in registers r0-r2 which will be overwritten)
-2) Setting the stack pointer to a valid value (the top of RAM, currently)
+2) Setting the stack pointer to a valid value (chosen by the platform)
 3) Branching to newlib's entry point function, _mainCRTStartup
 
 2b - The C library entry point, _mainCRTStartup
 ===============================================
 
 Now that we have a stack, we can start to execute code in a more normal C
-environment. The C library entry point is still written in assembler, though,
-and is still platform-specific - but no longer depends on particular chip
-details, only on the architecture in question. It's assembled from
-plat/$(ARCH)/crt0.S and produces _mainCRTStartup in the .text section. It's
-responsible for doing the "normal" parts of starting a C application, which are
-largely the same whether you are running on a real OS or in a selfhosted
-environment:
+environment. The C library entry point is a short C function and is still
+platform-specific - but no longer depends on particular chip details, only on
+the architecture in question. It's compiled from arch/$(ARCH)/crt0.c and
+produces _mainCRTStartup in the .text section. It's responsible for doing the
+"normal" parts of starting a C application, which are largely the same whether
+you are running on a real OS or in a selfhosted environment:
 
 1) Zeroing the memory for the .bss section
 2) Registering the global object destructor handler as an atexit() function
@@ -59,20 +58,17 @@ environment:
 4) Calling main()
 5) Calling exit() if main returns
 
-Global object constructors/destructors are required to support C++ binaries,
-and so that pykern code can use __attribute__((constructor)) to have functions
-automatically called on startup.
+Global object constructors/destructors are required so that pykern code can use
+__attribute__((constructor)) to have functions automatically called on startup.
 
 2c - The boot debug serial driver
 =================================
 
 To aid porting and debugging, a serial driver written in native C code exists
 which uses the serial port that u-boot set up for us. It's platform-specific,
-naturally, compiled from plat/$(ARCH)/machine/$(MACH)/serial.c. It includes a
-function tagged as a constructor which installs the serial driver as the IO
-handler for stdin, stdout and stderr - thus, debug output can be accomplished
-by simply printf() or any other ordinary C library mechanism once main() is
-called.
+naturally, compiled from arch/$(ARCH)/machine/$(MACH)/serial.c. It is used to
+implement read() and write() - thus, debug output can be accomplished by simply
+printf() or any other ordinary C library mechanism once main() is called.
 
 2d - Python extension modules
 =============================
