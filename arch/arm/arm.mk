@@ -1,1 +1,1 @@
-ARCHOBJECTS := start.o
+ARCHOBJECTS := start.o crt0.o

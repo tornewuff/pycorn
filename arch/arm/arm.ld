@@ -10,12 +10,10 @@ SECTIONS
   {
     __text_start__ = .;
     *(.start)
-    KEEP (*(.init))
     *(.text .stub .text.* .gnu.linkonce.t.*)
     /* .gnu.warning sections are handled specially by elf32.em.  */
     *(.gnu.warning)
     *(.glue_7t) *(.glue_7) *(.vfp11_veneer) *(.v4_bx)
-    KEEP (*(.fini))
     *(.rodata .rodata.* .gnu.linkonce.r.*)
     . = ALIGN(0x1000); /* make .text a whole number of pages */
     __text_end__ = .;

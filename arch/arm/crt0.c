@@ -27,3 +27,13 @@ void _mainCRTStartup(void)
 
     exit(main(0, 0));
 }
+
+// Define an empty _init and _fini since arm-eabi-gcc never generates
+// code into them, but newlib expects them to exist.
+void _init(void)
+{
+}
+
+void _fini(void)
+{
+}
