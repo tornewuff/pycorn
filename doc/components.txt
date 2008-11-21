@@ -45,13 +45,12 @@ for doing chip-specific hardware setup:
 ===============================================
 
 Now that we have a stack, we can start to execute code in a more normal C
-environment. The C library entry point is still written in assembler, though,
-and is still platform-specific - but no longer depends on particular chip
-details, only on the architecture in question. It's assembled from
-plat/$(ARCH)/crt0.S and produces _mainCRTStartup in the .text section. It's
-responsible for doing the "normal" parts of starting a C application, which are
-largely the same whether you are running on a real OS or in a selfhosted
-environment:
+environment. The C library entry point is a short C function and is still
+platform-specific - but no longer depends on particular chip details, only on
+the architecture in question. It's compiled from arch/$(ARCH)/crt0.c and
+produces _mainCRTStartup in the .text section. It's responsible for doing the
+"normal" parts of starting a C application, which are largely the same whether
+you are running on a real OS or in a selfhosted environment:
 
 1) Zeroing the memory for the .bss section
 2) Registering the global object destructor handler as an atexit() function
