@@ -1,4 +1,7 @@
 /*
+ * Generic memory mapped serial port, 8250/16550-like
+ * Should work for many ARM serial UARTs.
+ *
  * Copyright 2008 Torne Wuff
  *
  * This file is part of Pycorn.
@@ -25,7 +28,7 @@
      * destroys r0-r3
      */
     FUNC_START  BootPutStr
-    ldr     r1, =0x40100000
+    ldr     r1, =__dbg_serial_phys__
 1:  ldrb    r3, [r0], #1
     cmp     r3, #0
     beq     3f
@@ -43,7 +46,7 @@
      * destroys r1-r2
      */
     FUNC_START  BootPutChar
-    ldr     r1, =0x40100000
+    ldr     r1, =__dbg_serial_phys__
 2:  ldr     r2, [r1, #0x14]
     tst     r2, #0x20
     beq     2b
@@ -57,7 +60,7 @@
      * destroys r1-r3,ip
      */
     FUNC_START  BootPutInt
-    ldr     r1, =0x40100000
+    ldr     r1, =__dbg_serial_phys__
     mov     ip, #28
 1:  mov     r3, r0, ror ip
     and     r3, r3, #0xf

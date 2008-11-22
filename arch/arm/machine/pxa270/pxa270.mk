@@ -1,7 +1,8 @@
 CFLAGS += -mcpu=xscale -mtune=xscale
 PYCFLAGS += -mcpu=xscale -mtune=xscale
 KERNELMKIMAGE += -a 0xa0008000 -e 0xa0008000
-MACHOBJECTS := bootdebug.o serial.o
+ARCHOBJECTS += genmmserial.o
+MACHOBJECTS := serial.o
 
 ifdef OBJECTS
 $(phony run): $(notdir $(CURDIR)).flash
