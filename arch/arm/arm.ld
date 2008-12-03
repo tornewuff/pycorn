@@ -1,4 +1,12 @@
-/* Default linker script, for normal executables */
+/* GO GO MAGICAL LINKER SCRIPT
+ *
+ * This is intended to be included by a platform-specific script which defines
+ * the various symbols used - it will produce either a virtually or physically
+ * linked image depending which symbols are present.
+ *
+ * Some of the sections included might not actually appear in any inputs but
+ * best not to mess with it too much :)
+ */
 OUTPUT_FORMAT("elf32-littlearm", "elf32-bigarm",
 	      "elf32-littlearm")
 OUTPUT_ARCH(arm)

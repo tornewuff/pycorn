@@ -1,4 +1,7 @@
 /*
+ * C library entry point. Expects a normal C environment (valid stack)
+ * then goes on and initialises newlib stuff, then calls main.
+ *
  * Copyright 2008 Torne Wuff
  *
  * This file is part of Pycorn.

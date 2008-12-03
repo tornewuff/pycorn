@@ -12,17 +12,14 @@
  * (at your option) any later version.
  */
 
-.macro FUNC_START name
-    .global \name
-\name:
-.endm
+#include "macros.inc"
 
     .text
     .code 32
     .align 2
 
-
     /* Print a null terminated string on the debug serial port
+     * For early boot only, uses physical address
      *
      * r0: pointer to string
      * destroys r0-r3
@@ -41,6 +38,7 @@
 
 
     /* Print a character on the debug serial port
+     * For early boot only, uses physical address
      *
      * r0: character to print
      * destroys r1-r2
@@ -55,6 +53,7 @@
 
 
     /* Print a 32-bit integer as hex on the debug serial port
+     * For early boot only, uses physical address
      *
      * r0: integer to print
      * destroys r1-r3,ip
