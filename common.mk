@@ -16,7 +16,7 @@ SHAREDPATH := $(ROOT)/shared
 ARCHPATH := $(ROOT)/arch/$(ARCH)
 MACHPATH := $(ROOT)/arch/$(ARCH)/machine/$(MACH)
 CFLAGS := -g -Wall -O2 -fomit-frame-pointer -Werror
-CPPFLAGS := -I$(ARCHPATH) -I$(MACHPATH) -I$(ROOT)/libs/$( $(dir $(LIBS)))include
+CPPFLAGS := -I$(ROOT)/libs/$( $(dir $(LIBS)))include
 PYCFLAGS := -fomit-frame-pointer -Werror -Wno-error=strict-aliasing -Wno-error=char-subscripts
 LDFLAGS := -B$(MACHPATH) -B$(ARCHPATH) -nostdlib -lc -lgcc -T $(MACH).ld
 LDDEPS := $(MACHPATH)/$(MACH).ld $(ARCHPATH)/$(ARCH).ld

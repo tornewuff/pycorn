@@ -57,4 +57,5 @@ SECTIONS
   }
   __stack_end__ = DEFINED(__ram_map_end__) ? __ram_map_end__ : __ram_end__;
   __stack_start__ = __stack_end__ - __stack_size_min__;
+  __dbg_serial_virt__ = DEFINED(__dbg_serial_virt__) ? __dbg_serial_virt__ : __dbg_serial_phys__;
 }
