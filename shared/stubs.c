@@ -1,4 +1,6 @@
 /*
+ * Lots of newlib system calls which are just stubs.
+ *
  * Copyright 2008 Torne Wuff
  *
  * This file is part of Pycorn.

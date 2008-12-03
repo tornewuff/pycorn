@@ -1,5 +1,17 @@
 Well, this is Pycorn.
 
+Pycorn is an interpreted operating system written in Python, intended to
+recreate the easy learning possibilities of 8-bit microcomputers. Device
+drivers, file systems, network protocols can all be implemented in Python with
+no C or assembler code.
+
+The goal of the project is to create a usable interpreter-centric OS
+environment with the capabilities of modern computers; allowing a smooth
+learning curve from the acquisition of basic programming skills right up to
+implementing new OS-level functionality and drivers. Performance is not a goal,
+though it would be nice :) Current development is targeted at a variety of ARM
+platforms due to the relative simplicity of the hardware.
+
 LICENSE
 =======
 
@@ -25,22 +37,26 @@ HOW IT ALL FITS TOGETHER
 
 Pycorn currently uses devkitARM to build python, part of wintermute's excellent
 devkitpro project (http://www.devkitpro.org/). devkitARM includes a
-cross-compiling gcc targetted at generic ARM platforms, a build of the newlib
-embedded C library, and wintermute's libsysbase file IO abstraction library.
-This provides enough 'stuff' to compile the python interpreter into a library.
+cross-compiling gcc targetted at generic ARM platforms and a build of the
+newlib embedded C library. This provides enough 'stuff' to compile the python
+interpreter into a library.
 
-To actually make a bootable image a linkscript and crt0 are required which are
-implemented by pycorn. These are platform specific: the link script currently
-uses physical addresses and thus must be adjusted per target, and the crt0 is
-written in assembly to do things like stack setup. Right now we only have them
-for Marvell's PXA270 system-on-chip, as used in the Gumstix Verdex development
-board (http://www.gumstix.com). This board can be simulated by QEMU. A main
-program entry point is also required which invokes the python interpreter with
-some arguments, and though this is written in C it is portable.
+To actually make a bootable image a linker script and entry point are required
+which are implemented by pycorn. These are architecture specific and include a
+few machine specific details: a small linker script with some platform physical
+addresses incluldes the main architecture linker script. The entry point is
+written in assembly to do things like stack setup, but then calls a generic C
+library setup function written in C.
+
+Right now we only have them for Marvell's PXA270 system-on-chip, as used in the
+Gumstix Verdex development board (http://www.gumstix.com). This board can be
+simulated by QEMU. A main() function is also required which invokes the python
+interpreter with some arguments, and though this is written in C it is
+portable.
 
 Of course, it won't actually do anything visible; newlib has no actual IO
-facilities. A platform-specific serial driver is used for now, hooked up to
-libsysbase's stdin/stdout/stderr handles.
+facilities. A platform-specific serial debug driver is used for now, hooked up
+to newlib's stdin/stdout/stderr.
 
 And.. that's it for now. There is no way to import any modules which aren't
 built into the interpreter as all file access fails right now, and Python's
@@ -57,13 +73,14 @@ to run arm-eabi-gcc and friends.
 1) Add the makepp directory in the pycorn source tree to your PATH. makepp is a
 nice make replacement with lots of nifty features; used primarily because I
 hate make's handling of subdirectories. See http://makepp.sourceforge.net/ for
-their project page.
+their project page. I've included a version in the tree because it's a CVS
+snapshot, and an uncommon tool.
 
 2) Install u-boot's mkimage utility. This is in Debian as package
 "uboot-mkimage", or you can compile it from u-boot's source.
 
 3) Install autoconf. Python's configure script needs regeneration after
-patching.
+patching for cross-compilability.
 
 4) Run "makepp hello/hello.uimage". This is a "hello world" program which
 should load into u-boot and print on the default platform serial port.
