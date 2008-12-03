@@ -23,6 +23,7 @@ LDDEPS := $(MACHPATH)/$(MACH).ld $(ARCHPATH)/$(ARCH).ld
 MKIMAGEFLAGS := -A $(ARCH) -O linux
 KERNELMKIMAGE := $(MKIMAGEFLAGS) -T kernel
 LIBOBJECTS := $(ROOT)/libs/$( $(LIBS))
+FREEZEDIRS := $( $(SHAREDPATH) $(ARCHPATH))/frozen
 
 # Get machine-specific stuff
 include $(SHAREDPATH)/shared.mk

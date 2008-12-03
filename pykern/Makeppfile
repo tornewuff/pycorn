@@ -1,10 +1,10 @@
-OBJECTS := main.o getpath.o frozen.o _metalmodule.o _bootldrmodule.o
+OBJECTS = main.o getpath.o frozen.o _metalmodule.o _bootldrmodule.o
 LIBS := python/libpython2.5.a
 SYSLIBS := -lm
 
+include common.mk
+
 $(phony all): pykern.flash
 
-frozen.c: frozen/**/*.py $(ROOT)/libs/python/stamp-frozen freeze.py
-	python freeze.py frozen $(ROOT)/libs/python/frozen
-
-include common.mk
+frozen.c: $( $(FREEZEDIRS))/**/*.py $(ROOT)/libs/python/stamp-frozen freeze.py
+	python freeze.py $(FREEZEDIRS) $(ROOT)/libs/python/frozen
