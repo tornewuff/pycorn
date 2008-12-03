@@ -3,6 +3,7 @@ PYCFLAGS += -mcpu=xscale -mtune=xscale
 KERNELMKIMAGE += -a 0xa0008000 -e 0xa0008000
 ARCHOBJECTS += genmmserialb.o genmmserial.o
 MACHOBJECTS :=
+LDDEPS += $(ARCHPATH)/mmu-single.ld
 
 ifdef OBJECTS
 $(phony run): $(notdir $(CURDIR)).flash

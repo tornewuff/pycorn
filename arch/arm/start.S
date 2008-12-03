@@ -77,7 +77,7 @@
     mov     r9, r0
     mcr     p15, 0, r9, c2, c0, 0
     DEBUGREG    r9 physaddr of pagedir
-    ldr     r4, =0xf4000000
+    ldr     r4, =__page_dir_virt__
     add     r5, r4, #0x4000
     orr     r6, r9, #0x3f // AP 3, (R/W), cache/buffer
     bl      BootMapPages
@@ -134,9 +134,10 @@
 
     // Map the debug UART
     DEBUGMSG    Mapping debug UART...
-    ldr     r4, =0x40100000
-    ldr     r5, =0x40101000
-    orr     r6, r4, #0x33 // AP 3 (R/W), uncached/unbuffered
+    ldr     r4, =__dbg_serial_phys__
+    add     r5, r4, #0x1000
+    mov     r6, r4
+    orr     r6, #0x33 // AP 3 (R/W), uncached/unbuffered
     bl      BootMapPages
 
     // Load a stack pointer
@@ -168,7 +169,7 @@ govirtual:
     
     // Switch page directory to virtual address and revert self-mapping
     DEBUGMSG    Removing self-mapping...
-    mov     r9, #0xf4000000
+    ldr     r9, =__page_dir_virt__
     str     r4, [r9, r4, lsl #2]
     mov     r0, #0
     mcr     p15, 0, r0, c8, c7, 0       // invalidate entire TLB
