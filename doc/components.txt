@@ -38,7 +38,9 @@ for doing chip-specific hardware setup:
 
 1) Saving the machine type and taglist pointer in global variables (the
    bootloader passes them in registers r0-r2 which will be overwritten)
-2) Setting the stack pointer to a valid value (chosen by the platform)
+2) Setting up the MMU. Various minimal mappings are made, which python will be
+   able to change later.
+2) Setting the stack pointer to a valid value.
 3) Branching to newlib's entry point function, _mainCRTStartup
 
 2b - The C library entry point, _mainCRTStartup
@@ -65,10 +67,15 @@ __attribute__((constructor)) to have functions automatically called on startup.
 =================================
 
 To aid porting and debugging, a serial driver written in native C code exists
-which uses the serial port that u-boot set up for us. It's platform-specific,
-naturally, compiled from arch/$(ARCH)/machine/$(MACH)/serial.c. It is used to
+which uses the serial port that u-boot set up for us. It supports most memory
+mapped 8250/16550-like serial UARTs and only requires the base address from the
+platform. It's compiled from arch/$(ARCH)/genmmserial.c. It is used to
 implement read() and write() - thus, debug output can be accomplished by simply
 printf() or any other ordinary C library mechanism once main() is called.
+
+There is also a smaller serial driver written in asm in genmmserialb.S which
+exists to be able to print early boot debug messages before the MMU is enabled
+and stack is set up.
 
 2d - Python extension modules
 =============================
