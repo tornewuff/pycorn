@@ -134,9 +134,9 @@
 
     // Map the debug UART
     DEBUGMSG    Mapping debug UART...
-    ldr     r4, =__dbg_serial_phys__
+    ldr     r4, =__dbg_serial_virt__
     add     r5, r4, #0x1000
-    mov     r6, r4
+    ldr     r6, =__dbg_serial_phys__
     orr     r6, #0x33 // AP 3 (R/W), uncached/unbuffered
     bl      BootMapPages
 
@@ -168,14 +168,11 @@
 govirtual:
     
     // Switch page directory to virtual address and revert self-mapping
-    DEBUGMSG    Removing self-mapping...
     ldr     r9, =__page_dir_virt__
     str     r4, [r9, r4, lsl #2]
     mov     r0, #0
     mcr     p15, 0, r0, c8, c7, 0       // invalidate entire TLB
     CPWAIT  r0
-
-    DEBUGMSG    Leaving bootstrap for CRT entry point.
 
     // Branch to the C library entry point
     b       _mainCRTStartup
