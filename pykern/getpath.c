@@ -1,4 +1,7 @@
 /*
+ * Various functions Python calls to find its files: we have no filesystem
+ * at the C library level, so just return fairly arbitrary strings.
+ *
  * Copyright 2008 Torne Wuff
  *
  * This file is part of Pycorn.

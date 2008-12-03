@@ -1,4 +1,12 @@
-/* Default linker script, for normal executables */
+/* GO GO MAGICAL LINKER SCRIPT
+ *
+ * This is intended to be included by a platform-specific script which defines
+ * the various symbols used - it will produce either a virtually or physically
+ * linked image depending which symbols are present.
+ *
+ * Some of the sections included might not actually appear in any inputs but
+ * best not to mess with it too much :)
+ */
 OUTPUT_FORMAT("elf32-littlearm", "elf32-bigarm",
 	      "elf32-littlearm")
 OUTPUT_ARCH(arm)
@@ -10,12 +18,10 @@ SECTIONS
   {
     __text_start__ = .;
     *(.start)
-    KEEP (*(.init))
     *(.text .stub .text.* .gnu.linkonce.t.*)
     /* .gnu.warning sections are handled specially by elf32.em.  */
     *(.gnu.warning)
     *(.glue_7t) *(.glue_7) *(.vfp11_veneer) *(.v4_bx)
-    KEEP (*(.fini))
     *(.rodata .rodata.* .gnu.linkonce.r.*)
     . = ALIGN(0x1000); /* make .text a whole number of pages */
     __text_end__ = .;
@@ -51,4 +57,5 @@ SECTIONS
   }
   __stack_end__ = DEFINED(__ram_map_end__) ? __ram_map_end__ : __ram_end__;
   __stack_start__ = __stack_end__ - __stack_size_min__;
+  __dbg_serial_virt__ = DEFINED(__dbg_serial_virt__) ? __dbg_serial_virt__ : __dbg_serial_phys__;
 }

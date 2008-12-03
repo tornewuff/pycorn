@@ -40,6 +40,6 @@ def poke(address, value, bytes=4):
     hi = size[3]
     if value < lo or value > hi:
         raise ValueError('value must be between %s and %s' % (lo, hi))
-    return size[1](address)
+    return size[1](address, value)
 
 membuf = _metal.membuf

@@ -1,4 +1,6 @@
 /*
+ * Implementation of read and write which map stdin/out/err to serial.
+ *
  * Copyright 2008 Torne Wuff
  *
  * This file is part of Pycorn.

@@ -1,4 +1,6 @@
 /*
+ * Fairly dumb implementation of sbrk() using symbols defined by the linker
+ *
  * Copyright 2008 Torne Wuff
  *
  * This file is part of Pycorn.

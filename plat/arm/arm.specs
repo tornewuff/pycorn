@@ -1,6 +1,0 @@
-*startfile:
-crt0%O%s crti%O%s
-
-*endfile:
-crtn%O%s
-
