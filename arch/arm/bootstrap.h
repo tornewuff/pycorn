@@ -16,9 +16,11 @@
 
 #include <stdint.h>
 
+// Conveniences to make code clearer
 typedef uint32_t physaddr;
 typedef uint32_t virtaddr;
 
+// The bootdata structure
 typedef struct
 {
   physaddr rom_base;
@@ -30,29 +32,42 @@ typedef struct
   physaddr page_directory;
 } bootdata_t;
 
+// Bootdata structure pointer lives in a register
 register bootdata_t *bootdata asm ("r9");
 
+// Linker-defined section symbols
+extern char __text_start__, __text_end__, __data_start__, __data_end__;
+extern char __bss_start__, __bss_end__, __heap_start__, __heap_end__;
+extern char __stack_start__, __stack_end__, __page_dir_virt__;
+extern char __dbg_serial_virt__, __dbg_serial_phys__;
+
+// MMU constants
+#define SECTION_SHIFT 20
+#define SECTION_SIZE (1 << SECTION_SHIFT)
+#define SECTION_MASK (SECTION_SIZE - 1)
+#define PAGE_SHIFT 12
+#define PAGE_SIZE (1 << PAGE_SHIFT)
+#define PAGE_MASK (PAGE_SIZE - 1)
+#define PAGEDIR_SIZE (PAGE_SIZE * 4)
+#define PAGETABLE_SIZE (PAGE_SIZE / 4)
+
+// Pre-MMU debug printing
 extern void boot_putchar(char c);
 extern void boot_putstr(const char *s);
 extern void boot_putint(const char *label, uint32_t i);
-
 #define DBGCHAR(c) boot_putchar(c)
 #define DBGSTR(s) boot_putstr(s)
 #define DBGINT(l, i) boot_putint(l, i)
 
-extern physaddr alloc_pages_zero(uint32_t bytes, uint32_t align);
-extern void map_pages(virtaddr virt_start, virtaddr virt_end,
-        physaddr phys_start);
-
-extern void mmu_set_base(physaddr page_directory);
+// Typedefs for functions involved in MMU enabling
 typedef void (*mmu_done_func)(int selfmap_index, uint32_t old_pde);
 typedef void (*mmu_enable_func)(int selfmap_index, uint32_t old_pde,
     mmu_done_func next_func);
+
+// Functions defined in assembly
+extern void mmu_set_base(physaddr page_directory);
 extern void mmu_enable(int selfmap_index, uint32_t old_pde,
     mmu_done_func next_func);
 extern void mmu_invalidate_tlb();
-
-extern void boot_after_mmu(int selfmap_index, uint32_t old_pde);
-extern void _mainCRTStartup(void);
 
 #endif
