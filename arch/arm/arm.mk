@@ -1,1 +1,1 @@
-ARCHOBJECTS := start.o crt0.o
+ARCHOBJECTS := start.o bootstrap.o crt0.o
