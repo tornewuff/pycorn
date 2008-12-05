@@ -12,7 +12,6 @@
  * (at your option) any later version.
  */
 
-#include <stdio.h>
 #include <stdint.h>
 
 extern char __dbg_serial_virt__;
