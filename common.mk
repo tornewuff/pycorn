@@ -15,7 +15,7 @@ MKIMAGE := mkimage
 SHAREDPATH := $(ROOT)/shared
 ARCHPATH := $(ROOT)/arch/$(ARCH)
 MACHPATH := $(ROOT)/arch/$(ARCH)/machine/$(MACH)
-CFLAGS := -g -Wall -O2 -fomit-frame-pointer -Werror
+CFLAGS := -g -Wall -O2 -fomit-frame-pointer -std=gnu99 -Werror
 CPPFLAGS := -I$(ROOT)/libs/$( $(dir $(LIBS)))include
 PYCFLAGS := -fomit-frame-pointer -Werror -Wno-error=strict-aliasing -Wno-error=char-subscripts
 LDFLAGS := -B$(MACHPATH) -B$(ARCHPATH) -nostdlib -lc -lgcc -T $(MACH).ld
