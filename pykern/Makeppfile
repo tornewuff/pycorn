@@ -1,4 +1,4 @@
-OBJECTS = main.o getpath.o frozen.o _metalmodule.o _bootldrmodule.o
+OBJECTS = main.o getpath.o frozen.o _metalmemmodule.o _bootldrmodule.o
 LIBS := python/libpython2.5.a
 SYSLIBS := -lm
 

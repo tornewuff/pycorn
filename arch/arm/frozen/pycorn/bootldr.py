@@ -12,17 +12,17 @@
 import struct
 
 import _bootldr
-import metal
+from metal import mem
 
 def _tagdata():
     header = struct.Struct('2I')
     addr = _bootldr.taglist_addr
     while True:
-        headerbuf = metal.membuf(addr, header.size)
+        headerbuf = mem.membuf(addr, header.size)
         (size, tag) = header.unpack(headerbuf)
         if tag == 0:
             break
-        data = metal.membuf(addr + header.size, size * 4 - header.size)
+        data = mem.membuf(addr + header.size, size * 4 - header.size)
         yield tag, data
         addr += size * 4
 

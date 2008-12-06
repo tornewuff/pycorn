@@ -9,14 +9,14 @@
 # (at your option) any later version.
 #
 
-import _metal
+import _metalmem
 
 _sizes = (
         False,
-        (_metal.peek8, _metal.poke8, -0x80, 0xff),
-        (_metal.peek16, _metal.poke16, -0x8000, 0xffff),
+        (_metalmem.peek8, _metalmem.poke8, -0x80, 0xff),
+        (_metalmem.peek16, _metalmem.poke16, -0x8000, 0xffff),
         False,
-        (_metal.peek32, _metal.poke32, -0x80000000, 0xffffffff)
+        (_metalmem.peek32, _metalmem.poke32, -0x80000000, 0xffffffff)
         )
 
 def peek(address, bytes=4):
@@ -42,4 +42,4 @@ def poke(address, value, bytes=4):
         raise ValueError('value must be between %s and %s' % (lo, hi))
     return size[1](address, value)
 
-membuf = _metal.membuf
+membuf = _metalmem.membuf

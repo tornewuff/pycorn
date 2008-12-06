@@ -12,7 +12,7 @@
 #include <Python.h>
 
 static PyObject *
-metal_peek32(PyObject *self, PyObject *args)
+metalmem_peek32(PyObject *self, PyObject *args)
 {
     unsigned addr;
     unsigned val;
@@ -29,7 +29,7 @@ metal_peek32(PyObject *self, PyObject *args)
 }
 
 static PyObject *
-metal_poke32(PyObject *self, PyObject *args)
+metalmem_poke32(PyObject *self, PyObject *args)
 {
     unsigned addr;
     unsigned val;
@@ -46,7 +46,7 @@ metal_poke32(PyObject *self, PyObject *args)
 }
 
 static PyObject *
-metal_peek16(PyObject *self, PyObject *args)
+metalmem_peek16(PyObject *self, PyObject *args)
 {
     unsigned addr;
     unsigned short val;
@@ -63,7 +63,7 @@ metal_peek16(PyObject *self, PyObject *args)
 }
 
 static PyObject *
-metal_poke16(PyObject *self, PyObject *args)
+metalmem_poke16(PyObject *self, PyObject *args)
 {
     unsigned addr;
     unsigned short val;
@@ -80,7 +80,7 @@ metal_poke16(PyObject *self, PyObject *args)
 }
 
 static PyObject *
-metal_peek8(PyObject *self, PyObject *args)
+metalmem_peek8(PyObject *self, PyObject *args)
 {
     unsigned addr;
     unsigned char val;
@@ -92,7 +92,7 @@ metal_peek8(PyObject *self, PyObject *args)
 }
 
 static PyObject *
-metal_poke8(PyObject *self, PyObject *args)
+metalmem_poke8(PyObject *self, PyObject *args)
 {
     unsigned addr;
     unsigned char val;
@@ -104,7 +104,7 @@ metal_poke8(PyObject *self, PyObject *args)
 }
 
 static PyObject *
-metal_membuf(PyObject *self, PyObject *args)
+metalmem_membuf(PyObject *self, PyObject *args)
 {
     unsigned addr;
     Py_ssize_t len;
@@ -124,28 +124,28 @@ metal_membuf(PyObject *self, PyObject *args)
         return PyBuffer_FromMemory((void*)addr, len);
 }
 
-static const PyMethodDef MetalMethods[] = {
-    {"peek32", metal_peek32, METH_VARARGS, "Read a 32-bit word at the given address."},
-    {"poke32", metal_poke32, METH_VARARGS, "Write a 32-bit word at the given address."},
-    {"peek16", metal_peek16, METH_VARARGS, "Read a 16-bit halfword at the given address."},
-    {"poke16", metal_poke16, METH_VARARGS, "Write a 16-bit halfword at the given address."},
-    {"peek8", metal_peek8, METH_VARARGS, "Read an 8-bit byte at the given address."},
-    {"poke8", metal_poke8, METH_VARARGS, "Write an 8-bit byte at the given address."},
-    {"membuf", metal_membuf, METH_VARARGS, "Create a buffer object pointing at the given address"},
+static const PyMethodDef MetalMemMethods[] = {
+    {"peek32", metalmem_peek32, METH_VARARGS, "Read a 32-bit word at the given address."},
+    {"poke32", metalmem_poke32, METH_VARARGS, "Write a 32-bit word at the given address."},
+    {"peek16", metalmem_peek16, METH_VARARGS, "Read a 16-bit halfword at the given address."},
+    {"poke16", metalmem_poke16, METH_VARARGS, "Write a 16-bit halfword at the given address."},
+    {"peek8", metalmem_peek8, METH_VARARGS, "Read an 8-bit byte at the given address."},
+    {"poke8", metalmem_poke8, METH_VARARGS, "Write an 8-bit byte at the given address."},
+    {"membuf", metalmem_membuf, METH_VARARGS, "Create a buffer object pointing at the given address"},
     {NULL, NULL, 0, NULL}
 };
 
 PyMODINIT_FUNC
-initmetal(void)
+initmetalmem(void)
 {
     PyObject *m;
 
-    m = Py_InitModule("_metal", MetalMethods);
+    m = Py_InitModule("_metalmem", MetalMemMethods);
     if (m == NULL)
         return;
 }
 
-__attribute__((constructor)) void appendmetal()
+__attribute__((constructor)) void appendmetalmem()
 {
-    PyImport_AppendInittab("_metal", initmetal);
+    PyImport_AppendInittab("_metalmem", initmetalmem);
 }
