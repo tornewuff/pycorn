@@ -16,7 +16,8 @@
 
 physaddr alloc_pages_zero(uint32_t bytes, uint32_t align);
 void map_pages(virtaddr virt_start, virtaddr virt_end, physaddr phys_start);
-void boot_after_mmu(int selfmap_index, uint32_t old_pde);
+void boot_after_mmu(int selfmap_index, uint32_t old_pde)
+  __attribute__((noreturn));
 
 void boot_start()
 {
@@ -103,8 +104,6 @@ void boot_start()
   DBGSTR("Enable MMU\n");
   mmu_enable_phys(selfmap_index, old_pde, &boot_after_mmu);
 }
-
-extern void _mainCRTStartup(void);
 
 void boot_after_mmu(int selfmap_index, uint32_t old_pde)
 {

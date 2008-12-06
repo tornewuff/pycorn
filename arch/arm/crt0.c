@@ -20,6 +20,8 @@ extern int main(int argc, char *argv[]);
 extern void __libc_init_array(void);
 extern void __libc_fini_array(void);
 
+void _mainCRTStartup(void) __attribute__((noreturn));
+
 void _mainCRTStartup(void)
 {
     size_t bss_size = &__bss_end__ - &__bss_start__;

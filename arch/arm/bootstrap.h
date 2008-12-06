@@ -68,6 +68,9 @@ typedef void (*mmu_enable_func)(int selfmap_index, uint32_t old_pde,
 extern void mmu_set_base(physaddr page_directory);
 extern void mmu_enable(int selfmap_index, uint32_t old_pde,
     mmu_done_func next_func);
-extern void mmu_invalidate_tlb();
+extern void mmu_invalidate_tlb(void);
+
+// crt0 function
+extern void _mainCRTStartup(void) __attribute__((noreturn));
 
 #endif
