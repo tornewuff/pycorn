@@ -61,16 +61,27 @@
     mov     pc, lr
 
 
-    FUNC_START mmu_enable
+    FUNC_START  mmu_enable
+    mov     lr, r2
+    ldr     r2, [r9, #4]                // retrieve machtype
+    ldr     r3, [r9, #8]                // retrieve taglist_ptr
     mov     ip, #0x1
     mcr     p15, 0, ip, c3, c0, 0       // set DACR, client of domain 0
     mrc     p15, 0, ip, c1, c0, 0       // get control register
     orr     ip, #0x1                    // mmu enable bit
     orr     ip, #0x200                  // ROM permission bit
     mcr     p15, 0, ip, c1, c0, 0       // set control register
-    CPWAIT  ip
+    CPWAIT  ip                          // after this the MMU is on
+    ldr     ip, =machtype
+    cmp     ip, #0
+    strne   r2, [ip]                    // copy machtype to .data
+    ldr     ip, =taglist_ptr
+    cmp     ip, #0
+    strne   r3, [ip]                    // copy taglist_ptr to .data
     ldr     sp, =__stack_end__
-    mov     pc, r2
+    mov     pc, lr                      // branch to next func, virtual
+    .weak   machtype
+    .weak   taglist_ptr
     
 
     FUNC_START  mmu_invalidate_tlb
