@@ -65,6 +65,7 @@ typedef void (*mmu_enable_func)(int selfmap_index, uint32_t old_pde,
     mmu_done_func next_func);
 
 // Functions defined in assembly
+extern void _start(void);
 extern void mmu_set_base(physaddr page_directory);
 extern void mmu_enable(int selfmap_index, uint32_t old_pde,
     mmu_done_func next_func);

@@ -43,12 +43,6 @@
     str     r1, [r9, #4]
     str     r2, [r9, #8]
 
-    // r0-r2 are now free to overwrite
-    // Work out phys->virt offset
-    ldr     r0, =_start
-    sub     r0, r3
-    str     r0, [r9, #12]
-
     // Set temporary boot stack starting at end of the block
     mov     sp, r3
 

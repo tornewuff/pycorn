@@ -21,6 +21,9 @@ void boot_after_mmu(int selfmap_index, uint32_t old_pde)
 
 void boot_start()
 {
+  // Work out phys->virt offset
+  bootdata->phys_to_virt = (uint32_t)&_start - bootdata->rom_base;
+
   // Print all the info we received from the assembly entry point
   DBGSTR("Pycorn bootstrap entered\n");
   DBGINT("rom base: ", bootdata->rom_base);
