@@ -26,33 +26,56 @@ The Pycorn kernel is a C application, with some assembly for initial setup. It
 links to libpython.a to provide it with a Python interpreter. It contains
 several parts:
 
-2a - The native bootstrap, _start
-=================================
+2a - The bootstrap entry point
+==============================
 
-The native bootstrap is written in assembler, and is platform-specific. It's
-assembled from arch/$(ARCH)/start.S and produces the executable section .start
-which contains the function _start. The link script places .start at the
+The bootstrap entry point is written in assembler, and is platform-specific.
+It's assembled from arch/$(ARCH)/start.S and produces the executable section
+.start which contains the function _start. The link script places .start at the
 beginning of the final binary, which means that the entry point is always the
 first instruction - also part of the ARM Linux boot protocol. It's responsible
-for doing chip-specific hardware setup:
+for doing the minimal amount of hardware setup:
 
-1) Saving the machine type and taglist pointer in global variables (the
+1) Allocating space for the bootdata structure and setting the bootdata pointer
+   register.
+2) Saving the machine type and taglist pointer in the bootdata structure (the
    bootloader passes them in registers r0-r2 which will be overwritten)
-2) Setting up the MMU. Various minimal mappings are made, which python will be
-   able to change later.
-2) Setting the stack pointer to a valid value.
-3) Branching to newlib's entry point function, _mainCRTStartup
+3) Setting a temporary stack pointer for the bootstrap code.
+4) Calling the C bootstrap, boot_start
 
-2b - The C library entry point, _mainCRTStartup
+It also defines a few MMU setup helper functions which cannot be implemented in
+C: mmu_set_base, mmu_enable, and mmu_invalidate_tlb.
+
+2b - The main C bootstrap
+=========================
+
+The main C bootstrap is compiled from arch/$(ARCH)/bootstrap.c.
+
+boot_start runs with a valid stack but without the MMU enabled: any references
+to virtual addresses must be manually offset to the matching physical address.
+It is too difficult to access the .data or .bss sections as they are nontrivial
+offsets, so all boot-time data is stored in the bootdata structure, pointed to
+by a global register variable and initialised by the assembly entry point. It's
+responsible for the rest of hardware setup, creating all the MMU mappings and
+then calling mmu_enable, which switches the MMU on, moves to a virtually
+addressed stack, and returns to the C bootstrap at boot_after_mmu.
+
+The bootdata struct is no longer accessible in boot_after_mmu as it is not
+mapped into the virtual address space, so enable_mmu is responsible for passing
+the relevant parameters to this function. It does some MMU cleanups then
+branches to newlib's entry point function, _mainCRTStartup
+
+2c - The C library entry point, _mainCRTStartup
 ===============================================
 
-Now that we have a stack, we can start to execute code in a more normal C
-environment. The C library entry point is a short C function and is still
-platform-specific - but no longer depends on particular chip details, only on
-the architecture in question. It's compiled from arch/$(ARCH)/crt0.c and
-produces _mainCRTStartup in the .text section. It's responsible for doing the
-"normal" parts of starting a C application, which are largely the same whether
-you are running on a real OS or in a selfhosted environment:
+Now that the MMU is enabled and we have a virtually mapped stack, we can start
+to execute code in a more normal C environment. The C library entry point is a
+short C function and is still platform-specific - but no longer depends on
+particular chip details, only on the architecture in question. It's compiled
+from arch/$(ARCH)/crt0.c and produces _mainCRTStartup in the .text section.
+It's responsible for doing the "normal" parts of starting a C application,
+which are largely the same whether you are running on a real OS or in a
+selfhosted environment:
 
 1) Zeroing the memory for the .bss section
 2) Registering the global object destructor handler as an atexit() function
@@ -73,9 +96,9 @@ platform. It's compiled from arch/$(ARCH)/genmmserial.c. It is used to
 implement read() and write() - thus, debug output can be accomplished by simply
 printf() or any other ordinary C library mechanism once main() is called.
 
-There is also a smaller serial driver written in asm in genmmserialb.S which
-exists to be able to print early boot debug messages before the MMU is enabled
-and stack is set up.
+There is a seperate physical-addressed serial driver in genmmserial-bs.c which
+provides functions to print early boot debug messages before the MMU is
+enabled.
 
 2d - Python extension modules
 =============================

@@ -43,10 +43,11 @@ interpreter into a library.
 
 To actually make a bootable image a linker script and entry point are required
 which are implemented by pycorn. These are architecture specific and include a
-few machine specific details: a small linker script with some platform physical
-addresses incluldes the main architecture linker script. The entry point is
-written in assembly to do things like stack setup, but then calls a generic C
-library setup function written in C.
+few machine specific details: a small linker script with some platform physica
+addresses incluldes the main architecture linker script. The entry point uses a
+small amount of assembly then switches to position-independent C code for the
+majority of platform setup, then calls a generic C library setup function
+written in C.
 
 Right now we only have them for Marvell's PXA270 system-on-chip, as used in the
 Gumstix Verdex development board (http://www.gumstix.com). This board can be
