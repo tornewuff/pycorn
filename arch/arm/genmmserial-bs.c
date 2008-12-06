@@ -15,8 +15,6 @@
 #include <stdint.h>
 #include "bootstrap.h"
 
-extern char __dbg_serial_phys__;
-
 #define REGISTER(addr) (*(volatile uint32_t *)(addr))
 
 #define REG_THR REGISTER(&__dbg_serial_phys__)
