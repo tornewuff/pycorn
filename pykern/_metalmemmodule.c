@@ -19,11 +19,6 @@ metalmem_peek32(PyObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "I", &addr))
         return NULL;
-    if ((addr & 0x3) != 0)
-    {
-        PyErr_SetString(PyExc_ValueError, "32-bit access must be 4-byte aligned");
-        return NULL;
-    }
     val = *(unsigned*)addr;
     return Py_BuildValue("I", val);
 }
@@ -36,11 +31,6 @@ metalmem_poke32(PyObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "II", &addr, &val))
         return NULL;
-    if ((addr & 0x3) != 0)
-    {
-        PyErr_SetString(PyExc_ValueError, "32-bit access must be 4-byte aligned");
-        return NULL;
-    }
     *(unsigned*)addr = val;
     Py_RETURN_NONE;
 }
@@ -53,11 +43,6 @@ metalmem_peek16(PyObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "I", &addr))
         return NULL;
-    if ((addr & 0x1) != 0)
-    {
-        PyErr_SetString(PyExc_ValueError, "16-bit access must be 2-byte aligned");
-        return NULL;
-    }
     val = *(unsigned short*)addr;
     return Py_BuildValue("H", val);
 }
@@ -70,11 +55,6 @@ metalmem_poke16(PyObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "IH", &addr, &val))
         return NULL;
-    if ((addr & 0x1) != 0)
-    {
-        PyErr_SetString(PyExc_ValueError, "16-bit access must be 2-byte aligned");
-        return NULL;
-    }
     *(unsigned short*)addr = val;
     Py_RETURN_NONE;
 }
@@ -112,12 +92,6 @@ metalmem_membuf(PyObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "In|i", &addr, &len, &writable))
         return NULL;
-    if (addr + len < addr)
-    {
-        PyErr_SetString(PyExc_ValueError, "buffer is too long for address space");
-        return NULL;
-    }
-    
     if (writable)
         return PyBuffer_FromReadWriteMemory((void*)addr, len);
     else
