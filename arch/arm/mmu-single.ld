@@ -7,5 +7,5 @@ __ram_map_end__     = 0x02000000;
 __rom_map_start__   = 0xf0000000;
 /* fixed address mappings go right at the top of the address space just below
  * the vectors */
-__page_dir_virt__   = 0xfff00000;
-__dbg_serial_virt__ = 0xfff10000;
+__page_dir_virt__   = 0xfff00000; /* 16kb */
+__dbg_serial_virt__ = 0xfff10000; /* 4kb */
