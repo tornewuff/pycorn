@@ -1,2 +1,4 @@
 include pymodules.mk
 include common.mk
+
+load_makefile ..

@@ -13,3 +13,5 @@ python/hostpgen
 python/include
 python/quilt
 python/frozen
+arch/arm/pymodules/_metalcpu_coproc.S
+arch/arm/pymodules/_metalcpu_coproc.h

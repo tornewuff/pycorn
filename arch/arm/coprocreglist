@@ -1,0 +1,55 @@
+# ARM coprocessor register list
+# -----------------------------
+#
+# Format:
+# <coproc> <opcode_1> <CRn> <CRm> <opcode_2> <rw>
+#
+# CP15 registers from ARMv5TE (ARM ARM rev E)
+# -------------------------------------------
+#
+# ID codes
+15 0  0  0 0 r  Main ID
+15 0  0  0 1 r  Cache type
+# Control bits
+15 0  1  0 0 rw Control
+# MMU
+15 0  2  0 0 rw Translation table base
+15 0  3  0 0 rw Domain access control
+15 0  5  0 0 rw Fault status
+15 0  6  0 0 rw Fault address
+15 0  8  7 0 w  Invalidate entire unified/both TLB
+15 0  8  7 1 w  Invalidate single unified/both TLB entry
+15 0  8  5 0 w  Invalidate entire instruction TLB
+15 0  8  5 1 w  Invalidate single instruction TLB entry
+15 0  8  6 0 w  Invalidate entire data TLB
+15 0  8  6 1 w  Invalidate single data TLB entry
+15 0 10  0 0 rw Lockdown data TLB
+15 0 10  0 1 rw Lockdown instruction TLB
+# Cache
+15 0  7  0 4 w  Wait for interrupt
+15 0  7  5 0 w  Invalidate entire instruction cache
+15 0  7  5 1 w  Invalidate instruction cache line by address
+15 0  7  5 2 w  Invalidate instruction cache line by set/index
+15 0  7  5 4 w  Flush prefetch buffer
+15 0  7  5 6 w  Flush entire branch target cache
+15 0  7  5 7 w  Flush branch target cache entry
+15 0  7  6 0 w  Invalidate entire data cache
+15 0  7  6 1 w  Invalidate data cache line by address
+15 0  7  6 2 w  Invalidate data cache line by set/index
+15 0  7  7 0 w  Invalidate entire unified/both cache
+15 0  7  7 1 w  Invalidate unified/both cache line by address
+15 0  7  7 2 w  Invalidate unified/both cache line by set/index
+15 0  7 10 1 w  Clean data cache line by address
+15 0  7 10 2 w  Clean data cache line by set/index
+15 0  7 10 4 w  Drain write buffer
+15 0  7 11 1 w  Clean unified cache line by address
+15 0  7 11 2 w  Clean unified cache line by set/index
+15 0  7 13 1 w  Prefetch instruction cache line
+15 0  7 14 1 w  Clean and invalidate data cache line by address
+15 0  7 14 2 w  Clean and invalidate data cache line by set/index
+15 0  7 15 1 w  Clean and invalidate unified cache line by address
+15 0  7 15 2 w  Clean and invalidate unified cache line by set/index
+15 0  9  0 0 rw Lockdown data cache
+15 0  9  0 1 rw Lockdown instruction cache
+# Fast context switch extension
+15 0 13  0 0 rw Process ID
