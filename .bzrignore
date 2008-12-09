@@ -15,4 +15,4 @@ python/quilt
 python/frozen
 arch/arm/pymodules/_metalcpu_coproc.S
 arch/arm/pymodules/_metalcpu_coproc.h
-arch/arm/frozen/metal/cpu/coprocmap.py
+arch/arm/frozen/metal/_coprocmap.py
