@@ -1,4 +1,4 @@
 include common.mk
 
-pymodules/_metalcpu_coproc.S pymodules/_metalcpu_coproc.h: coprocreggen.py coprocreglist
+pymodules/_metalcpu_coproc.S pymodules/_metalcpu_coproc.h frozen/metal/cpu/coprocmap.py: coprocreggen.py coprocreglist
 	python $(inputs) $(outputs)

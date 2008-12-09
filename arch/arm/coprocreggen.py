@@ -14,11 +14,10 @@ import sys
 read = []
 write = []
 
-lineno = 0
+lineno = 1
 
 infile = open(sys.argv[1])
 for line in infile:
-    lineno += 1
     hash = line.find('#')
     if hash >= 0:
         line = line[:hash]
@@ -33,6 +32,7 @@ for line in infile:
         read.append(fields)
     if 'w' in rw:
         write.append(fields)
+    lineno += 1
 infile.close()
 
 asmfile = open(sys.argv[2], 'w')
@@ -66,3 +66,20 @@ hdrfile = open(sys.argv[3], 'w')
 print >>hdrfile, '#define COPROCREAD_REGS %s' % len(read)
 print >>hdrfile, '#define COPROCWRITE_REGS %s' % len(write)
 hdrfile.close()
+
+mapfile = open(sys.argv[4], 'w')
+print >>mapfile, 'coprocread_map = {'
+regindex = 0
+for fields in read:
+    print >>mapfile, ('(%s, %s, %s, %s, %s): ("%s", %s),'
+            % tuple(fields+[regindex]))
+    regindex += 1
+print >>mapfile, '}'
+print >>mapfile, 'coprocwrite_map = {'
+regindex = 0
+for fields in write:
+    print >>mapfile, ('(%s, %s, %s, %s, %s): ("%s", %s),'
+            % tuple(fields+[regindex]))
+    regindex += 1
+print >>mapfile, '}'
+mapfile.close()
