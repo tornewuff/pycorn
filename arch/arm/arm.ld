@@ -11,6 +11,10 @@ OUTPUT_FORMAT("elf32-littlearm", "elf32-bigarm",
 	      "elf32-littlearm")
 OUTPUT_ARCH(arm)
 ENTRY(_start)
+
+__heap_size_min__  = 0x400000;
+__stack_size_min__ = 0x20000;
+
 SECTIONS
 {
   .text (DEFINED(__rom_map_start__) ? __rom_map_start__ : __image_loads_to__) :
