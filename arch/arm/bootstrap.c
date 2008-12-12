@@ -45,6 +45,7 @@ void boot_start()
 
   // There are no page table pages allocated yet
   bootdata->next_free_pagetable = 0;
+  bootdata->next_free_ptbl_virt = (virtaddr)&__page_table_virt__;
 
   // Allocate and map page directory
   DBGSTR("Allocate and map page directory\n");
@@ -132,7 +133,18 @@ physaddr alloc_pages_zero(uint32_t bytes, uint32_t align)
 physaddr alloc_page_table(void)
 {
   if (!bootdata->next_free_pagetable)
+  {
     bootdata->next_free_pagetable = alloc_pages_zero(PAGE_SIZE, PAGE_SIZE);
+    // map the newly allocated page table page
+    // the first (and 1024th, and so on) time this happens, we go a bit
+    // recursive as there's no page table to map this page table page with,
+    // but the second time through this func next_free_pagetable is already
+    // set and thus we don't recurse any deeper.
+    virtaddr map_ptbl = bootdata->next_free_ptbl_virt;
+    bootdata->next_free_ptbl_virt += PAGE_SIZE;
+    map_pages(map_ptbl, bootdata->next_free_ptbl_virt,
+        bootdata->next_free_pagetable | 0x3f);
+  }
   physaddr pgt = bootdata->next_free_pagetable;
   bootdata->next_free_pagetable += PAGETABLE_SIZE;
   if (!(bootdata->next_free_pagetable & PAGE_MASK))
