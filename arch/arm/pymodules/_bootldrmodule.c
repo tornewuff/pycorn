@@ -11,24 +11,47 @@
 
 #include <Python.h>
 
+extern char __text_start__, __text_end__, __data_start__, __data_end__;
+extern char __bss_start__, __bss_end__, __heap_start__, __heap_end__;
+extern char __stack_start__, __stack_end__, __page_dir_virt__;
+extern char __dbg_serial_virt__, __page_table_virt__;
+
 unsigned int machtype = -1;
 void *taglist_ptr = (void*)-1;
+
+#define PyModule_AddUnsignedLongConstant(module, name, value) { \
+        PyObject *o = PyLong_FromUnsignedLong(value); \
+        if (o) PyModule_AddObject(m, name, o); }
+
+#define PyModule_AddVoidPtrConstant(module, name, value) { \
+        PyObject *o = PyLong_FromVoidPtr(value); \
+        if (o) PyModule_AddObject(m, name, o); }
 
 PyMODINIT_FUNC
 initbootldr(void)
 {
-    PyObject *m, *machine, *taglist_addr;
+    PyObject *m;
 
     m = Py_InitModule("_bootldr", NULL);
-    if (m == NULL)
+    if (!m)
         return;
 
-    machine = PyLong_FromUnsignedLong(machtype);
-    if (machine != NULL)
-        PyModule_AddObject(m, "machtype", machine);
-    taglist_addr = PyLong_FromVoidPtr(taglist_ptr);
-    if (taglist_addr != NULL)
-        PyModule_AddObject(m, "taglist_addr", taglist_addr);
+    PyModule_AddUnsignedLongConstant(m, "machtype", machtype);
+    PyModule_AddVoidPtrConstant(m, "taglist_addr", taglist_ptr);
+
+    PyModule_AddVoidPtrConstant(m, "text_start", &__text_start__);
+    PyModule_AddVoidPtrConstant(m, "text_end", &__text_end__);
+    PyModule_AddVoidPtrConstant(m, "data_start", &__data_start__);
+    PyModule_AddVoidPtrConstant(m, "data_end", &__data_end__);
+    PyModule_AddVoidPtrConstant(m, "bss_start", &__bss_start__);
+    PyModule_AddVoidPtrConstant(m, "bss_end", &__bss_end__);
+    PyModule_AddVoidPtrConstant(m, "heap_start", &__heap_start__);
+    PyModule_AddVoidPtrConstant(m, "heap_end", &__heap_end__);
+    PyModule_AddVoidPtrConstant(m, "stack_start", &__stack_start__);
+    PyModule_AddVoidPtrConstant(m, "stack_end", &__stack_end__);
+    PyModule_AddVoidPtrConstant(m, "page_dir_virt", &__page_dir_virt__);
+    PyModule_AddVoidPtrConstant(m, "page_table_virt", &__page_table_virt__);
+    PyModule_AddVoidPtrConstant(m, "dbg_serial_virt", &__dbg_serial_virt__);
 }
 
 __attribute__((constructor)) void appendbootldr()
