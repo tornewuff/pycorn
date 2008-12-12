@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include "bootstrap.h"
 
-#define REGISTER(addr) (*(volatile uint32_t *)(addr))
+#define REGISTER(addr) (*(volatile uint8_t *)(addr))
 
 #define REG_THR REGISTER(&__dbg_serial_phys__)
 #define REG_LSR REGISTER(&__dbg_serial_phys__ + 0x14)

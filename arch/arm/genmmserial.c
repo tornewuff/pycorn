@@ -16,7 +16,7 @@
 
 extern char __dbg_serial_virt__;
 
-#define REGISTER(addr) (*(volatile uint32_t *)(addr))
+#define REGISTER(addr) (*(volatile uint8_t *)(addr))
 
 #define REG_RBR REGISTER(&__dbg_serial_virt__)
 #define REG_THR REG_RBR
