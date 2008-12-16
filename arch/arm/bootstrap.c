@@ -15,6 +15,7 @@
 #include <string.h>
 
 physaddr alloc_pages_zero(uint32_t bytes, uint32_t align);
+physaddr get_page_table(int section_index, int skip_map);
 void map_pages(virtaddr virt_start, virtaddr virt_end, physaddr phys_start);
 void boot_after_mmu(int selfmap_index, uint32_t old_pde)
   __attribute__((noreturn));
@@ -43,21 +44,29 @@ void boot_start()
   bootdata->next_free_page = bootdata->rom_base + img_size;
   DBGINT("first free page: ", bootdata->next_free_page);
 
-  // There are no page table pages allocated yet
-  bootdata->next_free_pagetable = 0;
-  bootdata->next_free_ptbl_virt = (virtaddr)&__page_table_virt__;
-
-  // Allocate and map page directory
-  DBGSTR("Allocate and map page directory\n");
+  // Allocate page directory
+  DBGSTR("Allocate page directory\n");
   bootdata->page_directory = alloc_pages_zero(PAGEDIR_SIZE, PAGEDIR_SIZE);
   DBGINT("page directory: ", bootdata->page_directory);
-  map_pages((virtaddr)&__page_dir_virt__,
-      (virtaddr)(&__page_dir_virt__ + PAGEDIR_SIZE),
-      bootdata->page_directory | 0x3f); // ap 3 (r/w), cache/buffer
   
   // Set MMU base address
   DBGSTR("Set MMU base address\n");
   mmu_set_base(bootdata->page_directory);
+
+  // Allocate and map page table mappings
+  DBGSTR("Allocate and map page table mappings\n");
+  int ptbl_section = (virtaddr)(&__page_tbl_start__) >> SECTION_SHIFT;
+  physaddr ptbl_map = get_page_table(ptbl_section, 1);
+  virtaddr ptbl_address = (virtaddr)(&__page_tbl_start__)
+      + (ptbl_section * PAGETABLE_SIZE);
+  map_pages(ptbl_address, ptbl_address + (PAGE_SIZE * PTBLS_PER_PAGE),
+      ptbl_map | 0x3f);
+
+  // Map page directory
+  DBGSTR("Map page directory\n");
+  map_pages((virtaddr)&__page_dir_virt__,
+      (virtaddr)(&__page_dir_virt__ + PAGEDIR_SIZE),
+      bootdata->page_directory | 0x3f); // ap 3 (r/w), cache/buffer
 
   // Map text section of image
   DBGSTR("Map text section\n");
@@ -130,45 +139,41 @@ physaddr alloc_pages_zero(uint32_t bytes, uint32_t align)
   return base;
 }
 
-physaddr alloc_page_table(void)
+physaddr get_page_table(int section_index, int skip_map)
 {
-  if (!bootdata->next_free_pagetable)
+  uint32_t *pgd = (uint32_t *)bootdata->page_directory;
+  physaddr ptbl = (physaddr)(pgd[section_index] & 0xFFFFFC00);
+  if (!ptbl)
   {
-    bootdata->next_free_pagetable = alloc_pages_zero(PAGE_SIZE, PAGE_SIZE);
-    // map the newly allocated page table page
-    // the first (and 1024th, and so on) time this happens, we go a bit
-    // recursive as there's no page table to map this page table page with,
-    // but the second time through this func next_free_pagetable is already
-    // set and thus we don't recurse any deeper.
-    virtaddr map_ptbl = bootdata->next_free_ptbl_virt;
-    bootdata->next_free_ptbl_virt += PAGE_SIZE;
-    map_pages(map_ptbl, bootdata->next_free_ptbl_virt,
-        bootdata->next_free_pagetable | 0x3f);
+    ptbl = alloc_pages_zero(PAGE_SIZE, PAGE_SIZE);
+
+    int start_sec = section_index & ~(PTBLS_PER_PAGE-1);
+    for (int i = 0; i < 4; ++i)
+      pgd[start_sec + i] = (ptbl + (i * PAGETABLE_SIZE)) | 0x1;
+
+    int pagetable_index = section_index / PTBLS_PER_PAGE;
+    virtaddr pgt_virt = (virtaddr)(&__page_tbl_start__)
+        + (pagetable_index << PAGE_SHIFT);
+    if (!skip_map)
+      map_pages(pgt_virt, pgt_virt + PAGE_SIZE, ptbl | 0x3f);
+
+    int index_in_page = section_index % PTBLS_PER_PAGE;
+    ptbl += index_in_page * PAGETABLE_SIZE;
   }
-  physaddr pgt = bootdata->next_free_pagetable;
-  bootdata->next_free_pagetable += PAGETABLE_SIZE;
-  if (!(bootdata->next_free_pagetable & PAGE_MASK))
-    bootdata->next_free_pagetable = 0;
-  return pgt;
+
+  return ptbl;
 }
 
 void map_pages(virtaddr virt_start, virtaddr virt_end, physaddr phys_start)
 {
   int bytes = virt_end - virt_start;
-  uint32_t *pgd = (uint32_t *)bootdata->page_directory;
   int section_index = virt_start >> 20;
   int page_index = (virt_start << 12) >> 24;
   uint32_t pte = phys_start;
 
   for(;;)
   {
-    physaddr pde = pgd[section_index] & 0xFFFFFC00;
-    if (!pde)
-    {
-      pde = alloc_page_table();
-      pgd[section_index] = pde | 0x1;
-    }
-    uint32_t *pgt = (uint32_t *)pde;
+    uint32_t *pgt = (uint32_t *)get_page_table(section_index, 0);
     do
     {
       pgt[page_index++] = pte;
