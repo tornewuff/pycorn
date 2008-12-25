@@ -11,6 +11,7 @@
 
 import _metalcpu
 import metal._coprocmap as cpmap
+from metal import mem, register
 
 def _coprocread_index(coproc, opcode_1, CRn, CRm, opcode_2):
     return cpmap.coprocread_map.get((coproc, opcode_1, CRn, CRm, opcode_2))
@@ -28,12 +29,44 @@ def coproc_poke(coproc, opcode_1, CRn, CRm, opcode_2, value):
     reg_entry = _coprocwrite_index(coproc, opcode_1, CRn, CRm, opcode_2)
     if reg_entry is None:
         raise ValueError('coprocessor register not present/supported')
-    if value < -0x80000000 or value > 0xffffffff:
-        raise ValueError('value must be between -0x80000000 and 0xffffffff')
-    return _metalcpu.coproc_write(reg_entry[1], value)
+    mem.checkvalue(4, value)
+    _metalcpu.coproc_write(reg_entry[1], value)
 
 def cp15_peek(CRn, CRm=0, opcode_2=0):
     return coproc_peek(15, 0, CRn, CRm, opcode_2)
 
 def cp15_poke(CRn, CRm, opcode_2, value):
-    return coproc_poke(15, 0, CRn, CRm, opcode_2, value)
+    coproc_poke(15, 0, CRn, CRm, opcode_2, value)
+
+
+class CoprocRegister(register.Register):
+
+    def __init__(self, coproc, opcode_1, CRn, CRm=0, opcode_2=0):
+        read = _coprocread_index(coproc, opcode_1, CRn, CRm, opcode_2)
+        write = _coprocwrite_index(coproc, opcode_1, CRn, CRm, opcode_2)
+        register.Register.__init__(self, read is not None,
+                write is not None, 4)
+        self.coproc = coproc
+        self.opcode_1 = opcode_1
+        self.CRn = CRn
+        self.CRm = CRm
+        self.opcode_2 = opcode_2
+        if read is not None:
+            self.name = read[0]
+            self._readindex = read[1]
+        if write is not None:
+            self.name = write[0]
+            self._writeindex = write[1]
+
+    def __repr__(self):
+        return 'CoprocRegister(%s, %s, %s, %s, %s)' % (self.coproc,
+                self.opcode_1, self.CRn, self.CRm, self.opcode_2)
+
+    def __str__(self):
+        return '<%s coprocessor register "%s">' % (self._access(), self.name)
+
+    def _read(self):
+        return _metalcpu.coproc_read(self._readindex)
+
+    def _write(self, value):
+        _metalcpu.coproc_write(self._writeindex, value)
