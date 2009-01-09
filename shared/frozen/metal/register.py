@@ -32,7 +32,7 @@ class Register(object):
     def _read(self):
         raise NotImplementedError
 
-    def _write(self):
+    def _write(self, value):
         raise NotImplementedError
 
     def peek(self):
