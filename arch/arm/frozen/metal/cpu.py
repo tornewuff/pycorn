@@ -11,7 +11,8 @@
 
 import _metalcpu
 import metal._coprocmap as cpmap
-from metal import mem, register
+from metal import mem, register, bits
+from metal.bits import Field, Bits
 
 def _coprocread_index(coproc, opcode_1, CRn, CRm, opcode_2):
     return cpmap.coprocread_map.get((coproc, opcode_1, CRn, CRm, opcode_2))
@@ -70,3 +71,28 @@ class CoprocRegister(register.Register):
 
     def _write(self, value):
         _metalcpu.coproc_write(self._writeindex, value)
+
+
+class SystemControlCoprocessor(object):
+
+    class MainIDRegister(CoprocRegister, bits.Bitfield):
+
+        def __init__(self):
+            CoprocRegister.__init__(self, 15, 0, 0, 0, 0)
+            bits.Bitfield.__init__(self)
+
+        interpretation = Field(Bits[15:12], "ID code interpretation")
+
+        # if interpretation is 0, pre-ARM7 processor. Not handled yet.
+        # if interpretation is 7, ARM7 family processor. Not handled yet.
+        # otherwise, fields are defined as follows:
+
+        implementor = Field(Bits[31:24], "Implementor code")
+        variant = Field(Bits[23:20], "Variant number")
+        architecture = Field(Bits[19:16], "Architecture code")
+        partno = Field(Bits[15:4], "Primary part number")
+        revision = Field(Bits[3:0], "Revision number")
+
+    main_id = MainIDRegister()
+
+system_control = SystemControlCoprocessor()
