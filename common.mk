@@ -39,8 +39,8 @@ ifdef OBJECTS
 %.bin: %.elf
 	$(OBJCOPY) -O binary $(input) $(output)
 
-$(notdir $(CURDIR)).elf: $(MACHPATH)/$( $(MACHOBJECTS)) $(OBJECTS) $(LDDEPS)
-	$(CC) $(MACHPATH)/$( $(MACHOBJECTS)) $(OBJECTS) $(LDFLAGS) $(SYSLIBS) -o $(output)
+$(notdir $(CURDIR)).elf: $(OBJECTS) $(LDDEPS)
+	$(CC) $(OBJECTS) $(LDFLAGS) $(SYSLIBS) -o $(output)
 endif
 
 %.o: %.c $(prebuild $( $(PYINCLUDE))/stamp-include)
