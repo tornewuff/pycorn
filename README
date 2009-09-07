@@ -66,10 +66,11 @@ builtin readline is really stupid so you can't even backspace.. but it works!
 BUILDING
 ========
 
-0) Download devkitARM from
+0) Download devkitARM release 23b from
 http://sourceforge.net/project/showfiles.php?group_id=114505&package_id=124207
 and unpack it somewhere. Add devkitARM/bin to your PATH. You should now be able
-to run arm-eabi-gcc and friends.
+to run arm-eabi-gcc and friends. Newer versions of devkitARM do not work as
+their build of newlib expects slightly different syscalls.
 
 1) Add the makepp directory in the pycorn source tree to your PATH. makepp is a
 nice make replacement with lots of nifty features; used primarily because I
