@@ -1,7 +1,10 @@
+EMBRYOOBJECTS := readwrite.o sbrk.o stubs.o
+
 $(phony all): libembryo.a
 
 include common.mk
+include $(ARCHPATH)/embryo/embryo.mk
 
-libembryo.a: $(only_targets *.o)
+libembryo.a: $(EMBRYOOBJECTS)
 	&rm -f $(output)
 	$(AR) cr $(output) $(inputs)

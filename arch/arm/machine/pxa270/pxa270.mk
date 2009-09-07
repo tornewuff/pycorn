@@ -1,7 +1,7 @@
 CFLAGS += -mcpu=xscale -mtune=xscale
 PYCFLAGS += -mcpu=xscale -mtune=xscale
 KERNELMKIMAGE += -a 0xa0008000 -e 0xa0008000
-ARCHOBJECTS += genmmserial-bs.o genmmserial.o
+EMBRYO_GENMMSERIAL := y
 MACHOBJECTS :=
 LDDEPS += $(ARCHPATH)/mmu-single.ld
 
