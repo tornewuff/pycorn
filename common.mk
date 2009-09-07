@@ -8,6 +8,7 @@ PREFIX := arm-eabi-
 
 # Commands
 CC := $(PREFIX)gcc
+AR := $(PREFIX)ar
 OBJCOPY := $(PREFIX)objcopy
 MKIMAGE := mkimage
 
@@ -18,8 +19,8 @@ MACHPATH := $(ROOT)/arch/$(ARCH)/machine/$(MACH)
 CFLAGS := -g -Wall -O2 -fomit-frame-pointer -std=gnu99 -Werror
 CPPFLAGS := -I$( $(PYINCLUDE))/include
 PYCFLAGS := -fomit-frame-pointer -Werror -Wno-error=strict-aliasing -Wno-error=char-subscripts
-LDFLAGS := -B$(MACHPATH) -B$(ARCHPATH) -nostdlib -lc -lgcc -T $(MACH).ld
-LDDEPS := $(MACHPATH)/$(MACH).ld $(ARCHPATH)/$(ARCH).ld
+LDFLAGS := -B$(MACHPATH) -B$(ARCHPATH) -nostdlib -lc $(ROOT)/embryo/libembryo.a -lgcc -T $(MACH).ld
+LDDEPS := $(MACHPATH)/$(MACH).ld $(ARCHPATH)/$(ARCH).ld $(ROOT)/embryo/libembryo.a
 MKIMAGEFLAGS := -A $(ARCH) -O linux
 KERNELMKIMAGE := $(MKIMAGEFLAGS) -T kernel
 FREEZEDIRS := $( $(SHAREDPATH) $(ARCHPATH))/frozen
@@ -38,8 +39,8 @@ ifdef OBJECTS
 %.bin: %.elf
 	$(OBJCOPY) -O binary $(input) $(output)
 
-$(notdir $(CURDIR)).elf: $(ARCHPATH)/$( $(ARCHOBJECTS)) $(MACHPATH)/$( $(MACHOBJECTS)) $(SHAREDPATH)/$( $(SHAREDOBJECTS)) $(OBJECTS) $(LDDEPS)
-	$(CC) $(ARCHPATH)/$( $(ARCHOBJECTS)) $(MACHPATH)/$( $(MACHOBJECTS)) $(SHAREDPATH)/$( $(SHAREDOBJECTS)) $(OBJECTS) $(LDFLAGS) $(SYSLIBS) -o $(output)
+$(notdir $(CURDIR)).elf: $(ARCHPATH)/$( $(ARCHOBJECTS)) $(MACHPATH)/$( $(MACHOBJECTS)) $(OBJECTS) $(LDDEPS)
+	$(CC) $(ARCHPATH)/$( $(ARCHOBJECTS)) $(MACHPATH)/$( $(MACHOBJECTS)) $(OBJECTS) $(LDFLAGS) $(SYSLIBS) -o $(output)
 endif
 
 %.o: %.c $(prebuild $( $(PYINCLUDE))/stamp-include)

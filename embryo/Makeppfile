@@ -1,0 +1,7 @@
+$(phony all): libembryo.a
+
+include common.mk
+
+libembryo.a: $(only_targets *.o)
+	&rm -f $(output)
+	$(AR) cr $(output) $(inputs)
