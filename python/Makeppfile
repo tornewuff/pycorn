@@ -19,7 +19,7 @@ stamp-include: stamp-target stamp-sources
 stamp-target: stamp-sources hostpgen
 	rm -rf targetpy
 	&mkdir targetpy
-	cd targetpy; MACHDEP=pycorn ../Python-2.5.2/configure --host=arm-eabi --without-signal-module
+	cd targetpy; MACHDEP=pycorn CFLAGS="$(LDFLAGS)" ../Python-2.5.2/configure --host=arm-eabi --without-signal-module
 	cd targetpy; make HOSTPGEN=$(CURDIR)/hostpgen EXTRA_CFLAGS="$(PYCFLAGS)" libpython2.5.a
 	&touch stamp-target
 
