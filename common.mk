@@ -19,8 +19,8 @@ MACHPATH := $(ROOT)/arch/$(ARCH)/machine/$(MACH)
 CFLAGS := -g -Wall -O2 -fomit-frame-pointer -std=gnu99 -Werror
 CPPFLAGS := -I$( $(PYINCLUDE))/include
 PYCFLAGS := -fomit-frame-pointer -Werror -Wno-error=strict-aliasing -Wno-error=char-subscripts
-LDFLAGS := -B$(MACHPATH) -B$(ARCHPATH) -T $(MACH).ld -nostdlib -Wl,--start-group -lc $(ROOT)/embryo/libembryo.a -lgcc -Wl,--end-group
-LDDEPS := $(MACHPATH)/$(MACH).ld $(ARCHPATH)/$(ARCH).ld $(ROOT)/embryo/libembryo.a
+LDFLAGS := -L$(MACHPATH) -L$(ARCHPATH) -L$(ROOT)/embryo -specs=$(ARCHPATH)/embryo/embryo.specs -Tembryo.ld
+LDDEPS := $(MACHPATH)/embryo.ld $(ARCHPATH)/$(ARCH).ld $(ROOT)/embryo/libembryo.a
 MKIMAGEFLAGS := -A $(ARCH) -O linux
 KERNELMKIMAGE := $(MKIMAGEFLAGS) -T kernel
 FREEZEDIRS := $( $(SHAREDPATH) $(ARCHPATH))/frozen

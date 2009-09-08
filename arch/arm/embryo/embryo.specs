@@ -1,0 +1,11 @@
+%rename lib old_lib
+
+*lib:
+%(old_lib) -lembryo
+
+*startfile:
+
+
+*endfile:
+
+
