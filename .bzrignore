@@ -4,8 +4,9 @@
 *.uimage
 *.flash
 stamp-*
-python/Python-2.5.2
-downloads/Python-2.5.2.tar.bz2
+python/Python-*
+downloads/*.bz2
+downloads/*.gz
 python/hostpy
 python/targetpy
 pykern/frozen.c
