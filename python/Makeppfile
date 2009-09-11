@@ -16,7 +16,7 @@ stamp-include: stamp-target stamp-sources
 	cp -p targetpy/pyconfig.h include
 	&touch stamp-include
 
-stamp-target: stamp-sources hostpgen
+stamp-target: stamp-sources hostpgen $(LDDEPS)
 	rm -rf targetpy
 	&mkdir targetpy
 	cd targetpy; MACHDEP=pycorn CFLAGS="$(LDFLAGS)" ../Python-2.5.2/configure --host=arm-eabi --without-signal-module
