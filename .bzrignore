@@ -17,3 +17,11 @@ python/frozen
 arch/arm/pymodules/_metalcpu_coproc.S
 arch/arm/pymodules/_metalcpu_coproc.h
 arch/arm/frozen/metal/_coprocmap.py
+toolchain/binutils/binutils-*
+toolchain/binutils/build
+toolchain/gcc/gcc-*
+toolchain/gcc/build
+toolchain/newlib/newlib-*
+toolchain/newlib/build
+toolchain/gdb/gdb-*
+toolchain/gdb/build

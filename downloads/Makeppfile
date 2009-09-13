@@ -7,3 +7,19 @@ u-boot-verdex-%.bin: :last_chance
 Python-%.tar.bz2: :last_chance
 	&rm -f $(output)
 	wget http://www.python.org/ftp/python/$(output:Python-%.tar.bz2=%)/$(output)
+
+gcc-core-%.tar.bz2: :last_chance
+	&rm -f $(output)
+	wget http://ftpmirror.gnu.org/gcc/gcc-$(output:gcc-core-%.tar.bz2=%)/$(output)
+
+binutils-%.tar.bz2: :last_chance
+	&rm -f $(output)
+	wget http://ftpmirror.gnu.org/binutils/$(output)
+
+gdb-%.tar.bz2: :last_chance
+	&rm -f $(output)
+	wget http://ftpmirror.gnu.org/gdb/$(output)
+
+newlib-%.tar.gz: :last_chance
+	&rm -f $(output)
+	wget ftp://sources.redhat.com/pub/newlib/$(output)

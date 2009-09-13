@@ -35,11 +35,8 @@ makepp/LICENSE.
 HOW IT ALL FITS TOGETHER
 ========================
 
-Pycorn currently uses devkitARM to build python, part of wintermute's excellent
-devkitpro project (http://www.devkitpro.org/). devkitARM includes a
-cross-compiling gcc targetted at generic ARM platforms and a build of the
-newlib embedded C library. This provides enough 'stuff' to compile the python
-interpreter into a library.
+Pycorn uses a cross-compiling gcc and the newlib enbedded C library.  This
+provides enough 'stuff' to compile the main python interpreter into a library.
 
 To actually make a bootable image a linker script and entry point are required
 which are implemented by pycorn. These are architecture specific and include a
@@ -63,14 +60,10 @@ And.. that's it for now. There is no way to import any modules which aren't
 built into the interpreter as all file access fails right now, and Python's
 builtin readline is really stupid so you can't even backspace.. but it works!
 
-BUILDING
-========
+REQUIREMENTS
+============
 
-0) Download devkitARM release 23b from
-http://sourceforge.net/project/showfiles.php?group_id=114505&package_id=124207
-and unpack it somewhere. Add devkitARM/bin to your PATH. You should now be able
-to run arm-eabi-gcc and friends. Newer versions of devkitARM do not work as
-their build of newlib expects slightly different syscalls.
+Pycorn requires several things in order to build:
 
 1) Add the makepp directory in the pycorn source tree to your PATH. makepp is a
 nice make replacement with lots of nifty features; used primarily because I
@@ -78,26 +71,36 @@ hate make's handling of subdirectories. See http://makepp.sourceforge.net/ for
 their project page. I've included a version in the tree because it's a CVS
 snapshot, and an uncommon tool.
 
-2) Install u-boot's mkimage utility. This is in Debian as package
+2) You need an arm-eabi crosscompiler toolchain, and newlib 1.17. To build one
+automatically:
+
+cd toolchain; makepp TOOLSPREFIX=/dir/to/install/to
+
+Once it's built, add the bin directory inside TOOLSPREFIX to your path.
+
+3) Install u-boot's mkimage utility. This is in Debian as package
 "uboot-mkimage", or you can compile it from u-boot's source.
 
-3) Install autoconf. Python's configure script needs regeneration after
+4) Install autoconf. Python's configure script needs regeneration after
 patching for cross-compilability.
 
-4) Run "makepp hello/hello.uimage". This is a "hello world" program which
+BUILDING
+========
+
+1) Run "makepp hello/hello.uimage". This is a "hello world" program which
 should load into u-boot and print on the default platform serial port.
 
-5a) If you have an actual Gumstix Verdex board you should be able to load this
+1a) If you have an actual Gumstix Verdex board you should be able to load this
 by serial, tftp, or MMC, and execute it with bootm.
 
-5b) If you don't, you can simulate it under QEMU by doing "makepp hello/run",
+1b) If you don't, you can simulate it under QEMU by doing "makepp hello/run",
 assuming you have QEMU installed. The bootloader will be configured
 automatically so it should just run. Hit C-a x (C-a a x under screen) to kill
 QEMU.
 
-6) Run "makepp pykern/pykern.uimage". This is the python interpreter as a
+2) Run "makepp pykern/pykern.uimage". This is the python interpreter as a
 kernel.
 
-7a) Again, if you have an actual Verdex board it should run from u-boot.
+3a) Again, if you have an actual Verdex board it should run from u-boot.
 
-7b) Otherwise, "makepp pykern/run" to launch it in QEMU.
+3b) Otherwise, "makepp pykern/run" to launch it in QEMU.

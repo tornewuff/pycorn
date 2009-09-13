@@ -1,0 +1,23 @@
+BINUTILSVER := 2.19.1
+BINUTILSTAR := binutils-$(BINUTILSVER).tar.bz2
+BINUTILSDIR := binutils-$(BINUTILSVER)
+
+include toolchain.mk
+
+stamp-install: stamp-build
+	cd build; make install
+	&touch $(output)
+
+stamp-build: stamp-sources
+	rm -rf build
+	&mkdir build
+	cd build; CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" ../$(BINUTILSDIR)/configure --prefix=$(absolute_filename $(TOOLSPREFIX)) --target=$(TOOLSTARGET) --disable-nls
+	cd build; make
+	&touch $(output)
+
+stamp-sources $(BINUTILSDIR)/configure: $(ROOT)/downloads/$(BINUTILSTAR)
+	rm -rf $(BINUTILSDIR)
+	tar jxf $(input)
+	&touch $(output)
+
+no_implicit_load $(BINUTILSDIR) build

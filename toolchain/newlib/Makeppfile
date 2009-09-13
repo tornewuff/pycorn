@@ -1,0 +1,23 @@
+NEWLIBVER := 1.17.0
+NEWLIBTAR := newlib-$(NEWLIBVER).tar.gz
+NEWLIBDIR := newlib-$(NEWLIBVER)
+
+include toolchain.mk
+
+stamp-install: stamp-build
+	cd build; make install
+	&touch $(output)
+
+stamp-build: stamp-sources ../gcc/stamp-install
+	rm -rf build
+	&mkdir build
+	cd build; ../$(NEWLIBDIR)/configure --disable-newlib-supplied-syscalls --disable-multilib --disable-libgloss --target=$(TOOLSTARGET) --prefix=$(absolute_filename $(TOOLSPREFIX))
+	cd build; make CFLAGS_FOR_TARGET=-DREENTRANT_SYSCALLS_PROVIDED
+	&touch $(output)
+
+stamp-sources $(NEWLIBDIR)/configure: $(ROOT)/downloads/$(NEWLIBTAR)
+	rm -rf $(NEWLIBDIR)
+	tar zxf $(input)
+	&touch $(output)
+
+no_implicit_load $(NEWLIBDIR) build

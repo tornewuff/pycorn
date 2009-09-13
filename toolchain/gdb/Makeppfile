@@ -1,0 +1,23 @@
+GDBVER := 6.8
+GDBTAR := gdb-$(GDBVER).tar.bz2
+GDBDIR := gdb-$(GDBVER)
+
+include toolchain.mk
+
+stamp-install: stamp-build
+	cd build; make install
+	&touch $(output)
+
+stamp-build: stamp-sources
+	rm -rf build
+	&mkdir build
+	cd build; CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" ../$(GDBDIR)/configure --prefix=$(absolute_filename $(TOOLSPREFIX)) --target=$(TOOLSTARGET) --disable-nls --disable-werror
+	cd build; make
+	&touch $(output)
+
+stamp-sources $(GDBDIR)/configure: $(ROOT)/downloads/$(GDBTAR)
+	rm -rf $(GDBDIR)
+	tar jxf $(input)
+	&touch $(output)
+
+no_implicit_load $(GDBDIR) build
