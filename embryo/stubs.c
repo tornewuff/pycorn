@@ -44,7 +44,7 @@ int _getpid_r(struct _reent *r)
   return 1;
 }
 
-int isatty(int file)
+int _isatty_r(struct _reent *r, int file)
 {
   if (file >= 0 && file <= 2)
     return 1;
