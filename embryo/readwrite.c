@@ -18,14 +18,14 @@ int _read_r(void *r, int file, void *ptr, int len)
 {
   if (file == 0)
     return serial_read(ptr, len);
-	else
-  	return -1;
+  else
+    return -1;
 }
 
 int _write_r(void *r, int file, const void *ptr, int len)
 {
   if (file >= 1 && file <= 2)
     return serial_write(ptr, len);
-	else
-  	return -1;
+  else
+    return -1;
 }

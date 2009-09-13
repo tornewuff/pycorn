@@ -20,19 +20,19 @@ extern char __heap_end__;
 
 void *_sbrk_r(struct _reent *r, ptrdiff_t incr)
 {
-	static char *current;
+  static char *current;
   char *prev;
 
   if (current == NULL)
     current = &__heap_start__;
 
-	if (current + incr >= &__heap_end__ || current + incr < &__heap_start__)
+  if (current + incr >= &__heap_end__ || current + incr < &__heap_start__)
   {
-		r->_errno = ENOMEM;
-		return (void *) -1;
-	}
+    r->_errno = ENOMEM;
+    return (void *) -1;
+  }
 
-	prev = current;
-	current += incr;
-	return (void *) prev;
+  prev = current;
+  current += incr;
+  return (void *) prev;
 }

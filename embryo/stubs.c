@@ -25,7 +25,7 @@ int _close_r(struct _reent *r, int file)
 
 void _exit(int rc)
 {
-	for (;;) {}
+  for (;;) {}
 }
 
 int _fstat_r(struct _reent *r, int file, struct stat *st)
