@@ -11,3 +11,4 @@ __page_tbl_start__  = 0xffb00000; /* 4mb, enough to map 4gb */
 __page_tbl_end__    = 0xfff00000;
 __page_dir_virt__   = 0xfff00000; /* 16kb */
 __dbg_serial_virt__ = 0xfff10000; /* 4kb */
+__bootdata_virt__   = 0xfff20000; /* 4kb */

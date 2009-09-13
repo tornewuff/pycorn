@@ -101,7 +101,13 @@ void boot_start()
   DBGSTR("Mapping debug UART\n");
   map_pages((virtaddr)&__dbg_serial_virt__, 
       (virtaddr)(&__dbg_serial_virt__ + PAGE_SIZE),
-      (physaddr)&__dbg_serial_phys__ | 0x33); // ap 3 (r/w), cache/buffer
+      (physaddr)&__dbg_serial_phys__ | 0x33); // ap 3 (r/w), no cache/no buffer
+
+  // Map boot data page
+  DBGSTR("Mapping boot data\n");
+  map_pages((virtaddr)&__bootdata_virt__,
+      (virtaddr)(&__bootdata_virt__ + PAGE_SIZE),
+      (physaddr)bootdata | 0x3f); // ap 3 (r/w), cache/buffer
 
   // Self-map MMU enabling code
   DBGSTR("Self-map MMU enabling code\n");

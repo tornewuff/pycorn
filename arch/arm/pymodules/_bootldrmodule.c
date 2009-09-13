@@ -15,9 +15,7 @@ extern char __text_start__, __text_end__, __data_start__, __data_end__;
 extern char __bss_start__, __bss_end__, __heap_start__, __heap_end__;
 extern char __stack_start__, __stack_end__, __page_dir_virt__;
 extern char __dbg_serial_virt__, __page_tbl_start__, __page_tbl_end__;
-
-unsigned int machtype = -1;
-void *taglist_ptr = (void*)-1;
+extern char __bootdata_virt__;
 
 #define PyModule_AddUnsignedLongConstant(module, name, value) { \
         PyObject *o = PyLong_FromUnsignedLong(value); \
@@ -36,9 +34,6 @@ initbootldr(void)
     if (!m)
         return;
 
-    PyModule_AddUnsignedLongConstant(m, "machtype", machtype);
-    PyModule_AddVoidPtrConstant(m, "taglist_addr", taglist_ptr);
-
     PyModule_AddVoidPtrConstant(m, "text_start", &__text_start__);
     PyModule_AddVoidPtrConstant(m, "text_end", &__text_end__);
     PyModule_AddVoidPtrConstant(m, "data_start", &__data_start__);
@@ -53,6 +48,7 @@ initbootldr(void)
     PyModule_AddVoidPtrConstant(m, "page_tbl_start", &__page_tbl_start__);
     PyModule_AddVoidPtrConstant(m, "page_tbl_end", &__page_tbl_end__);
     PyModule_AddVoidPtrConstant(m, "dbg_serial_virt", &__dbg_serial_virt__);
+    PyModule_AddVoidPtrConstant(m, "bootdata_virt", &__bootdata_virt__);
 }
 
 __attribute__((constructor)) void appendbootldr()

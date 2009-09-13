@@ -40,6 +40,7 @@ extern char __bss_start__, __bss_end__, __heap_start__, __heap_end__;
 extern char __stack_start__, __stack_end__, __page_dir_virt__;
 extern char __dbg_serial_virt__, __dbg_serial_phys__;
 extern char __page_tbl_start__, __page_tbl_end__;
+extern char __bootdata_virt__;
 
 // MMU constants
 #define SECTION_SHIFT 20
