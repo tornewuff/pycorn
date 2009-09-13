@@ -16,9 +16,9 @@ MKIMAGE := mkimage
 SHAREDPATH := $(ROOT)/shared
 ARCHPATH := $(ROOT)/arch/$(ARCH)
 MACHPATH := $(ROOT)/arch/$(ARCH)/machine/$(MACH)
-CFLAGS := -g -Wall -O2 -fomit-frame-pointer -std=gnu99 -Werror
+CFLAGS := -g -Wall -O2 -pipe -fomit-frame-pointer -std=gnu99 -Werror
 CPPFLAGS := -I$( $(PYINCLUDE))/include
-PYCFLAGS := -fomit-frame-pointer -Werror -Wno-error=strict-aliasing -Wno-error=char-subscripts
+PYCFLAGS := -pipe -fomit-frame-pointer -fno-strict-aliasing -Werror -Wno-error=char-subscripts
 LDFLAGS := -L$(absolute_filename $(MACHPATH)) -L$(absolute_filename $(ARCHPATH)) -L$(absolute_filename $(ROOT)/embryo) -specs=$(absolute_filename $(ARCHPATH)/embryo/embryo.specs) -Tembryo.ld
 LDDEPS := $(MACHPATH)/embryo.ld $(ARCHPATH)/$(ARCH).ld $(ROOT)/embryo/libembryo.a
 MKIMAGEFLAGS := -A $(ARCH) -O linux
