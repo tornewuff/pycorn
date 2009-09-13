@@ -10,7 +10,6 @@ PREFIX := arm-eabi-
 CC := $(PREFIX)gcc
 AR := $(PREFIX)ar
 OBJCOPY := $(PREFIX)objcopy
-MKIMAGE := mkimage
 
 # Flags and paths
 SHAREDPATH := $(ROOT)/shared
@@ -21,8 +20,6 @@ CPPFLAGS := -I$( $(PYINCLUDE))/include
 PYCFLAGS := -pipe -fomit-frame-pointer -fno-strict-aliasing -Werror -Wno-error=char-subscripts
 LDFLAGS := -L$(absolute_filename $(MACHPATH)) -L$(absolute_filename $(ARCHPATH)) -L$(absolute_filename $(ROOT)/embryo) -specs=$(absolute_filename $(ARCHPATH)/embryo/embryo.specs) -Tembryo.ld
 LDDEPS := $(MACHPATH)/embryo.ld $(ARCHPATH)/$(ARCH).ld $(ROOT)/embryo/libembryo.a
-MKIMAGEFLAGS := -A $(ARCH) -O linux
-KERNELMKIMAGE := $(MKIMAGEFLAGS) -T kernel
 FREEZEDIRS := $( $(SHAREDPATH) $(ARCHPATH))/frozen
 
 # Get machine-specific stuff
@@ -33,9 +30,6 @@ include $(MACHPATH)/$(MACH).mk
 # Rules
 
 ifdef OBJECTS
-%.uimage: %.bin
-	$(MKIMAGE) -C none $(KERNELMKIMAGE) -n $(basename $(input)) -d $(input) $(output)
-
 %.bin: %.elf
 	$(OBJCOPY) -O binary $(input) $(output)
 
