@@ -49,7 +49,10 @@ int _isatty_r(struct _reent *r, int file)
   if (file >= 0 && file <= 2)
     return 1;
   else
-    return 0;
+  {
+    r->_errno = EBADF;
+    return -1;
+  }
 }
 
 int _kill_r(struct _reent *r, int pid, int sig)

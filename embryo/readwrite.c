@@ -11,21 +11,30 @@
  * (at your option) any later version.
  */
 
+#include <errno.h>
+#include <reent.h>
+
 extern int serial_read(void *ptr, int len);
 extern int serial_write(const void *ptr, int len);
 
-int _read_r(void *r, int file, void *ptr, int len)
+_ssize_t _read_r(struct _reent *r, int file, void *ptr, size_t len)
 {
   if (file == 0)
     return serial_read(ptr, len);
   else
+  {
+    r->_errno = EBADF;
     return -1;
+  }
 }
 
-int _write_r(void *r, int file, const void *ptr, int len)
+_ssize_t _write_r(struct _reent *r, int file, const void *ptr, size_t len)
 {
   if (file >= 1 && file <= 2)
     return serial_write(ptr, len);
   else
+  {
+    r->_errno = EBADF;
     return -1;
+  }
 }
