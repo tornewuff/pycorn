@@ -1,6 +1,9 @@
 COMPONENTS
 ==========
 
+Note: this is slightly outdated and will probably be replaced with text on the
+wiki.
+
 Pycorn is made up of a number of parts written in various languages. This is an
 attempt to explain what those parts are, and how they fit together. It also
 explains the boot process, in vague terms.

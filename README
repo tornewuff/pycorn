@@ -1,7 +1,7 @@
 Well, this is Pycorn.
 
 Pycorn is an interpreted operating system written in Python, intended to
-recreate the easy learning possibilities of 8-bit microcomputers. Device
+recreate the style of learning available on 16-bit microcomputers. Device
 drivers, file systems, network protocols can all be implemented in Python with
 no C or assembler code.
 
@@ -15,6 +15,7 @@ platforms due to the relative simplicity of the hardware.
 LICENSE
 =======
 
+---------------------------------------------------------------------
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -27,6 +28,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+---------------------------------------------------------------------
 
 The directory 'makepp' is a verbatim copy of the original makepp source,
 distributed here for convenience. makepp has its own licensing terms in
@@ -35,7 +37,7 @@ makepp/LICENSE.
 HOW IT ALL FITS TOGETHER
 ========================
 
-Pycorn uses a cross-compiling gcc and the newlib enbedded C library.  This
+Pycorn uses a cross-compiling gcc and the newlib embedded C library.  This
 provides enough 'stuff' to compile the main python interpreter into a library.
 
 To actually make a bootable image a linker script and entry point are required
