@@ -15,43 +15,10 @@
 #define __BOOTSTRAP_H__
 
 #include <stdint.h>
-
-// Conveniences to make code clearer
-typedef uint32_t physaddr;
-typedef uint32_t virtaddr;
-
-// The bootdata structure
-typedef struct
-{
-  physaddr rom_base;
-  uint32_t machtype;
-  physaddr taglist_ptr;
-  uint32_t phys_to_virt;
-  physaddr next_free_page;
-  physaddr page_directory;
-} bootdata_t;
+#include <bootdata.h>
 
 // Bootdata structure pointer lives in a register
 register bootdata_t *bootdata asm ("r9");
-
-// Linker-defined section symbols
-extern char __text_start__, __text_end__, __data_start__, __data_end__;
-extern char __bss_start__, __bss_end__, __heap_start__, __heap_end__;
-extern char __stack_start__, __stack_end__, __page_dir_virt__;
-extern char __dbg_serial_virt__, __dbg_serial_phys__;
-extern char __page_tbl_start__, __page_tbl_end__;
-extern char __bootdata_virt__;
-
-// MMU constants
-#define SECTION_SHIFT 20
-#define SECTION_SIZE (1 << SECTION_SHIFT)
-#define SECTION_MASK (SECTION_SIZE - 1)
-#define PAGE_SHIFT 12
-#define PAGE_SIZE (1 << PAGE_SHIFT)
-#define PAGE_MASK (PAGE_SIZE - 1)
-#define PTBLS_PER_PAGE 4
-#define PAGEDIR_SIZE (PAGE_SIZE * PTBLS_PER_PAGE)
-#define PAGETABLE_SIZE (PAGE_SIZE / PTBLS_PER_PAGE)
 
 // Pre-MMU debug printing
 extern void boot_putchar(char c);
@@ -75,5 +42,13 @@ extern void mmu_invalidate_tlb(void);
 
 // crt0 function
 extern void _mainCRTStartup(void) __attribute__((noreturn));
+
+// memory functions
+physaddr alloc_pages_zero(uint32_t bytes, uint32_t align);
+physaddr get_page_table(int section_index, int skip_map);
+void map_pages(virtaddr virt_start, virtaddr virt_end, physaddr phys_start);
+
+// atag parsing
+extern int parse_atags(void);
 
 #endif

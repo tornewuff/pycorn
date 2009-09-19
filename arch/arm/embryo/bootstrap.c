@@ -14,14 +14,14 @@
 #include "bootstrap.h"
 #include <string.h>
 
-physaddr alloc_pages_zero(uint32_t bytes, uint32_t align);
-physaddr get_page_table(int section_index, int skip_map);
-void map_pages(virtaddr virt_start, virtaddr virt_end, physaddr phys_start);
 void boot_after_mmu(int selfmap_index, uint32_t old_pde)
   __attribute__((noreturn));
 
 void boot_start()
 {
+  // Clear some bootdata values
+  bootdata->initrd_size = 0;
+
   // Work out phys->virt offset
   bootdata->phys_to_virt = (uint32_t)&_start - bootdata->rom_base;
 
@@ -38,6 +38,10 @@ void boot_start()
   uint32_t bss_size = &__bss_end__ - &__bss_start__;
   uint32_t heap_size = &__heap_end__ - &__heap_start__;
   uint32_t stack_size = &__stack_end__ - &__stack_start__;
+
+  // Parse atags
+  int r = parse_atags();
+  DBGINT("parse_atags returned ", r);
 
   // Work out where the first free page after the image is
   uint32_t img_size = text_size + data_size;
@@ -108,6 +112,21 @@ void boot_start()
   map_pages((virtaddr)&__bootdata_virt__,
       (virtaddr)(&__bootdata_virt__ + PAGE_SIZE),
       (physaddr)bootdata | 0x3f); // ap 3 (r/w), cache/buffer
+
+  // Map the initrd
+  if (bootdata->initrd_size)
+  {
+    physaddr map_start = PAGEALIGN_DOWN(bootdata->initrd_phys);
+    uint32_t map_len = PAGEALIGN_UP(bootdata->initrd_phys +
+        bootdata->initrd_size) - map_start;
+    uint32_t offset = bootdata->initrd_phys - map_start;
+    bootdata->initrd_virt = (virtaddr)&__initrd_map_start__ + offset;
+
+    DBGSTR("Map initrd\n");
+    map_pages((virtaddr)&__initrd_map_start__,
+        (virtaddr)(&__initrd_map_start__ + map_len),
+        map_start | 0xf); // ap 0 (rom), cache/buffer
+  }
 
   // Self-map MMU enabling code
   DBGSTR("Self-map MMU enabling code\n");
