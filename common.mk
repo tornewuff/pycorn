@@ -23,7 +23,6 @@ LDDEPS := $(MACHPATH)/embryo.ld $(ARCHPATH)/$(ARCH).ld $(ROOT)/embryo/libembryo.
 FREEZEDIRS := $( $(SHAREDPATH) $(ARCHPATH))/frozen
 
 # Get machine-specific stuff
-include $(SHAREDPATH)/shared.mk
 include $(ARCHPATH)/$(ARCH).mk
 include $(MACHPATH)/$(MACH).mk
 

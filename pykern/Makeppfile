@@ -1,3 +1,4 @@
+PYMODULES := _metalmemmodule.o
 OBJECTS = main.o getpath.o frozen.o $(PYMODULES) $(ROOT)/python/libpython2.5.a
 SYSLIBS := -lm
 
