@@ -1,5 +1,8 @@
 /*
- * ATAG format
+ * Subset of the ATAG format used in the linux boot protocol.
+ *
+ * We don't need the more esoteric tags used by Linux.
+ *
  *
  * Copyright 2008 Torne Wuff
  *

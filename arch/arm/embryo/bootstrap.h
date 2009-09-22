@@ -1,5 +1,9 @@
 /*
- * Bootstrap declarations
+ * Bootstrap declarations.
+ *
+ * This should not be used by the app, but *everything* in the bootstrap
+ * *MUST* include this file, as it contains the bootdata register declaration
+ *
  *
  * Copyright 2008 Torne Wuff
  *
@@ -20,7 +24,7 @@
 // Bootdata structure pointer lives in a register
 register bootdata_t *bootdata asm ("r9");
 
-// Pre-MMU debug printing
+// Pre-MMU debug printing - wrapped in macros so they can be disabled
 extern void boot_putchar(char c);
 extern void boot_putstr(const char *s);
 extern void boot_putint(const char *label, uint32_t i);
@@ -33,7 +37,7 @@ typedef void (*mmu_done_func)(int selfmap_index, uint32_t old_pde);
 typedef void (*mmu_enable_func)(int selfmap_index, uint32_t old_pde,
     mmu_done_func next_func);
 
-// Functions defined in assembly
+// Functions defined in start.S
 extern void _start(void);
 extern void mmu_set_base(physaddr page_directory);
 extern void mmu_enable(int selfmap_index, uint32_t old_pde,

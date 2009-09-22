@@ -1,5 +1,9 @@
 /*
- * ATAG parsing code
+ * ATAG parsing code.
+ *
+ * This is done very early in the bootstrap process so no mapping can
+ * actually happen here; only setting values in bootdata.
+ *
  *
  * Copyright 2008 Torne Wuff
  *
@@ -14,9 +18,13 @@
 #include "bootstrap.h"
 #include "atag.h"
 
+// Parses the atags pointed to by taglist_ptr, if they are valid,
+// and stores the various parameters found in bootdata.
+// returns 0 if the atags were parsed successfully
 int parse_atags()
 {
   struct tag *tags = (struct tag *)bootdata->taglist_ptr;
+  // The first tag must be an ATAG_CORE - if not it's invalid.
   if (tags->hdr.tag != ATAG_CORE)
     return -1;
 
@@ -29,6 +37,7 @@ int parse_atags()
     switch (t->hdr.tag)
     {
     case ATAG_INITRD2:
+      // got the physical addresses of a ramdisk
       if (t->hdr.size >= 4)
       {
         DBGINT("initrd start: ", t->u.initrd.start);

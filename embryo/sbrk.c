@@ -1,5 +1,10 @@
 /*
- * Fairly dumb implementation of sbrk() using symbols defined by the linker
+ * Really dumb sbrk() implementation using a fixed size pool of memory.
+ *
+ * The linker provides __heap_start__ and __heap_end__ which are the bounds of
+ * our fixed size pool of memory. How we'll deal with this later is not decided
+ * yet, for now this works (unless you try and sbrk() too much).
+ *
  *
  * Copyright 2008 Torne Wuff
  *
@@ -15,9 +20,11 @@
 #include <errno.h>
 #include <reent.h>
 
+// provided by link script
 extern char __heap_start__;
 extern char __heap_end__;
 
+// Just use the fixed size heap.
 void *_sbrk_r(struct _reent *r, ptrdiff_t incr)
 {
   static char *current;

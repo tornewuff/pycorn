@@ -1,5 +1,9 @@
 /*
- * Bootstrap code
+ * Main bootstrap code.
+ *
+ * This is responsible for setting up the address space ready to move to the
+ * virtual memory environment.
+ *
  *
  * Copyright 2008 Torne Wuff
  *
@@ -17,6 +21,9 @@
 void boot_after_mmu(int selfmap_index, uint32_t old_pde)
   __attribute__((noreturn));
 
+// Called by _start. Physical addressing is in effect, but this code is
+// linked assuming virtual addresses: only PC-relative references actually
+// work. A small stack is available.
 void boot_start()
 {
   // Clear some bootdata values
@@ -38,13 +45,16 @@ void boot_start()
   uint32_t bss_size = &__bss_end__ - &__bss_start__;
   uint32_t heap_size = &__heap_end__ - &__heap_start__;
   uint32_t stack_size = &__stack_end__ - &__stack_start__;
+  uint32_t img_size = text_size + data_size;
 
   // Parse atags
   int r = parse_atags();
   DBGINT("parse_atags returned ", r);
 
-  // Work out where the first free page after the image is
-  uint32_t img_size = text_size + data_size;
+  // Work out where the first free page after the image is.
+  // We will use this as the starting location to allocate pages, so there
+  // had better be some megabytes of memory here. This will change later to
+  // a less stupid allocator.
   bootdata->next_free_page = bootdata->rom_base + img_size;
   DBGINT("first free page: ", bootdata->next_free_page);
 
@@ -58,6 +68,10 @@ void boot_start()
   mmu_set_base(bootdata->page_directory);
 
   // Allocate and map page table mappings
+  // Page tables are placed linearly at a fixed location to make
+  // it possible to find them again later without having to remember
+  // where they are.
+  // This is kinda scary as we are bootstrapping :)
   DBGSTR("Allocate and map page table mappings\n");
   int ptbl_section = (virtaddr)(&__page_tbl_start__) >> SECTION_SHIFT;
   physaddr ptbl_map = get_page_table(ptbl_section, 1);
@@ -95,13 +109,13 @@ void boot_start()
   map_pages((virtaddr)&__heap_start__, (virtaddr)&__heap_end__,
       heap_phys | 0x3f); // ap 3 (r/w), cache/buffer
 
-  // Allocate and map heap section
+  // Allocate and map stack section
   DBGSTR("Allocate and map stack\n");
   physaddr stack_phys = alloc_pages_zero(stack_size, PAGE_SIZE);
   map_pages((virtaddr)&__stack_start__, (virtaddr)&__stack_end__,
       stack_phys | 0x3f); // ap 3 (r/w), cache/buffer
 
-  // Map debug UART
+  // Map debug UART - we assume no more than a page is needed
   DBGSTR("Mapping debug UART\n");
   map_pages((virtaddr)&__dbg_serial_virt__, 
       (virtaddr)(&__dbg_serial_virt__ + PAGE_SIZE),
@@ -113,12 +127,16 @@ void boot_start()
       (virtaddr)(&__bootdata_virt__ + PAGE_SIZE),
       (physaddr)bootdata | 0x3f); // ap 3 (r/w), cache/buffer
 
-  // Map the initrd
+  // Map the initrd if there was one
   if (bootdata->initrd_size)
   {
+    // The initrd address may not be a page multiple as u-boot has
+    // its own header on the file, so we need to align it.
     physaddr map_start = PAGEALIGN_DOWN(bootdata->initrd_phys);
     uint32_t map_len = PAGEALIGN_UP(bootdata->initrd_phys +
         bootdata->initrd_size) - map_start;
+    // We also need to calculate the offset and offset the virtual
+    // address by the matching amount.
     uint32_t offset = bootdata->initrd_phys - map_start;
     bootdata->initrd_virt = (virtaddr)&__initrd_map_start__ + offset;
 
@@ -129,6 +147,11 @@ void boot_start()
   }
 
   // Self-map MMU enabling code
+  // The page which contains the MMU enable function must be mapped
+  // with phys==virt address, otherwise bad stuff happens. We do this
+  // by stuffing in a 1MB section mapping for this address, which may
+  // overwrite an actual page table mapping (it's saved and restored
+  // later on).
   DBGSTR("Self-map MMU enabling code\n");
   mmu_enable_func mmu_enable_phys = &mmu_enable - bootdata->phys_to_virt;
   physaddr selfmap_addr = (physaddr)mmu_enable_phys;
@@ -138,11 +161,14 @@ void boot_start()
   uint32_t old_pde = pgd[selfmap_index];
   pgd[selfmap_index] = selfmap_addr | 0xe; // ap 0 (rom), cache/buffer
 
-  // Enable MMU
+  // Enable MMU. This doesn't return, it goes to boot_after_mmu.
   DBGSTR("Enable MMU\n");
   mmu_enable_phys(selfmap_index, old_pde, &boot_after_mmu);
 }
 
+// On entry here we are now running with the proper virtual address
+// mappings, except that the selfmapping installed above needs to be
+// reverted.
 void boot_after_mmu(int selfmap_index, uint32_t old_pde)
 {
   // Restore mapping overwritten by self-mapping
@@ -154,6 +180,8 @@ void boot_after_mmu(int selfmap_index, uint32_t old_pde)
   _mainCRTStartup();
 }
 
+// Allocate physical pages, of the given size and alignment in bytes.
+// They are cleared to zero before being returned.
 physaddr alloc_pages_zero(uint32_t bytes, uint32_t align)
 {
   physaddr base = bootdata->next_free_page;
@@ -164,12 +192,20 @@ physaddr alloc_pages_zero(uint32_t bytes, uint32_t align)
   return base;
 }
 
+// Get the physical address of the page table for the given
+// section index (i.e. multiple of 1MB). If it doesn't exist,
+// it's allocated and mapped (mapping is skipped if skip_map
+// is true).
+// We actually allocate page tables four at a time, because
+// it's too fiddly to keep track of partially used pages -
+// pagetables are only 1kb on ARM.
 physaddr get_page_table(int section_index, int skip_map)
 {
   uint32_t *pgd = (uint32_t *)bootdata->page_directory;
   physaddr ptbl = (physaddr)(pgd[section_index] & 0xFFFFFC00);
   if (!ptbl)
   {
+    // need to allocate it
     ptbl = alloc_pages_zero(PAGE_SIZE, PAGE_SIZE);
 
     int start_sec = section_index & ~(PTBLS_PER_PAGE-1);
@@ -189,6 +225,8 @@ physaddr get_page_table(int section_index, int skip_map)
   return ptbl;
 }
 
+// Map a linear range of pages [virt_start, virt_end), pointing at
+// phys_start. All parameters must be page aligned.
 void map_pages(virtaddr virt_start, virtaddr virt_end, physaddr phys_start)
 {
   int bytes = virt_end - virt_start;

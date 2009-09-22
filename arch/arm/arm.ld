@@ -10,11 +10,31 @@
 OUTPUT_FORMAT("elf32-littlearm", "elf32-bigarm",
               "elf32-littlearm")
 OUTPUT_ARCH(arm)
+
+/* The entry point is in libembryo.a rather than being a seperate crt0.o
+ * so we force the object with _start in to be included in the link here.
+ */
 ENTRY(_start)
 EXTERN(_start)
 
+/* Default size of the fixed heap */
+/* It doesn't grow yet, but it may later, so it's a minimum. */
 __heap_size_min__  = 0x400000;
+/* Default size of the original thread stack */
+/* It doesn't grow yet, but it may later, so it's a minimum. */
 __stack_size_min__ = 0x20000;
+
+/* For virtual addressing, we need definitions for:
+ *   __rom_map_start__      Start address to map read only data
+ *   __ram_map_start__      Start address to map writable data
+ *   __ram_map_end__        Last address to map writable data
+ *   __dbg_serial_virt__    Virtual address to map serial registers at
+ *
+ * For physical addressing, we need definitions for:
+ *   __image_loads_to__     Physical address where image will be loaded
+ *   __ram_end__            Last physical address of writable memory
+ *   __dbg_serial_phys__    Physical address of serial registers
+ */
 
 SECTIONS
 {

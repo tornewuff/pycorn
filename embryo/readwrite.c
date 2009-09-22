@@ -1,5 +1,9 @@
 /*
- * Implementation of read and write which map stdin/out/err to serial.
+ * Implementations of read() and write() for stdin/out/err
+ *
+ * stdin/out/err are mapped to the debug serial port, provided by the platform
+ * specific code. No other file descriptors exist.
+ *
  *
  * Copyright 2008 Torne Wuff
  *
@@ -14,9 +18,11 @@
 #include <errno.h>
 #include <reent.h>
 
+// provided by platform specific code somewhere.
 extern int serial_read(void *ptr, int len);
 extern int serial_write(const void *ptr, int len);
 
+// read from the serial debug port, only stdin exists.
 _ssize_t _read_r(struct _reent *r, int file, void *ptr, size_t len)
 {
   if (file == 0)
@@ -28,6 +34,7 @@ _ssize_t _read_r(struct _reent *r, int file, void *ptr, size_t len)
   }
 }
 
+// write to the serial debug port, stdout/err handled identically.
 _ssize_t _write_r(struct _reent *r, int file, const void *ptr, size_t len)
 {
   if (file >= 1 && file <= 2)
