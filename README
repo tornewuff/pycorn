@@ -74,11 +74,15 @@ their project page. I've included a version in the tree because it's a CVS
 snapshot, and an uncommon tool.
 
 2) You need an arm-eabi crosscompiler toolchain, and newlib 1.17. To build one
-automatically:
+automatically, install the header files for libgmp, libmpfr and ncurses (the
+dev packages for them from your distro), then run:
 
 cd toolchain; makepp TOOLSPREFIX=/dir/to/install/to
 
-Once it's built, add the bin directory inside TOOLSPREFIX to your path.
+Once it's built, add the bin directory inside TOOLSPREFIX to your path. If you
+install one from somewhere else, newlib must be built to expect reentrant
+syscalls and without its own embedded syscalls or it will not work; better to
+use this one.
 
 3) Install u-boot's mkimage utility. This is in Debian as package
 "uboot-mkimage", or you can compile it from u-boot's source.
