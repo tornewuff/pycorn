@@ -1,4 +1,2 @@
 include pyinclude.mk
 include common.mk
-
-load_makefile ..

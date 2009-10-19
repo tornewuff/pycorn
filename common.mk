@@ -26,6 +26,9 @@ FREEZEDIRS := $( $(SHAREDPATH) $(ARCHPATH))/frozen
 include $(ARCHPATH)/$(ARCH).mk
 include $(MACHPATH)/$(MACH).mk
 
+# Include shared python modules
+include $(ROOT)/pymodules/pymodules.mk
+
 # Rules
 
 ifdef OBJECTS
