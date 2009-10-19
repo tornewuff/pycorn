@@ -11,7 +11,7 @@ stamp-install: stamp-build
 stamp-build: stamp-sources
 	rm -rf build
 	&mkdir build
-	cd build; CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" ../$(BINUTILSDIR)/configure --prefix=$(absolute_filename $(TOOLSPREFIX)) --target=$(TOOLSTARGET) --disable-nls
+	cd build; CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" ../$(BINUTILSDIR)/configure --prefix=$(absolute_filename $(TOOLSPREFIX)) --target=$(TOOLSTARGET) --disable-nls --disable-werror
 	cd build; make
 	&touch $(output)
 
