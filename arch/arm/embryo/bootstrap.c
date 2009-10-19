@@ -209,7 +209,7 @@ physaddr get_page_table(int section_index, int skip_map)
     ptbl = alloc_pages_zero(PAGE_SIZE, PAGE_SIZE);
 
     int start_sec = section_index & ~(PTBLS_PER_PAGE-1);
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < PTBLS_PER_PAGE; ++i)
       pgd[start_sec + i] = (ptbl + (i * PAGETABLE_SIZE)) | 0x1;
 
     int pagetable_index = section_index / PTBLS_PER_PAGE;
