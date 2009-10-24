@@ -1,4 +1,11 @@
 /*
+ * _metalmem module. Provides primitives to issue single reads and writes to
+ * arbitrary memory addresses, and to create a buffer object pointing at an
+ * arbitrary range of memory. No checking of addresses is done whatsoever; this
+ * is so that higher level constructs can check addresses just once and then
+ * make accesses more quickly later.
+ *
+ *
  * Copyright 2008 Torne Wuff
  *
  * This file is part of Pycorn.
@@ -110,7 +117,7 @@ static const PyMethodDef MetalMemMethods[] = {
 };
 
 PyMODINIT_FUNC
-initmetalmem(void)
+init_metalmem(void)
 {
     PyObject *m;
 
@@ -119,7 +126,7 @@ initmetalmem(void)
         return;
 }
 
-__attribute__((constructor)) void appendmetalmem()
+__attribute__((constructor)) void append_metalmem()
 {
-    PyImport_AppendInittab("_metalmem", initmetalmem);
+    PyImport_AppendInittab("_metalmem", init_metalmem);
 }
