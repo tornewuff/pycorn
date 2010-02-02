@@ -34,6 +34,17 @@ The directory 'makepp' is a verbatim copy of the original makepp source,
 distributed here for convenience. makepp has its own licensing terms in
 makepp/LICENSE.
 
+RUNNING A BINARY RELEASE
+========================
+
+To run a binary release on qemu:
+
+qemu-system-arm -M verdex -pflash pykern.flash -nographic -m 289
+
+To run a binary release on a Gumstix Verdex, load pykern.uimage to RAM using
+the U-Boot bootloader (preinstalled on the Verdex boards) and run it with the
+"bootm" command.
+
 HOW IT ALL FITS TOGETHER
 ========================
 
@@ -42,8 +53,8 @@ provides enough 'stuff' to compile the main python interpreter into a library.
 
 To actually make a bootable image a linker script and entry point are required
 which are implemented by pycorn. These are architecture specific and include a
-few machine specific details: a small linker script with some platform physica
-addresses incluldes the main architecture linker script. The entry point uses a
+few machine specific details: a small linker script with some platform physical
+addresses includes the main architecture linker script. The entry point uses a
 small amount of assembly then switches to position-independent C code for the
 majority of platform setup, then calls a generic C library setup function
 written in C.
