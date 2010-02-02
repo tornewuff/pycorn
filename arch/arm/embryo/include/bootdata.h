@@ -35,9 +35,9 @@ typedef struct
   uint32_t phys_to_virt;    // Offset for phys->virt address of .text section
   physaddr next_free_page;  // Next unallocated physical page address
   physaddr page_directory;  // Physical address of page directory
+  uint32_t initrd_size;     // Size of initrd in bytes, 0 for no initrd
   physaddr initrd_phys;     // Physical address of initrd (invalid if size=0)
   virtaddr initrd_virt;     // Virtual address of initrd (invalid if size=0)
-  uint32_t initrd_size;     // Size of initrd in bytes, 0 for no initrd
 } bootdata_t;
 
 // Linker-defined section symbols
@@ -61,5 +61,18 @@ extern char __bootdata_virt__, __initrd_map_start__;
 
 #define PAGEALIGN_DOWN(x) ((x>>PAGE_SHIFT)<<PAGE_SHIFT)
 #define PAGEALIGN_UP(x) (((x+PAGE_MASK)>>PAGE_SHIFT)<<PAGE_SHIFT)
+
+#define PGD_ROM (0<<10)
+#define PGD_RW  (3<<10)
+#define PGD_CACHE   8
+#define PGD_BUFF    4
+#define PGD_COARSE  1
+#define PGD_SECTION 2
+
+#define PTB_ROM (0<<4)
+#define PTB_RW  (3<<4)
+#define PTB_CACHE 8
+#define PTB_BUFF  4
+#define PTB_EXT   3
 
 #endif
