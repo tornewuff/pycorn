@@ -11,16 +11,18 @@ CC := $(PREFIX)gcc
 AR := $(PREFIX)ar
 OBJCOPY := $(PREFIX)objcopy
 
-# Flags and paths
+# Paths
 SHAREDPATH := $(ROOT)/shared
 ARCHPATH := $(ROOT)/arch/$(ARCH)
 MACHPATH := $(ROOT)/arch/$(ARCH)/machine/$(MACH)
+FREEZEDIRS := $( $(SHAREDPATH) $(ARCHPATH))/frozen
+
+# Flags
 CFLAGS := -g -Wall -O2 -pipe -fomit-frame-pointer -std=gnu99 -Werror
 CPPFLAGS := -I$( $(PYINCLUDE))/include
 PYCFLAGS := -pipe -fomit-frame-pointer -fno-strict-aliasing -Werror -Wno-error=char-subscripts
 LDFLAGS := -L$(absolute_filename $(MACHPATH)) -L$(absolute_filename $(ARCHPATH)) -L$(absolute_filename $(ROOT)/embryo) -specs=$(absolute_filename $(ARCHPATH)/embryo/embryo.specs) -Tembryo.ld
 LDDEPS := $(MACHPATH)/embryo.ld $(ARCHPATH)/$(ARCH).ld $(ROOT)/embryo/libembryo.a
-FREEZEDIRS := $( $(SHAREDPATH) $(ARCHPATH))/frozen
 
 # Get machine-specific stuff
 include $(ARCHPATH)/$(ARCH).mk
