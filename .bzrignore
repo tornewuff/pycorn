@@ -14,9 +14,9 @@ python/hostpgen
 python/include
 python/quilt
 python/frozen
-arch/arm/pymodules/_metalcpu_coproc.S
-arch/arm/pymodules/_metalcpu_coproc.h
-arch/arm/frozen/metal/_coprocmap.py
+arch/arm/metal/ext/_metalcpu_coproc.S
+arch/arm/metal/ext/_metalcpu_coproc.h
+arch/arm/metal/frozen/metal/_coprocmap.py
 toolchain/binutils/binutils-*
 toolchain/binutils/build
 toolchain/gcc/gcc-*

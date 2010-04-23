@@ -1,4 +1,4 @@
-OBJECTS = main.o getpath.o frozen.o $(PYMODULES) $(ROOT)/python/libpython2.5.a
+OBJECTS = main.o getpath.o frozen.o $(EXTMODULES) $(ROOT)/python/libpython2.5.a
 SYSLIBS := -lm
 
 $(phony all): pykern.flash

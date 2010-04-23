@@ -12,10 +12,8 @@ AR := $(PREFIX)ar
 OBJCOPY := $(PREFIX)objcopy
 
 # Paths
-SHAREDPATH := $(ROOT)/shared
 ARCHPATH := $(ROOT)/arch/$(ARCH)
 MACHPATH := $(ROOT)/arch/$(ARCH)/machine/$(MACH)
-FREEZEDIRS := $( $(SHAREDPATH) $(ARCHPATH))/frozen
 
 # Flags
 CFLAGS := -g -Wall -O2 -pipe -fomit-frame-pointer -std=gnu99 -Werror
@@ -28,8 +26,8 @@ LDDEPS := $(MACHPATH)/embryo.ld $(ARCHPATH)/$(ARCH).ld $(ROOT)/embryo/libembryo.
 include $(ARCHPATH)/$(ARCH).mk
 include $(MACHPATH)/$(MACH).mk
 
-# Include shared python modules
-include $(ROOT)/pymodules/pymodules.mk
+# Include arch-independant metal code
+include $(ROOT)/metal/metal.mk
 
 # Rules
 
