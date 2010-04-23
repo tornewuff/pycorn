@@ -1,4 +1,8 @@
 /*
+ * _bootstrap module. Provides the values of various constant addresses which
+ * were used by the bootstrap code.
+ *
+ *
  * Copyright 2008 Torne Wuff
  *
  * This file is part of Pycorn.
@@ -26,11 +30,11 @@ extern char __bootdata_virt__;
         if (o) PyModule_AddObject(m, name, o); }
 
 PyMODINIT_FUNC
-initbootldr(void)
+initbootstrap(void)
 {
     PyObject *m;
 
-    m = Py_InitModule("_bootldr", NULL);
+    m = Py_InitModule3("_bootstrap", NULL, "Definitions of bootstrap fixed addresses");
     if (!m)
         return;
 
@@ -51,7 +55,7 @@ initbootldr(void)
     PyModule_AddVoidPtrConstant(m, "bootdata_virt", &__bootdata_virt__);
 }
 
-__attribute__((constructor)) void appendbootldr()
+__attribute__((constructor)) void appendbootstrap()
 {
-    PyImport_AppendInittab("_bootldr", initbootldr);
+    PyImport_AppendInittab("_bootstrap", initbootstrap);
 }
