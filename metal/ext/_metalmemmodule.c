@@ -121,7 +121,7 @@ init_metalmem(void)
 {
     PyObject *m;
 
-    m = Py_InitModule("_metalmem", MetalMemMethods);
+    m = Py_InitModule3("_metalmem", MetalMemMethods, "Methods to access memory directly from Python.");
     if (m == NULL)
         return;
 }
