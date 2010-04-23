@@ -1,6 +1,12 @@
 # ARM coprocessor register list
 # -----------------------------
 #
+# This list is used to generate assembly code to access these registers, since
+# while Python can, with C module help, access arbitrary memory addresses,
+# there is no sensible way to access arbitrary coprocessor registers on ARM,
+# as each one is a separate instruction encoding. The descriptions are exposed
+# to the Python user.
+#
 # Format:
 # <coproc> <opcode_1> <CRn> <CRm> <opcode_2> <rw>
 #

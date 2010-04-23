@@ -1,3 +1,18 @@
+#!/usr/bin/python
+#
+# Tool to generate assembly code used to access ARM coprocessor registers.
+# 
+# ARM coprocessor register accesses are all separate instruction encodings, so
+# this is the easiest way to make them accessible. It reads the list of
+# registers from the first argument, and writes out an assembly file to the
+# filename given in the second argument. The assembly code is just a huge
+# switch statement, which given an index 0..n reads/writes that coprocessor
+# register; the index numbers are not expected to be stable, they are just the
+# order of the list. The number of registers in each list is written out as a C
+# header to the file named by the third argument (which is used for bounds
+# checking). It writes out a mapping to the Python module named by the
+# fourth argument.
+# 
 #
 # Copyright 2008 Torne Wuff
 #
@@ -16,6 +31,7 @@ write = []
 
 lineno = 1
 
+# build up list of which registers need to exist, for read and write
 infile = open(sys.argv[1])
 for line in infile:
     hash = line.find('#')
@@ -35,6 +51,8 @@ for line in infile:
     lineno += 1
 infile.close()
 
+# output two giant asm functions containing a computed jump to the right
+# generated instruction
 asmfile = open(sys.argv[2], 'w')
 print >>asmfile, """
     .text
@@ -62,11 +80,14 @@ for fields in write:
 
 asmfile.close()
 
+# output header with the number of registers available for read and write
 hdrfile = open(sys.argv[3], 'w')
 print >>hdrfile, '#define COPROCREAD_REGS %s' % len(read)
 print >>hdrfile, '#define COPROCWRITE_REGS %s' % len(write)
 hdrfile.close()
 
+# output python module containing two dictionaries mapping coprocessor params
+# to the descriptions and index numbers
 mapfile = open(sys.argv[4], 'w')
 print >>mapfile, 'coprocread_map = {'
 regindex = 0

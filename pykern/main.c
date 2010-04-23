@@ -14,6 +14,11 @@
 #include "Python.h"
 #include <stdio.h>
 
+/* Arguments:
+ * -v for verbose because we want to see modules getting loaded.
+ * -S to not load site.py since it doesn't exist.
+ * -i to always force the interactive prompt to show up.
+ */
 char *pyargs[] = { "python", "-v", "-S", "-i", NULL };
 
 int main()
