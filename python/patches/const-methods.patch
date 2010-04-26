@@ -1,7 +1,7 @@
-Index: quilted/Include/methodobject.h
+Index: Python-2.5.5/Include/methodobject.h
 ===================================================================
---- quilted.orig/Include/methodobject.h	2008-09-04 16:54:38.000000000 +0100
-+++ quilted/Include/methodobject.h	2008-09-04 16:56:25.000000000 +0100
+--- Python-2.5.5.orig/Include/methodobject.h	2010-04-26 23:36:53.374633085 +0100
++++ Python-2.5.5/Include/methodobject.h	2010-04-26 23:37:11.095741063 +0100
 @@ -46,7 +46,7 @@
  PyAPI_FUNC(PyObject *) Py_FindMethod(PyMethodDef[], PyObject *, const char *);
  
@@ -20,10 +20,10 @@ Index: quilted/Include/methodobject.h
      PyObject    *m_self; /* Passed as 'self' arg to the C func, can be NULL */
      PyObject    *m_module; /* The __module__ attribute, can be anything */
  } PyCFunctionObject;
-Index: quilted/Include/modsupport.h
+Index: Python-2.5.5/Include/modsupport.h
 ===================================================================
---- quilted.orig/Include/modsupport.h	2008-09-04 16:49:31.000000000 +0100
-+++ quilted/Include/modsupport.h	2008-09-04 16:50:36.000000000 +0100
+--- Python-2.5.5.orig/Include/modsupport.h	2010-04-26 23:36:53.390634754 +0100
++++ Python-2.5.5/Include/modsupport.h	2010-04-26 23:37:11.103738267 +0100
 @@ -113,7 +113,8 @@
   #endif
  #endif
@@ -34,10 +34,10 @@ Index: quilted/Include/modsupport.h
                                        const char *doc, PyObject *self,
                                        int apiver);
  
-Index: quilted/Objects/methodobject.c
+Index: Python-2.5.5/Objects/methodobject.c
 ===================================================================
---- quilted.orig/Objects/methodobject.c	2008-09-04 16:55:05.000000000 +0100
-+++ quilted/Objects/methodobject.c	2008-09-04 16:55:37.000000000 +0100
+--- Python-2.5.5.orig/Objects/methodobject.c	2010-04-26 23:36:53.486641844 +0100
++++ Python-2.5.5/Objects/methodobject.c	2010-04-26 23:37:11.103738267 +0100
 @@ -7,7 +7,7 @@
  static PyCFunctionObject *free_list = NULL;
  
@@ -47,10 +47,10 @@ Index: quilted/Objects/methodobject.c
  {
  	PyCFunctionObject *op;
  	op = free_list;
-Index: quilted/Python/modsupport.c
+Index: Python-2.5.5/Python/modsupport.c
 ===================================================================
---- quilted.orig/Python/modsupport.c	2008-09-04 16:50:44.000000000 +0100
-+++ quilted/Python/modsupport.c	2008-09-04 16:54:12.000000000 +0100
+--- Python-2.5.5.orig/Python/modsupport.c	2010-04-26 23:36:53.470641589 +0100
++++ Python-2.5.5/Python/modsupport.c	2010-04-26 23:37:11.103738267 +0100
 @@ -29,11 +29,11 @@
   This Python has API version %d, module %.100s has version %d.";
  
@@ -65,10 +65,10 @@ Index: quilted/Python/modsupport.c
  	if (!Py_IsInitialized())
  	    Py_FatalError("Interpreter not initialized (version mismatch?)");
  	if (module_api_version != PYTHON_API_VERSION) {
-Index: quilted/Include/descrobject.h
+Index: Python-2.5.5/Include/descrobject.h
 ===================================================================
---- quilted.orig/Include/descrobject.h	2008-09-04 17:37:22.000000000 +0100
-+++ quilted/Include/descrobject.h	2008-09-04 17:40:21.000000000 +0100
+--- Python-2.5.5.orig/Include/descrobject.h	2010-04-26 23:36:53.438638816 +0100
++++ Python-2.5.5/Include/descrobject.h	2010-04-26 23:37:11.124552248 +0100
 @@ -48,12 +48,12 @@
  
  typedef struct {
@@ -99,10 +99,10 @@ Index: quilted/Include/descrobject.h
  PyAPI_FUNC(PyObject *) PyDescr_NewGetSet(PyTypeObject *,
  					       struct PyGetSetDef *);
  PyAPI_FUNC(PyObject *) PyDescr_NewWrapper(PyTypeObject *,
-Index: quilted/Include/object.h
+Index: Python-2.5.5/Include/object.h
 ===================================================================
---- quilted.orig/Include/object.h	2008-09-04 17:33:50.000000000 +0100
-+++ quilted/Include/object.h	2008-09-04 17:34:28.000000000 +0100
+--- Python-2.5.5.orig/Include/object.h	2010-04-26 23:36:53.422635629 +0100
++++ Python-2.5.5/Include/object.h	2010-04-26 23:37:11.124552248 +0100
 @@ -314,8 +314,8 @@
  	iternextfunc tp_iternext;
  
@@ -114,10 +114,10 @@ Index: quilted/Include/object.h
  	struct PyGetSetDef *tp_getset;
  	struct _typeobject *tp_base;
  	PyObject *tp_dict;
-Index: quilted/Include/structmember.h
+Index: Python-2.5.5/Include/structmember.h
 ===================================================================
---- quilted.orig/Include/structmember.h	2008-09-04 17:41:20.000000000 +0100
-+++ quilted/Include/structmember.h	2008-09-04 17:41:38.000000000 +0100
+--- Python-2.5.5.orig/Include/structmember.h	2010-04-26 23:36:53.402636104 +0100
++++ Python-2.5.5/Include/structmember.h	2010-04-26 23:37:11.124552248 +0100
 @@ -83,8 +83,8 @@
  PyAPI_FUNC(int) PyMember_Set(char *, struct memberlist *, const char *, PyObject *);
  
@@ -129,10 +129,10 @@ Index: quilted/Include/structmember.h
  
  
  #ifdef __cplusplus
-Index: quilted/Objects/descrobject.c
+Index: Python-2.5.5/Objects/descrobject.c
 ===================================================================
---- quilted.orig/Objects/descrobject.c	2008-09-04 17:31:21.000000000 +0100
-+++ quilted/Objects/descrobject.c	2008-09-04 17:39:53.000000000 +0100
+--- Python-2.5.5.orig/Objects/descrobject.c	2010-04-26 23:36:53.502642858 +0100
++++ Python-2.5.5/Objects/descrobject.c	2010-04-26 23:37:11.124552248 +0100
 @@ -591,7 +591,7 @@
  }
  
@@ -160,10 +160,10 @@ Index: quilted/Objects/descrobject.c
  {
  	PyMemberDescrObject *descr;
  
-Index: quilted/Objects/typeobject.c
+Index: Python-2.5.5/Objects/typeobject.c
 ===================================================================
---- quilted.orig/Objects/typeobject.c	2008-09-04 17:36:05.000000000 +0100
-+++ quilted/Objects/typeobject.c	2008-09-04 17:36:39.000000000 +0100
+--- Python-2.5.5.orig/Objects/typeobject.c	2010-04-26 23:36:53.522643557 +0100
++++ Python-2.5.5/Objects/typeobject.c	2010-04-26 23:37:11.131742301 +0100
 @@ -2931,7 +2931,7 @@
  /* Initialize the __dict__ in a type object */
  
@@ -182,10 +182,10 @@ Index: quilted/Objects/typeobject.c
  {
  	PyObject *dict = type->tp_dict;
  
-Index: quilted/Python/structmember.c
+Index: Python-2.5.5/Python/structmember.c
 ===================================================================
---- quilted.orig/Python/structmember.c	2008-09-04 17:41:54.000000000 +0100
-+++ quilted/Python/structmember.c	2008-09-04 17:42:16.000000000 +0100
+--- Python-2.5.5.orig/Python/structmember.c	2010-04-26 23:36:53.454639426 +0100
++++ Python-2.5.5/Python/structmember.c	2010-04-26 23:37:11.160727992 +0100
 @@ -51,7 +51,7 @@
  }
  

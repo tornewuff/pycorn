@@ -1,10 +1,10 @@
 This patch is based on openembedded's crosscompilation patch. Original is
 (C) by Michael 'Mickey' Lauer <mlauer@vanille-media.de>
 
-Index: Python-2.5.2/Makefile.pre.in
+Index: Python-2.5.5/Makefile.pre.in
 ===================================================================
---- Python-2.5.2.orig/Makefile.pre.in	2007-12-05 20:43:57.000000000 +0000
-+++ Python-2.5.2/Makefile.pre.in	2008-08-20 18:08:04.000000000 +0100
+--- Python-2.5.5.orig/Makefile.pre.in	2010-04-26 23:36:54.078679150 +0100
++++ Python-2.5.5/Makefile.pre.in	2010-04-26 23:37:08.671589936 +0100
 @@ -199,7 +199,7 @@
  ##########################################################################
  # Parser
@@ -26,11 +26,11 @@ Index: Python-2.5.2/Makefile.pre.in
  
  $(PGEN):	$(PGENOBJS)
  		$(CC) $(OPT) $(LDFLAGS) $(PGENOBJS) $(LIBS) -o $(PGEN)
-Index: Python-2.5.2/configure.in
+Index: Python-2.5.5/configure.in
 ===================================================================
---- Python-2.5.2.orig/configure.in	2008-02-13 19:17:17.000000000 +0000
-+++ Python-2.5.2/configure.in	2008-08-20 18:06:10.000000000 +0100
-@@ -3410,45 +3410,6 @@
+--- Python-2.5.5.orig/configure.in	2010-04-26 23:36:54.062676753 +0100
++++ Python-2.5.5/configure.in	2010-04-26 23:37:08.679587711 +0100
+@@ -3430,45 +3430,6 @@
  					   
  
  

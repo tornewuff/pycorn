@@ -1,7 +1,7 @@
-Index: quilted/Include/token.h
+Index: Python-2.5.5/Include/token.h
 ===================================================================
---- quilted.orig/Include/token.h	2008-09-04 16:09:21.000000000 +0100
-+++ quilted/Include/token.h	2008-09-04 16:09:30.000000000 +0100
+--- Python-2.5.5.orig/Include/token.h	2010-04-26 23:36:53.610647709 +0100
++++ Python-2.5.5/Include/token.h	2010-04-26 23:37:10.631710383 +0100
 @@ -72,7 +72,7 @@
  #define ISEOF(x)		((x) == ENDMARKER)
  
@@ -11,10 +11,10 @@ Index: quilted/Include/token.h
  PyAPI_FUNC(int) PyToken_OneChar(int);
  PyAPI_FUNC(int) PyToken_TwoChars(int, int);
  PyAPI_FUNC(int) PyToken_ThreeChars(int, int, int);
-Index: quilted/Parser/tokenizer.c
+Index: Python-2.5.5/Parser/tokenizer.c
 ===================================================================
---- quilted.orig/Parser/tokenizer.c	2008-09-04 16:08:59.000000000 +0100
-+++ quilted/Parser/tokenizer.c	2008-09-04 16:09:09.000000000 +0100
+--- Python-2.5.5.orig/Parser/tokenizer.c	2010-04-26 23:36:53.626649187 +0100
++++ Python-2.5.5/Parser/tokenizer.c	2010-04-26 23:37:10.644196721 +0100
 @@ -41,7 +41,7 @@
  
  /* Token names */
@@ -24,10 +24,10 @@ Index: quilted/Parser/tokenizer.c
  	"ENDMARKER",
  	"NAME",
  	"NUMBER",
-Index: quilted/Include/grammar.h
+Index: Python-2.5.5/Include/grammar.h
 ===================================================================
---- quilted.orig/Include/grammar.h	2008-09-04 16:18:31.000000000 +0100
-+++ quilted/Include/grammar.h	2008-09-04 16:18:57.000000000 +0100
+--- Python-2.5.5.orig/Include/grammar.h	2010-04-26 23:36:53.594648289 +0100
++++ Python-2.5.5/Include/grammar.h	2010-04-26 23:37:10.666385139 +0100
 @@ -76,7 +76,7 @@
  
  int addlabel(labellist *ll, int type, char *str);
@@ -37,10 +37,10 @@ Index: quilted/Include/grammar.h
  void translatelabels(grammar *g);
  
  void addfirstsets(grammar *g);
-Index: quilted/Parser/grammar1.c
+Index: Python-2.5.5/Parser/grammar1.c
 ===================================================================
---- quilted.orig/Parser/grammar1.c	2008-09-04 16:18:02.000000000 +0100
-+++ quilted/Parser/grammar1.c	2008-09-04 16:18:19.000000000 +0100
+--- Python-2.5.5.orig/Parser/grammar1.c	2010-04-26 23:36:53.646651177 +0100
++++ Python-2.5.5/Parser/grammar1.c	2010-04-26 23:37:10.666385139 +0100
 @@ -30,7 +30,7 @@
  #endif
  }

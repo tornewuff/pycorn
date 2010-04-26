@@ -1,7 +1,7 @@
-Index: quilted/Include/Python.h
+Index: Python-2.5.5/Include/Python.h
 ===================================================================
---- quilted.orig/Include/Python.h	2006-06-10 13:23:46.000000000 +0100
-+++ quilted/Include/Python.h	2008-09-04 15:57:24.000000000 +0100
+--- Python-2.5.5.orig/Include/Python.h	2010-04-26 23:36:53.838663021 +0100
++++ Python-2.5.5/Include/Python.h	2010-04-26 23:37:09.855664303 +0100
 @@ -162,7 +162,7 @@
  #endif
  

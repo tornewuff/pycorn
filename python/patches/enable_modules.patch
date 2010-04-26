@@ -1,7 +1,7 @@
-Index: Python-2.5.2/Modules/Setup.dist
+Index: Python-2.5.5/Modules/Setup.dist
 ===================================================================
---- Python-2.5.2.orig/Modules/Setup.dist	2008-09-23 22:28:55.000000000 +0100
-+++ Python-2.5.2/Modules/Setup.dist	2008-09-23 22:29:02.000000000 +0100
+--- Python-2.5.5.orig/Modules/Setup.dist	2010-04-26 23:37:09.119618388 +0100
++++ Python-2.5.5/Modules/Setup.dist	2010-04-26 23:37:12.927855576 +0100
 @@ -167,7 +167,7 @@
  #array arraymodule.c	# array objects
  #cmath cmathmodule.c # -lm # complex math library functions

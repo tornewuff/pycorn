@@ -1,7 +1,7 @@
-Index: quilted/Python/bltinmodule.c
+Index: Python-2.5.5/Python/bltinmodule.c
 ===================================================================
---- quilted.orig/Python/bltinmodule.c	2008-02-14 11:26:18.000000000 +0000
-+++ quilted/Python/bltinmodule.c	2008-09-04 21:38:16.000000000 +0100
+--- Python-2.5.5.orig/Python/bltinmodule.c	2010-04-26 23:36:52.702590118 +0100
++++ Python-2.5.5/Python/bltinmodule.c	2010-04-26 23:37:11.723780533 +0100
 @@ -2230,7 +2230,7 @@
  in length to the length of the shortest argument sequence.");
  
@@ -11,10 +11,10 @@ Index: quilted/Python/bltinmodule.c
   	{"__import__",	(PyCFunction)builtin___import__, METH_VARARGS | METH_KEYWORDS, import_doc},
   	{"abs",		builtin_abs,        METH_O, abs_doc},
   	{"all",		builtin_all,        METH_O, all_doc},
-Index: quilted/Modules/gcmodule.c
+Index: Python-2.5.5/Modules/gcmodule.c
 ===================================================================
---- quilted.orig/Modules/gcmodule.c	2006-10-09 20:42:33.000000000 +0100
-+++ quilted/Modules/gcmodule.c	2008-09-04 21:38:16.000000000 +0100
+--- Python-2.5.5.orig/Modules/gcmodule.c	2010-04-26 23:36:52.638588333 +0100
++++ Python-2.5.5/Modules/gcmodule.c	2010-04-26 23:37:11.727780507 +0100
 @@ -1188,7 +1188,7 @@
  "get_referrers() -- Return the list of objects that refer to an object.\n"
  "get_referents() -- Return the list of objects that an object refers to.\n");
@@ -24,10 +24,10 @@ Index: quilted/Modules/gcmodule.c
  	{"enable",	   gc_enable,	  METH_NOARGS,  gc_enable__doc__},
  	{"disable",	   gc_disable,	  METH_NOARGS,  gc_disable__doc__},
  	{"isenabled",	   gc_isenabled,  METH_NOARGS,  gc_isenabled__doc__},
-Index: quilted/Objects/codeobject.c
+Index: Python-2.5.5/Objects/codeobject.c
 ===================================================================
---- quilted.orig/Objects/codeobject.c	2006-07-12 06:27:46.000000000 +0100
-+++ quilted/Objects/codeobject.c	2008-09-04 21:38:16.000000000 +0100
+--- Python-2.5.5.orig/Objects/codeobject.c	2010-04-26 23:36:53.042612697 +0100
++++ Python-2.5.5/Objects/codeobject.c	2010-04-26 23:37:11.735781511 +0100
 @@ -110,7 +110,7 @@
  
  #define OFF(x) offsetof(PyCodeObject, x)
@@ -37,11 +37,11 @@ Index: quilted/Objects/codeobject.c
  	{"co_argcount",	T_INT,		OFF(co_argcount),	READONLY},
  	{"co_nlocals",	T_INT,		OFF(co_nlocals),	READONLY},
  	{"co_stacksize",T_INT,		OFF(co_stacksize),	READONLY},
-Index: quilted/Objects/dictobject.c
+Index: Python-2.5.5/Objects/dictobject.c
 ===================================================================
---- quilted.orig/Objects/dictobject.c	2007-11-29 18:33:04.000000000 +0000
-+++ quilted/Objects/dictobject.c	2008-09-04 22:24:14.000000000 +0100
-@@ -1981,7 +1981,7 @@
+--- Python-2.5.5.orig/Objects/dictobject.c	2010-04-26 23:36:52.842599288 +0100
++++ Python-2.5.5/Objects/dictobject.c	2010-04-26 23:37:11.735781511 +0100
+@@ -1985,7 +1985,7 @@
  PyDoc_STRVAR(iteritems__doc__,
  "D.iteritems() -> an iterator over the (key, value) items of D");
  
@@ -50,7 +50,7 @@ Index: quilted/Objects/dictobject.c
  	{"__contains__",(PyCFunction)dict_has_key,      METH_O | METH_COEXIST,
  	 contains__doc__},
  	{"__getitem__", (PyCFunction)dict_subscript,	METH_O | METH_COEXIST,
-@@ -2251,7 +2251,7 @@
+@@ -2255,7 +2255,7 @@
  
  PyDoc_STRVAR(length_hint_doc, "Private method returning an estimate of len(list(it)).");
  
@@ -59,11 +59,11 @@ Index: quilted/Objects/dictobject.c
  	{"__length_hint__", (PyCFunction)dictiter_len, METH_NOARGS, length_hint_doc},
   	{NULL,		NULL}		/* sentinel */
  };
-Index: quilted/Objects/fileobject.c
+Index: Python-2.5.5/Objects/fileobject.c
 ===================================================================
---- quilted.orig/Objects/fileobject.c	2007-05-07 20:25:38.000000000 +0100
-+++ quilted/Objects/fileobject.c	2008-09-04 22:18:39.000000000 +0100
-@@ -1749,7 +1749,7 @@
+--- Python-2.5.5.orig/Objects/fileobject.c	2010-04-26 23:36:52.734593824 +0100
++++ Python-2.5.5/Objects/fileobject.c	2010-04-26 23:37:11.745351180 +0100
+@@ -1752,7 +1752,7 @@
  PyDoc_STRVAR(exit_doc,
  	     "__exit__(*excinfo) -> None.  Closes the file.");
  
@@ -72,7 +72,7 @@ Index: quilted/Objects/fileobject.c
  	{"readline",  (PyCFunction)file_readline, METH_VARARGS, readline_doc},
  	{"read",      (PyCFunction)file_read,     METH_VARARGS, read_doc},
  	{"write",     (PyCFunction)file_write,    METH_VARARGS, write_doc},
-@@ -1773,7 +1773,7 @@
+@@ -1776,7 +1776,7 @@
  
  #define OFF(x) offsetof(PyFileObject, x)
  
@@ -81,10 +81,10 @@ Index: quilted/Objects/fileobject.c
  	{"softspace",	T_INT,		OFF(f_softspace), 0,
  	 "flag indicating that a space needs to be printed; used by print"},
  	{"mode",	T_OBJECT,	OFF(f_mode),	RO,
-Index: quilted/Objects/setobject.c
+Index: Python-2.5.5/Objects/setobject.c
 ===================================================================
---- quilted.orig/Objects/setobject.c	2007-04-18 03:02:15.000000000 +0100
-+++ quilted/Objects/setobject.c	2008-09-04 22:25:22.000000000 +0100
+--- Python-2.5.5.orig/Objects/setobject.c	2010-04-26 23:36:52.886603736 +0100
++++ Python-2.5.5/Objects/setobject.c	2010-04-26 23:37:11.753175898 +0100
 @@ -816,7 +816,7 @@
  
  PyDoc_STRVAR(length_hint_doc, "Private method returning an estimate of len(list(it)).");
@@ -112,11 +112,11 @@ Index: quilted/Objects/setobject.c
  	{"__contains__",(PyCFunction)set_direct_contains,	METH_O | METH_COEXIST,
  	 contains_doc},
  	{"copy",	(PyCFunction)frozenset_copy,	METH_NOARGS,
-Index: quilted/Objects/stringobject.c
+Index: Python-2.5.5/Objects/stringobject.c
 ===================================================================
---- quilted.orig/Objects/stringobject.c	2007-11-07 01:19:49.000000000 +0000
-+++ quilted/Objects/stringobject.c	2008-09-04 21:38:16.000000000 +0100
-@@ -3841,7 +3841,7 @@
+--- Python-2.5.5.orig/Objects/stringobject.c	2010-04-26 23:36:52.746594735 +0100
++++ Python-2.5.5/Objects/stringobject.c	2010-04-26 23:37:11.767780061 +0100
+@@ -3867,7 +3867,7 @@
  }
  
  
@@ -125,11 +125,11 @@ Index: quilted/Objects/stringobject.c
  string_methods[] = {
  	/* Counterparts of the obsolete stropmodule functions; except
  	   string.maketrans(). */
-Index: quilted/Objects/unicodeobject.c
+Index: Python-2.5.5/Objects/unicodeobject.c
 ===================================================================
---- quilted.orig/Objects/unicodeobject.c	2007-11-02 22:46:38.000000000 +0000
-+++ quilted/Objects/unicodeobject.c	2008-09-04 22:26:25.000000000 +0100
-@@ -3228,7 +3228,7 @@
+--- Python-2.5.5.orig/Objects/unicodeobject.c	2010-04-26 23:36:52.826600136 +0100
++++ Python-2.5.5/Objects/unicodeobject.c	2010-04-26 23:37:11.780102353 +0100
+@@ -3295,7 +3295,7 @@
                            128*map->count3);
  }
  
@@ -138,7 +138,7 @@ Index: quilted/Objects/unicodeobject.c
  	{"size", encoding_map_size, METH_NOARGS, 
           PyDoc_STR("Return the size (in bytes) of this object") },
          { 0 }
-@@ -7009,7 +7009,7 @@
+@@ -7089,7 +7089,7 @@
  }
  
  
@@ -147,10 +147,10 @@ Index: quilted/Objects/unicodeobject.c
  
      /* Order is according to common usage: often used methods should
         appear first, since lookup is done sequentially. */
-Index: quilted/Python/import.c
+Index: Python-2.5.5/Python/import.c
 ===================================================================
---- quilted.orig/Python/import.c	2007-08-23 19:08:33.000000000 +0100
-+++ quilted/Python/import.c	2008-09-04 22:33:53.000000000 +0100
+--- Python-2.5.5.orig/Python/import.c	2010-04-26 23:36:52.654588847 +0100
++++ Python-2.5.5/Python/import.c	2010-04-26 23:37:11.793626253 +0100
 @@ -2933,7 +2933,7 @@
  Release the interpreter's import lock.\n\
  On platforms without threads, this function does nothing.");
@@ -169,10 +169,10 @@ Index: quilted/Python/import.c
  	{"find_module", (PyCFunction)NullImporter_find_module, METH_VARARGS,
  	 "Always return None"
  	},
-Index: quilted/Python/sysmodule.c
+Index: Python-2.5.5/Python/sysmodule.c
 ===================================================================
---- quilted.orig/Python/sysmodule.c	2007-04-16 07:12:02.000000000 +0100
-+++ quilted/Python/sysmodule.c	2008-09-04 21:38:16.000000000 +0100
+--- Python-2.5.5.orig/Python/sysmodule.c	2010-04-26 23:36:52.686591360 +0100
++++ Python-2.5.5/Python/sysmodule.c	2010-04-26 23:37:11.803783565 +0100
 @@ -733,7 +733,7 @@
  }
  #endif
@@ -182,10 +182,10 @@ Index: quilted/Python/sysmodule.c
  	/* Might as well keep this in alphabetic order */
  	{"callstats", (PyCFunction)PyEval_GetCallStats, METH_NOARGS,
  	 callstats_doc},
-Index: quilted/Objects/classobject.c
+Index: Python-2.5.5/Objects/classobject.c
 ===================================================================
---- quilted.orig/Objects/classobject.c	2008-09-04 22:16:48.000000000 +0100
-+++ quilted/Objects/classobject.c	2008-09-04 22:18:45.000000000 +0100
+--- Python-2.5.5.orig/Objects/classobject.c	2010-04-26 23:36:52.874602825 +0100
++++ Python-2.5.5/Objects/classobject.c	2010-04-26 23:37:11.803783565 +0100
 @@ -2208,7 +2208,7 @@
  
  #define OFF(x) offsetof(PyMethodObject, x)
@@ -195,10 +195,10 @@ Index: quilted/Objects/classobject.c
  	{"im_class",	T_OBJECT,	OFF(im_class),	READONLY|RESTRICTED,
  	 "the class associated with a method"},
  	{"im_func",	T_OBJECT,	OFF(im_func),	READONLY|RESTRICTED,
-Index: quilted/Objects/complexobject.c
+Index: Python-2.5.5/Objects/complexobject.c
 ===================================================================
---- quilted.orig/Objects/complexobject.c	2008-09-04 22:23:01.000000000 +0100
-+++ quilted/Objects/complexobject.c	2008-09-04 22:23:40.000000000 +0100
+--- Python-2.5.5.orig/Objects/complexobject.c	2010-04-26 23:36:53.070615485 +0100
++++ Python-2.5.5/Objects/complexobject.c	2010-04-26 23:37:11.807783404 +0100
 @@ -652,13 +652,13 @@
  	return Py_BuildValue("(D)", &v->cval);
  }
@@ -215,10 +215,10 @@ Index: quilted/Objects/complexobject.c
  	{"real", T_DOUBLE, offsetof(PyComplexObject, cval.real), READONLY,
  	 "the real part of a complex number"},
  	{"imag", T_DOUBLE, offsetof(PyComplexObject, cval.imag), READONLY,
-Index: quilted/Objects/descrobject.c
+Index: Python-2.5.5/Objects/descrobject.c
 ===================================================================
---- quilted.orig/Objects/descrobject.c	2008-09-04 22:23:01.000000000 +0100
-+++ quilted/Objects/descrobject.c	2008-09-04 22:29:50.000000000 +0100
+--- Python-2.5.5.orig/Objects/descrobject.c	2010-04-26 23:37:11.124552248 +0100
++++ Python-2.5.5/Objects/descrobject.c	2010-04-26 23:37:11.811783340 +0100
 @@ -317,7 +317,7 @@
  	return PyString_FromString(descr->d_method->ml_doc);
  }
@@ -255,10 +255,10 @@ Index: quilted/Objects/descrobject.c
  	{"fget", T_OBJECT, offsetof(propertyobject, prop_get), READONLY},
  	{"fset", T_OBJECT, offsetof(propertyobject, prop_set), READONLY},
  	{"fdel", T_OBJECT, offsetof(propertyobject, prop_del), READONLY},
-Index: quilted/Objects/enumobject.c
+Index: Python-2.5.5/Objects/enumobject.c
 ===================================================================
---- quilted.orig/Objects/enumobject.c	2008-09-04 22:23:01.000000000 +0100
-+++ quilted/Objects/enumobject.c	2008-09-04 22:24:23.000000000 +0100
+--- Python-2.5.5.orig/Objects/enumobject.c	2010-04-26 23:36:52.950607593 +0100
++++ Python-2.5.5/Objects/enumobject.c	2010-04-26 23:37:11.811783340 +0100
 @@ -247,7 +247,7 @@
  
  PyDoc_STRVAR(length_hint_doc, "Private method returning an estimate of len(list(it)).");
@@ -268,10 +268,10 @@ Index: quilted/Objects/enumobject.c
  	{"__length_hint__", (PyCFunction)reversed_len, METH_NOARGS, length_hint_doc},
   	{NULL,		NULL}		/* sentinel */
  };
-Index: quilted/Objects/exceptions.c
+Index: Python-2.5.5/Objects/exceptions.c
 ===================================================================
---- quilted.orig/Objects/exceptions.c	2008-09-04 22:23:01.000000000 +0100
-+++ quilted/Objects/exceptions.c	2008-09-04 22:30:16.000000000 +0100
+--- Python-2.5.5.orig/Objects/exceptions.c	2010-04-26 23:36:53.010611469 +0100
++++ Python-2.5.5/Objects/exceptions.c	2010-04-26 23:37:11.815786390 +0100
 @@ -178,7 +178,7 @@
  }
  
@@ -353,10 +353,10 @@ Index: quilted/Objects/exceptions.c
      /* Sentinel */
      {NULL, NULL}
  };
-Index: quilted/Objects/floatobject.c
+Index: Python-2.5.5/Objects/floatobject.c
 ===================================================================
---- quilted.orig/Objects/floatobject.c	2008-09-04 22:23:01.000000000 +0100
-+++ quilted/Objects/floatobject.c	2008-09-04 22:24:37.000000000 +0100
+--- Python-2.5.5.orig/Objects/floatobject.c	2010-04-26 23:36:53.122618657 +0100
++++ Python-2.5.5/Objects/floatobject.c	2010-04-26 23:37:11.823786591 +0100
 @@ -1106,7 +1106,7 @@
  "Overrides the automatic determination of C-level floating point type.\n"
  "This affects how floats are converted to and from binary strings.");
@@ -366,10 +366,10 @@ Index: quilted/Objects/floatobject.c
  	{"__getnewargs__",	(PyCFunction)float_getnewargs,	METH_NOARGS},
  	{"__getformat__",	(PyCFunction)float_getformat,	
  	 METH_O|METH_CLASS,		float_getformat_doc},
-Index: quilted/Objects/frameobject.c
+Index: Python-2.5.5/Objects/frameobject.c
 ===================================================================
---- quilted.orig/Objects/frameobject.c	2008-09-04 22:19:00.000000000 +0100
-+++ quilted/Objects/frameobject.c	2008-09-04 22:19:05.000000000 +0100
+--- Python-2.5.5.orig/Objects/frameobject.c	2010-04-26 23:36:53.054613483 +0100
++++ Python-2.5.5/Objects/frameobject.c	2010-04-26 23:37:11.823786591 +0100
 @@ -14,7 +14,7 @@
  
  #define OFF(x) offsetof(PyFrameObject, x)
@@ -379,10 +379,10 @@ Index: quilted/Objects/frameobject.c
  	{"f_back",	T_OBJECT,	OFF(f_back),	RO},
  	{"f_code",	T_OBJECT,	OFF(f_code),	RO},
  	{"f_builtins",	T_OBJECT,	OFF(f_builtins),RO},
-Index: quilted/Objects/funcobject.c
+Index: Python-2.5.5/Objects/funcobject.c
 ===================================================================
---- quilted.orig/Objects/funcobject.c	2008-09-04 22:16:47.000000000 +0100
-+++ quilted/Objects/funcobject.c	2008-09-04 22:18:22.000000000 +0100
+--- Python-2.5.5.orig/Objects/funcobject.c	2010-04-26 23:36:53.026611005 +0100
++++ Python-2.5.5/Objects/funcobject.c	2010-04-26 23:37:11.827786570 +0100
 @@ -158,7 +158,7 @@
  
  #define OFF(x) offsetof(PyFunctionObject, x)
@@ -392,10 +392,10 @@ Index: quilted/Objects/funcobject.c
          {"func_closure",  T_OBJECT,     OFF(func_closure),
  	 RESTRICTED|READONLY},
          {"func_doc",      T_OBJECT,     OFF(func_doc), WRITE_RESTRICTED},
-Index: quilted/Objects/genobject.c
+Index: Python-2.5.5/Objects/genobject.c
 ===================================================================
---- quilted.orig/Objects/genobject.c	2008-09-04 22:16:48.000000000 +0100
-+++ quilted/Objects/genobject.c	2008-09-04 22:24:44.000000000 +0100
+--- Python-2.5.5.orig/Objects/genobject.c	2010-04-26 23:36:52.982609525 +0100
++++ Python-2.5.5/Objects/genobject.c	2010-04-26 23:37:11.827786570 +0100
 @@ -288,13 +288,13 @@
  }
  
@@ -412,10 +412,10 @@ Index: quilted/Objects/genobject.c
  	{"send",(PyCFunction)gen_send, METH_O, send_doc},
  	{"throw",(PyCFunction)gen_throw, METH_VARARGS, throw_doc},
  	{"close",(PyCFunction)gen_close, METH_NOARGS, close_doc},
-Index: quilted/Objects/intobject.c
+Index: Python-2.5.5/Objects/intobject.c
 ===================================================================
---- quilted.orig/Objects/intobject.c	2008-09-04 22:23:01.000000000 +0100
-+++ quilted/Objects/intobject.c	2008-09-04 22:24:50.000000000 +0100
+--- Python-2.5.5.orig/Objects/intobject.c	2010-04-26 23:36:52.794597175 +0100
++++ Python-2.5.5/Objects/intobject.c	2010-04-26 23:37:11.831787294 +0100
 @@ -1058,7 +1058,7 @@
  	return Py_BuildValue("(l)", v->ob_ival);
  }
@@ -425,10 +425,10 @@ Index: quilted/Objects/intobject.c
  	{"__getnewargs__",	(PyCFunction)int_getnewargs,	METH_NOARGS},
  	{NULL,		NULL}		/* sentinel */
  };
-Index: quilted/Objects/iterobject.c
+Index: Python-2.5.5/Objects/iterobject.c
 ===================================================================
---- quilted.orig/Objects/iterobject.c	2008-09-04 22:23:01.000000000 +0100
-+++ quilted/Objects/iterobject.c	2008-09-04 22:24:55.000000000 +0100
+--- Python-2.5.5.orig/Objects/iterobject.c	2010-04-26 23:36:52.902604271 +0100
++++ Python-2.5.5/Objects/iterobject.c	2010-04-26 23:37:11.831787294 +0100
 @@ -88,7 +88,7 @@
  
  PyDoc_STRVAR(length_hint_doc, "Private method returning an estimate of len(list(it)).");
@@ -438,10 +438,10 @@ Index: quilted/Objects/iterobject.c
  	{"__length_hint__", (PyCFunction)iter_len, METH_NOARGS, length_hint_doc},
   	{NULL,		NULL}		/* sentinel */
  };
-Index: quilted/Objects/listobject.c
+Index: Python-2.5.5/Objects/listobject.c
 ===================================================================
---- quilted.orig/Objects/listobject.c	2008-09-04 22:23:01.000000000 +0100
-+++ quilted/Objects/listobject.c	2008-09-04 22:32:29.000000000 +0100
+--- Python-2.5.5.orig/Objects/listobject.c	2010-04-26 23:36:52.994613902 +0100
++++ Python-2.5.5/Objects/listobject.c	2010-04-26 23:37:11.831787294 +0100
 @@ -2432,7 +2432,7 @@
  
  static PyObject *list_subscript(PyListObject*, PyObject*);
@@ -460,11 +460,11 @@ Index: quilted/Objects/listobject.c
  	{"__length_hint__", (PyCFunction)listiter_len, METH_NOARGS, length_hint_doc},
   	{NULL,		NULL}		/* sentinel */
  };
-Index: quilted/Objects/longobject.c
+Index: Python-2.5.5/Objects/longobject.c
 ===================================================================
---- quilted.orig/Objects/longobject.c	2008-09-04 22:23:01.000000000 +0100
-+++ quilted/Objects/longobject.c	2008-09-04 22:25:05.000000000 +0100
-@@ -3365,7 +3365,7 @@
+--- Python-2.5.5.orig/Objects/longobject.c	2010-04-26 23:37:10.219687121 +0100
++++ Python-2.5.5/Objects/longobject.c	2010-04-26 23:37:11.848020725 +0100
+@@ -3367,7 +3367,7 @@
  	return Py_BuildValue("(N)", _PyLong_Copy(v));
  }
  
@@ -473,10 +473,10 @@ Index: quilted/Objects/longobject.c
  	{"__getnewargs__",	(PyCFunction)long_getnewargs,	METH_NOARGS},
  	{NULL,		NULL}		/* sentinel */
  };
-Index: quilted/Objects/methodobject.c
+Index: Python-2.5.5/Objects/methodobject.c
 ===================================================================
---- quilted.orig/Objects/methodobject.c	2008-09-04 22:29:30.000000000 +0100
-+++ quilted/Objects/methodobject.c	2008-09-04 22:30:50.000000000 +0100
+--- Python-2.5.5.orig/Objects/methodobject.c	2010-04-26 23:37:11.103738267 +0100
++++ Python-2.5.5/Objects/methodobject.c	2010-04-26 23:37:11.859786031 +0100
 @@ -179,7 +179,7 @@
  
  #define OFF(x) offsetof(PyCFunctionObject, x)
@@ -486,10 +486,10 @@ Index: quilted/Objects/methodobject.c
  	{"__module__",    T_OBJECT,     OFF(m_module), WRITE_RESTRICTED},
  	{NULL}
  };
-Index: quilted/Objects/moduleobject.c
+Index: Python-2.5.5/Objects/moduleobject.c
 ===================================================================
---- quilted.orig/Objects/moduleobject.c	2008-09-04 22:29:30.000000000 +0100
-+++ quilted/Objects/moduleobject.c	2008-09-04 22:30:55.000000000 +0100
+--- Python-2.5.5.orig/Objects/moduleobject.c	2010-04-26 23:36:52.810599012 +0100
++++ Python-2.5.5/Objects/moduleobject.c	2010-04-26 23:37:11.859786031 +0100
 @@ -9,7 +9,7 @@
  	PyObject *md_dict;
  } PyModuleObject;
@@ -499,10 +499,10 @@ Index: quilted/Objects/moduleobject.c
  	{"__dict__", T_OBJECT, offsetof(PyModuleObject, md_dict), READONLY},
  	{0}
  };
-Index: quilted/Objects/rangeobject.c
+Index: Python-2.5.5/Objects/rangeobject.c
 ===================================================================
---- quilted.orig/Objects/rangeobject.c	2008-09-04 22:23:01.000000000 +0100
-+++ quilted/Objects/rangeobject.c	2008-09-04 22:25:13.000000000 +0100
+--- Python-2.5.5.orig/Objects/rangeobject.c	2010-04-26 23:36:53.086615969 +0100
++++ Python-2.5.5/Objects/rangeobject.c	2010-04-26 23:37:11.863787356 +0100
 @@ -143,7 +143,7 @@
  PyDoc_STRVAR(reverse_doc,
  "Returns a reverse iterator.");
@@ -521,10 +521,10 @@ Index: quilted/Objects/rangeobject.c
  	{"__length_hint__", (PyCFunction)rangeiter_len, METH_NOARGS, length_hint_doc},
   	{NULL,		NULL}		/* sentinel */
  };
-Index: quilted/Objects/sliceobject.c
+Index: Python-2.5.5/Objects/sliceobject.c
 ===================================================================
---- quilted.orig/Objects/sliceobject.c	2008-09-04 22:23:01.000000000 +0100
-+++ quilted/Objects/sliceobject.c	2008-09-04 22:25:30.000000000 +0100
+--- Python-2.5.5.orig/Objects/sliceobject.c	2010-04-26 23:36:52.762596324 +0100
++++ Python-2.5.5/Objects/sliceobject.c	2010-04-26 23:37:11.863787356 +0100
 @@ -240,7 +240,7 @@
  	return s;
  }
@@ -543,10 +543,10 @@ Index: quilted/Objects/sliceobject.c
  	{"indices",	(PyCFunction)slice_indices,
  	 METH_O,	slice_indices_doc},
  	{NULL, NULL}
-Index: quilted/Objects/structseq.c
+Index: Python-2.5.5/Objects/structseq.c
 ===================================================================
---- quilted.orig/Objects/structseq.c	2008-09-04 22:23:01.000000000 +0100
-+++ quilted/Objects/structseq.c	2008-09-04 22:25:40.000000000 +0100
+--- Python-2.5.5.orig/Objects/structseq.c	2010-04-26 23:36:52.966608328 +0100
++++ Python-2.5.5/Objects/structseq.c	2010-04-26 23:37:11.863787356 +0100
 @@ -298,7 +298,7 @@
  	(objobjproc)structseq_contains,	        /* sq_contains */
  };
@@ -556,11 +556,11 @@ Index: quilted/Objects/structseq.c
  	{"__reduce__", (PyCFunction)structseq_reduce, 
  	 METH_NOARGS, NULL},
  	{NULL, NULL}
-Index: quilted/Objects/tupleobject.c
+Index: Python-2.5.5/Objects/tupleobject.c
 ===================================================================
---- quilted.orig/Objects/tupleobject.c	2008-09-04 22:23:01.000000000 +0100
-+++ quilted/Objects/tupleobject.c	2008-09-04 22:25:49.000000000 +0100
-@@ -633,7 +633,7 @@
+--- Python-2.5.5.orig/Objects/tupleobject.c	2010-04-26 23:36:52.918603248 +0100
++++ Python-2.5.5/Objects/tupleobject.c	2010-04-26 23:37:11.867788166 +0100
+@@ -647,7 +647,7 @@
  	
  }
  
@@ -569,7 +569,7 @@ Index: quilted/Objects/tupleobject.c
  	{"__getnewargs__",	(PyCFunction)tuple_getnewargs,	METH_NOARGS},
  	{NULL,		NULL}		/* sentinel */
  };
-@@ -831,7 +831,7 @@
+@@ -845,7 +845,7 @@
  
  PyDoc_STRVAR(length_hint_doc, "Private method returning an estimate of len(list(it)).");
  
@@ -578,10 +578,10 @@ Index: quilted/Objects/tupleobject.c
  	{"__length_hint__", (PyCFunction)tupleiter_len, METH_NOARGS, length_hint_doc},
   	{NULL,		NULL}		/* sentinel */
  };
-Index: quilted/Objects/typeobject.c
+Index: Python-2.5.5/Objects/typeobject.c
 ===================================================================
---- quilted.orig/Objects/typeobject.c	2008-09-04 22:23:01.000000000 +0100
-+++ quilted/Objects/typeobject.c	2008-09-04 22:27:53.000000000 +0100
+--- Python-2.5.5.orig/Objects/typeobject.c	2010-04-26 23:37:11.131742301 +0100
++++ Python-2.5.5/Objects/typeobject.c	2010-04-26 23:37:11.871790244 +0100
 @@ -5,7 +5,7 @@
  
  #include <ctype.h>
@@ -618,7 +618,7 @@ Index: quilted/Objects/typeobject.c
  	{"__new__", (PyCFunction)tp_new_wrapper, METH_KEYWORDS,
  	 PyDoc_STR("T.__new__(S, ...) -> "
  	 	   "a new object with type S, a subtype of T")},
-@@ -5674,7 +5674,7 @@
+@@ -5707,7 +5707,7 @@
  	PyTypeObject *obj_type;
  } superobject;
  
@@ -627,11 +627,11 @@ Index: quilted/Objects/typeobject.c
  	{"__thisclass__", T_OBJECT, offsetof(superobject, type), READONLY,
  	 "the class invoking super()"},
  	{"__self__",  T_OBJECT, offsetof(superobject, obj), READONLY,
-Index: quilted/Python/marshal.c
+Index: Python-2.5.5/Python/marshal.c
 ===================================================================
---- quilted.orig/Python/marshal.c	2008-09-04 22:33:44.000000000 +0100
-+++ quilted/Python/marshal.c	2008-09-04 22:33:59.000000000 +0100
-@@ -1226,7 +1226,7 @@
+--- Python-2.5.5.orig/Python/marshal.c	2010-04-26 23:36:52.670590365 +0100
++++ Python-2.5.5/Python/marshal.c	2010-04-26 23:37:11.892000584 +0100
+@@ -1229,7 +1229,7 @@
  	return result;
  }
  
@@ -640,10 +640,10 @@ Index: quilted/Python/marshal.c
  	{"dump",	marshal_dump,	METH_VARARGS},
  	{"load",	marshal_load,	METH_O},
  	{"dumps",	marshal_dumps,	METH_VARARGS},
-Index: quilted/Python/symtable.c
+Index: Python-2.5.5/Python/symtable.c
 ===================================================================
---- quilted.orig/Python/symtable.c	2008-09-04 22:33:44.000000000 +0100
-+++ quilted/Python/symtable.c	2008-09-04 22:34:12.000000000 +0100
+--- Python-2.5.5.orig/Python/symtable.c	2010-04-26 23:36:52.718593714 +0100
++++ Python-2.5.5/Python/symtable.c	2010-04-26 23:37:11.899789935 +0100
 @@ -105,7 +105,7 @@
  
  #define OFF(x) offsetof(PySTEntryObject, x)

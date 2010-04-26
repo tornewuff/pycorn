@@ -1,7 +1,7 @@
-Index: Python-2.5.2/Modules/Setup.dist
+Index: Python-2.5.5/Modules/Setup.dist
 ===================================================================
---- Python-2.5.2.orig/Modules/Setup.dist	2008-08-20 18:09:20.000000000 +0100
-+++ Python-2.5.2/Modules/Setup.dist	2008-08-20 18:09:58.000000000 +0100
+--- Python-2.5.5.orig/Modules/Setup.dist	2010-04-26 23:36:54.006673789 +0100
++++ Python-2.5.5/Modules/Setup.dist	2010-04-26 23:37:09.119618388 +0100
 @@ -109,16 +109,16 @@
  # This only contains the minimal set of modules required to run the 
  # setup.py script in the root of the Python source tree.

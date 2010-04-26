@@ -1,4 +1,4 @@
-PYTHONVER := 2.5.2
+PYTHONVER := 2.5.5
 PYTHONVERMINOR := 2.5
 
 libpython$(PYTHONVERMINOR).a: stamp-target

@@ -1,7 +1,7 @@
-Index: quilted/Python/getcopyright.c
+Index: Python-2.5.5/Python/getcopyright.c
 ===================================================================
---- quilted.orig/Python/getcopyright.c	2008-02-21 11:53:40.000000000 +0000
-+++ quilted/Python/getcopyright.c	2008-09-04 15:57:24.000000000 +0100
+--- Python-2.5.5.orig/Python/getcopyright.c	2010-04-26 23:36:53.898667719 +0100
++++ Python-2.5.5/Python/getcopyright.c	2010-04-26 23:37:09.491640952 +0100
 @@ -2,7 +2,7 @@
  
  #include "Python.h"
