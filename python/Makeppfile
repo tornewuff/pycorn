@@ -1,4 +1,7 @@
-libpython2.5.a: stamp-target
+PYTHONVER := 2.5.2
+PYTHONVERMINOR := 2.5
+
+libpython$(PYTHONVERMINOR).a: stamp-target
 	cp -p targetpy/$(output) $(output)
 
 FREEZEMODS := $(&cat freezelist)
@@ -6,21 +9,21 @@ FREEZEMODS := $(&cat freezelist)
 stamp-frozen: stamp-sources
 	rm -rf frozen
 	&mkdir frozen
-	cp -p Python-2.5.2/Lib/$(FREEZEMODS) frozen
+	cp -p Python-$(PYTHONVER)/Lib/$(FREEZEMODS) frozen
 	&touch stamp-frozen
 
 stamp-include: stamp-target stamp-sources
 	rm -rf include
 	&mkdir include
-	cp -p Python-2.5.2/Include/*.h include
+	cp -p Python-$(PYTHONVER)/Include/*.h include
 	cp -p targetpy/pyconfig.h include
 	&touch stamp-include
 
 stamp-target: stamp-sources hostpgen $(LDDEPS)
 	rm -rf targetpy
 	&mkdir targetpy
-	cd targetpy; MACHDEP=pycorn CFLAGS="$(LDFLAGS)" ../Python-2.5.2/configure --host=arm-eabi --without-signal-module
-	cd targetpy; make HOSTPGEN=$(CURDIR)/hostpgen EXTRA_CFLAGS="$(PYCFLAGS)" libpython2.5.a
+	cd targetpy; MACHDEP=pycorn CFLAGS="$(LDFLAGS)" ../Python-$(PYTHONVER)/configure --host=arm-eabi --without-signal-module
+	cd targetpy; make HOSTPGEN=$(CURDIR)/hostpgen EXTRA_CFLAGS="$(PYCFLAGS)" libpython$(PYTHONVERMINOR).a
 	&touch stamp-target
 
 hostpgen: stamp-host
@@ -29,25 +32,25 @@ hostpgen: stamp-host
 stamp-host: stamp-sources
 	rm -rf hostpy 
 	&mkdir hostpy
-	cd hostpy; ../Python-2.5.2/configure
+	cd hostpy; ../Python-$(PYTHONVER)/configure
 	cd hostpy; make Parser/pgen
 	&touch stamp-host
 
-stamp-quilt: $(ROOT)/downloads/Python-2.5.2.tar.bz2
+stamp-quilt: $(ROOT)/downloads/Python-$(PYTHONVER).tar.bz2
 	rm -rf quilt
 	&mkdir quilt
 	cd quilt; tar jxf ../$(input)
-	&ln -s ../../patches quilt/Python-2.5.2
-	cd quilt/Python-2.5.2; quilt push -a
+	&ln -s ../../patches quilt/Python-$(PYTHONVER)
+	cd quilt/Python-$(PYTHONVER); quilt push -a
 	&touch $(output)
 
-stamp-sources Python-2.5.2/configure: $(ROOT)/downloads/Python-2.5.2.tar.bz2 patches/*
-	rm -rf Python-2.5.2
+stamp-sources Python-$(PYTHONVER)/configure: $(ROOT)/downloads/Python-$(PYTHONVER).tar.bz2 patches/*
+	rm -rf Python-$(PYTHONVER)
 	tar jxf $(input)
-	cd Python-2.5.2; for p in `cat ../patches/series`; do patch -p1 < ../patches/$$p; done
-	cd Python-2.5.2; autoconf
+	cd Python-$(PYTHONVER); for p in `cat ../patches/series`; do patch -p1 < ../patches/$$p; done
+	cd Python-$(PYTHONVER); autoconf
 	&touch $(output)
 
-no_implicit_load Python-2.5.2 hostpy targetpy
+no_implicit_load Python-$(PYTHONVER) hostpy targetpy
 
 include common.mk
