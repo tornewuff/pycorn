@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-import struct
+import cStringIO, struct
 
 import _bootstrap
 from _metalmem import membuf
@@ -21,5 +21,7 @@ _bootdata = _bootdata_t.unpack(_bootdata_buf)
 
 if _bootdata[6] > 0:
     initrd = membuf(_bootdata[8], _bootdata[6])
+    initrd_file = cStringIO.StringIO(initrd)
 else:
     initrd = None
+    initrd_file = None

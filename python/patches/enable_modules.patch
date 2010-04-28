@@ -1,7 +1,7 @@
 Index: Python-2.5.5/Modules/Setup.dist
 ===================================================================
---- Python-2.5.5.orig/Modules/Setup.dist	2010-04-26 23:37:09.119618388 +0100
-+++ Python-2.5.5/Modules/Setup.dist	2010-04-26 23:37:12.927855576 +0100
+--- Python-2.5.5.orig/Modules/Setup.dist	2010-04-28 19:19:27.008622737 +0100
++++ Python-2.5.5/Modules/Setup.dist	2010-04-28 20:03:56.895476634 +0100
 @@ -167,7 +167,7 @@
  #array arraymodule.c	# array objects
  #cmath cmathmodule.c # -lm # complex math library functions
@@ -11,3 +11,12 @@ Index: Python-2.5.5/Modules/Setup.dist
  #time timemodule.c # -lm # time operations and variables
  #operator operator.c	# operator.add() and similar goodies
  #_weakref _weakref.c	# basic weak reference support
+@@ -427,7 +427,7 @@
+ #parser parsermodule.c
+ 
+ # cStringIO and cPickle
+-#cStringIO cStringIO.c
++cStringIO cStringIO.c
+ #cPickle cPickle.c
+ 
+ 
