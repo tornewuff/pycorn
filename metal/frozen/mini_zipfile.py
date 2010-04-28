@@ -71,7 +71,7 @@ class ZipFile:
         bytes = self.fp.read(fheader[_FH_COMPRESSED_SIZE])
         if compress_type == ZIP_STORED:
             return bytes
-        elif compress_type == ZIP_DEFLATED:
+        elif compress_type == ZIP_DEFLATED and zlib:
             # zlib compress/decompress code by Jeremy Hylton of CNRI
             dc = zlib.decompressobj(-15)
             bytes = dc.decompress(bytes)
