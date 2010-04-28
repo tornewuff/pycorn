@@ -1,6 +1,6 @@
 OBJECTS = main.o getpath.o frozen.o $(EXTMODULES) $(ROOT)/python/libpython2.5.a
 SYSLIBS := -lm
-RAMDISK := test.txt
+RAMDISK := test.zip
 
 $(phony all): pykern.flash
 
