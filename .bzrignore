@@ -16,7 +16,7 @@ python/quilt
 python/frozen
 arch/arm/metal/ext/_metalcpu_coproc.S
 arch/arm/metal/ext/_metalcpu_coproc.h
-arch/arm/metal/frozen/metal/_coprocmap.py
+arch/arm/metal/initrd/metal/_coprocmap.py
 toolchain/binutils/binutils-*
 toolchain/binutils/build
 toolchain/gcc/gcc-*
