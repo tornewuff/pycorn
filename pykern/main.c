@@ -18,8 +18,10 @@
  * -v for verbose because we want to see modules getting loaded.
  * -S to not load site.py since it doesn't exist.
  * -i to always force the interactive prompt to show up.
+ * -c "__import__('bootstrap')" to make the frozen-in bootstrap code run
  */
-char *pyargs[] = { "python", "-v", "-S", "-i", NULL };
+char *pyargs[] = { "python", "-v", "-S", "-i",
+    "-c", "__import__('bootstrap')", NULL };
 
 int main()
 {
