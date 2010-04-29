@@ -1,7 +1,9 @@
 # Minimal zipimporter.
 #
 # This module implements an import hook which can import modules from a
-# zipfile, provided as a file-like object.
+# zipfile, provided as a file-like object. It is activated by the presence of
+# the path '/initrd' in sys.path. The object must be instantiated by giving it
+# a file-like object before being inserted into sys.path_hooks
 #
 #
 # Copyright 2010 Torne Wuff
@@ -97,8 +99,3 @@ class MiniZipImport:
     def get_filename(self, fullname):
         path, package = self._check_zipfile(fullname)
         return path
-
-
-from bootstrap.arch import initrd_file
-sys.path_hooks[:] = [MiniZipImport(initrd_file)]
-sys.path[:] = ['/initrd']
