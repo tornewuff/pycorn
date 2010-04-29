@@ -1,3 +1,21 @@
+# Minimal support for reading the contents of a zipfile.
+#
+# This is a cut-down version of the zipfile module from the Python standard
+# library. It does not support writing, it does not check CRCs, and it does not
+# expose any file metadata.
+#
+#
+# Copyright 2010 Torne Wuff, based on zipfile.py from the Python standard
+# library.
+#
+# This file is part of Pycorn.
+#
+# Pycorn is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+
 import struct
 
 try:
@@ -29,7 +47,6 @@ _FH_EXTRA_FIELD_LENGTH = 11
 class ZipFile:
 
     def __init__(self, fp):
-        """Open the ZIP file and read in the table of contents."""
         self.fileoffset = {}
         self.fp = fp
 
