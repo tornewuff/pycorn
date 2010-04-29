@@ -99,6 +99,6 @@ class MiniZipImport:
         return path
 
 
-from pycorn.bootstrap import initrd_file
+from bootstrap.arch import initrd_file
 sys.path_hooks[:] = [MiniZipImport(initrd_file)]
 sys.path[:] = ['/initrd']
