@@ -1,2 +1,2 @@
-include pyinclude.mk
+include python/pyinclude.mk
 include common.mk
