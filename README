@@ -95,10 +95,7 @@ install one from somewhere else, newlib must be built to expect reentrant
 syscalls and without its own embedded syscalls or it will not work; better to
 use this one.
 
-3) Install u-boot's mkimage utility. This is in Debian as package
-"uboot-mkimage", or you can compile it from u-boot's source.
-
-4) Install autoconf. Python's configure script needs regeneration after
+3) Install autoconf. Python's configure script needs regeneration after
 patching for cross-compilability.
 
 BUILDING
