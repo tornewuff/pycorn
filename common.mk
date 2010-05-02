@@ -1,10 +1,7 @@
 # Disable makepp's builtin rules as they're not particularly cross-compile-y
 makepp_no_builtin = 1
 
-# Target selection, stuck here for now
-ARCH := arm
-MACH := pxa270
-PREFIX := arm-eabi-
+include $(ROOT)/config.mk
 
 # Commands
 CC := $(PREFIX)gcc
