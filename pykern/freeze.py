@@ -54,7 +54,7 @@ def makefreeze(moddict):
     packages), write out frozen.c in the current directory.
 
     """
-    outfp = open('frozen.c', 'w')
+    outfp = open(sys.argv[1], 'w')
     outfp.write(header)
     done = []
     mods = moddict.keys()
@@ -106,6 +106,8 @@ def addfile(path, shortpath, namelist):
 def scandir(dir, shortdir, modprefix):
     """Recursively scan a directory looking for modules to freeze."""
     for entry in os.listdir(dir):
+        if fnmatch.fnmatch(entry, '.*'):
+            continue
         path = os.path.join(dir, entry)
         shortpath = os.path.join(shortdir, entry)
         if os.path.isdir(path):
@@ -113,7 +115,7 @@ def scandir(dir, shortdir, modprefix):
         elif os.path.isfile(path) and fnmatch.fnmatch(entry, '*.py'):
             addfile(path, shortpath, modprefix + [entry[:-3]])
 
-for dir in sys.argv[1:]:
+for dir in sys.argv[2:]:
     scandir(dir, "", [])
 
 makefreeze(mods)

@@ -8,7 +8,7 @@ include pyinclude.mk
 include common.mk
 
 frozen.c: $( $(FREEZEDIRS))/**/*.py $(ROOT)/python/stamp-frozen freeze.py
-	python freeze.py $(FREEZEDIRS) $(ROOT)/python/frozen
+	python freeze.py $(output) $(FREEZEDIRS) $(ROOT)/python/frozen
 
 initrd.zip: $( $(INITRDDIRS))/** $(ROOT)/python/stamp-initrd makezip.py
 	python makezip.py $(output) $(INITRDDIRS) $(ROOT)/python/initrd
