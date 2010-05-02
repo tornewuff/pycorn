@@ -5,6 +5,13 @@ libpython$(PYTHONVERMINOR).a: stamp-target
 	cp -p targetpy/$(output) $(output)
 
 FREEZEMODS := $(&cat freezelist)
+INITRDMODS := $(&cat initrdlist)
+
+stamp-initrd: stamp-sources
+	rm -rf initrd
+	&mkdir initrd
+	cp -p Python-$(PYTHONVER)/Lib/$(INITRDMODS) initrd
+	&touch stamp-initrd
 
 stamp-frozen: stamp-sources
 	rm -rf frozen

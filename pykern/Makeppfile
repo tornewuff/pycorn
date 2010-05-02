@@ -1,6 +1,6 @@
 OBJECTS = main.o getpath.o frozen.o $(EXTMODULES) $(ROOT)/python/libpython2.5.a
 SYSLIBS := -lm
-RAMDISK := test.zip
+RAMDISK := initrd.zip
 
 $(phony all): pykern.flash
 
@@ -9,3 +9,6 @@ include common.mk
 
 frozen.c: $( $(FREEZEDIRS))/**/*.py $(ROOT)/python/stamp-frozen freeze.py
 	python freeze.py $(FREEZEDIRS) $(ROOT)/python/frozen
+
+initrd.zip: $( $(INITRDDIRS))/** $(ROOT)/python/stamp-initrd makezip.py
+	python makezip.py $(output) $(INITRDDIRS) $(ROOT)/python/initrd
