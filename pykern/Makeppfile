@@ -7,6 +7,10 @@ $(phony all): pykern.flash
 include python/pyinclude.mk
 include common.mk
 
+ifdef DEBUG_PYSTARTUP
+CFLAGS += -DDEBUG_PYSTARTUP
+endif
+
 frozen.c: $( $(FREEZEDIRS))/**/*.py $(ROOT)/python/stamp-frozen freeze.py
 	python freeze.py $(output) $(FREEZEDIRS) $(ROOT)/python/frozen
 

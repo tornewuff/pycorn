@@ -28,9 +28,16 @@ register bootdata_t *bootdata asm ("r9");
 extern void boot_putchar(char c);
 extern void boot_putstr(const char *s);
 extern void boot_putint(const char *label, uint32_t i);
+
+#ifdef DEBUG_EMBRYO
 #define DBGCHAR(c) boot_putchar(c)
 #define DBGSTR(s) boot_putstr(s)
 #define DBGINT(l, i) boot_putint(l, i)
+#else
+#define DBGCHAR(c)
+#define DBGSTR(s)
+#define DBGINT(l, i)
+#endif
 
 // Typedefs for functions involved in MMU enabling
 typedef void (*mmu_done_func)(int selfmap_index, uint32_t old_pde);

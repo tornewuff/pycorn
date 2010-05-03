@@ -15,13 +15,16 @@
 #include <stdio.h>
 
 /* Arguments:
- * -v for verbose because we want to see modules getting loaded.
+ * -v for verbose if DEBUG_PYSTARTUP is defined
  * -S to not load site.py since it doesn't exist.
  * -i to always force the interactive prompt to show up.
  * -c "__import__('bootstrap')" to make the frozen-in bootstrap code run
  */
-char *pyargs[] = { "python", "-v", "-S", "-i",
-    "-c", "__import__('bootstrap')", NULL };
+char *pyargs[] = { "python",
+#ifdef DEBUG_PYSTARTUP
+    "-v",
+#endif
+    "-S", "-i", "-c", "__import__('bootstrap')", NULL };
 
 int main()
 {

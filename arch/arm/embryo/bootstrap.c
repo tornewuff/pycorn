@@ -50,6 +50,7 @@ void boot_start()
   // Parse atags
   int r = parse_atags();
   DBGINT("parse_atags returned ", r);
+  (void)r;
 
   // Work out where the first free page after the image is.
   // We will use this as the starting location to allocate pages, so there
