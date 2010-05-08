@@ -18,6 +18,15 @@ import sys
 
 from bootstrap.arch import initrd_file
 from bootstrap.mini_zipimport import MiniZipImport
+from bootstrap.version import version_info
+
+# Print version info/banner
+print 'Pycorn r%s' % version_info['revno'],
+if not version_info['clean']:
+    print '(modified)',
+print '(Python %s.%s.%s)' % sys.version_info[0:3]
+print 'Revid:', version_info['revision_id']
+print 'Built:', version_info['build_date']
 
 # Clear existing path, which is useless
 del sys.path[:]
