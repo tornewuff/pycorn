@@ -16,10 +16,10 @@ FREEZEDIRS += frozen
 $(phony always):
 
 stamp-version: always
-	bzr version-info --check-clean --custom --template "{date} {revno} {revision_id} {branch_nick} {clean}" > stamp-version
+	bzr version-info --custom --template "{date} {revno} {revision_id} {branch_nick}" > stamp-version
 
 frozen/bootstrap/version.py: stamp-version : signature md5
-	bzr version-info --python --check-clean > $(output)
+	bzr version-info --python > $(output)
 
 frozen.c: $( $(FREEZEDIRS))/**/*.py $(ROOT)/python/stamp-frozen freeze.py
 	python freeze.py $(output) $(FREEZEDIRS) $(ROOT)/python/frozen
