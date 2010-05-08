@@ -13,8 +13,10 @@ endif
 
 FREEZEDIRS += frozen
 
-stamp-version:
-	&echo -o $(output) $(shell bzr version-info --check-clean --custom --template "{date} {revno} {revision_id} {branch_nick} {clean}")
+$(phony always):
+
+stamp-version: always
+	bzr version-info --check-clean --custom --template "{date} {revno} {revision_id} {branch_nick} {clean}" > stamp-version
 
 frozen/bootstrap/version.py: stamp-version : signature md5
 	bzr version-info --python --check-clean > $(output)
