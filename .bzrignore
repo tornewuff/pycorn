@@ -16,6 +16,7 @@ python/include
 python/quilt
 python/frozen
 python/initrd
+pykern/frozen/bootstrap/version.py
 arch/arm/metal/ext/_metalcpu_coproc.S
 arch/arm/metal/ext/_metalcpu_coproc.h
 arch/arm/metal/initrd/metal/_coprocmap.py

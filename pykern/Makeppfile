@@ -11,6 +11,14 @@ ifdef DEBUG_PYSTARTUP
 CFLAGS += -DDEBUG_PYSTARTUP
 endif
 
+FREEZEDIRS += frozen
+
+stamp-version:
+	&echo -o $(output) $(shell bzr version-info --check-clean --custom --template "{date} {revno} {revision_id} {branch_nick} {clean}")
+
+frozen/bootstrap/version.py: stamp-version : signature md5
+	bzr version-info --python --check-clean > $(output)
+
 frozen.c: $( $(FREEZEDIRS))/**/*.py $(ROOT)/python/stamp-frozen freeze.py
 	python freeze.py $(output) $(FREEZEDIRS) $(ROOT)/python/frozen
 
