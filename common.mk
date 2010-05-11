@@ -28,6 +28,7 @@ include $(ROOT)/metal/metal.mk
 
 # Rules
 
+ifndef USE_BINARIES
 ifdef OBJECTS
 %.bin: %.elf
 	$(OBJCOPY) -O binary $(input) $(output)
@@ -44,3 +45,4 @@ endif
 
 %.o: %.s
 	$(CC) $(ASFLAGS) -c $(input) -o $(output)
+endif

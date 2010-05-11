@@ -1,5 +1,9 @@
+include common.mk
+
+ifndef USE_BINARIES
 $(phony all): hello/all pykern/all
+else
+$(phony all): pykern/all
+endif
 
 $(phony run): pykern/run
-
-include common.mk

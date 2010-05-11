@@ -7,6 +7,8 @@ libpython$(PYTHONVERMINOR).a: stamp-target
 FREEZEMODS := $(&cat freezelist)
 INITRDMODS := $(&cat initrdlist)
 
+include common.mk
+
 stamp-initrd: stamp-sources
 	rm -rf initrd
 	&mkdir initrd
@@ -51,13 +53,18 @@ stamp-quilt: $(ROOT)/downloads/Python-$(PYTHONVER).tar.bz2
 	cd quilt/Python-$(PYTHONVER); quilt push -a
 	&touch $(output)
 
+ifndef USE_BINARIES
 stamp-sources Python-$(PYTHONVER)/configure: $(ROOT)/downloads/Python-$(PYTHONVER).tar.bz2 patches/*
 	rm -rf Python-$(PYTHONVER)
 	tar jxf $(input)
 	cd Python-$(PYTHONVER); for p in `cat ../patches/series`; do patch -p1 < ../patches/$$p; done
 	cd Python-$(PYTHONVER); autoconf
 	&touch $(output)
+else
+stamp-sources: $(ROOT)/downloads/Python-$(PYTHONVER).tar.bz2
+	rm -rf Python-$(PYTHONVER)
+	tar jxf $(input)
+	&touch $(output)
+endif
 
 no_implicit_load Python-$(PYTHONVER) hostpy targetpy
-
-include common.mk

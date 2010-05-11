@@ -15,6 +15,7 @@ FREEZEDIRS += frozen
 
 $(phony always):
 
+ifndef USE_BINARIES
 stamp-version: always
 	bzr version-info --custom --template "{date} {revno} {revision_id} {branch_nick}" > stamp-version
 
@@ -23,6 +24,12 @@ frozen/bootstrap/version.py: stamp-version : signature md5
 
 frozen.c: $( $(FREEZEDIRS))/**/*.py $(ROOT)/python/stamp-frozen freeze.py
 	python freeze.py $(output) $(FREEZEDIRS) $(ROOT)/python/frozen
+endif
 
 initrd.zip: $( $(INITRDDIRS))/** $(ROOT)/python/stamp-initrd makezip.py
 	python makezip.py $(output) $(INITRDDIRS) $(ROOT)/python/initrd
+
+ifdef USE_BINARIES
+pykern.uimage: $(MACHPATH)/$(MACH)-pykern.uimage
+	&cp -f $(input) $(output)
+endif
