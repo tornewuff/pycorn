@@ -2,7 +2,7 @@
 
 makepp_speedup -- How to make makepp faster
 
-=for vc $Id: makepp_speedup.pod,v 1.10 2008/05/21 21:58:58 pfeiffer Exp $
+=for vc $Id: makepp_speedup.pod,v 1.11 2008/11/23 21:20:40 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -24,6 +24,11 @@ You can combine several of these tips to increase the time gain even more.
 
 
 =head2 Safe Methods
+
+=head3 Use makeppreplay
+
+The stand-alone utility L<makeppreplay, mppr|makeppreplay> repeats things that
+makepp has already done.
 
 =head3 Use a Faster Perl
 

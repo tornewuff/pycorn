@@ -39,7 +39,7 @@ perl				# A double-paren perl statement.
   }}
 
 perl {
-  $::pid = $$;
+  $Mpp::pid = $$;
   run qw(script.pl statement-script.out b);
 }
 
@@ -64,12 +64,12 @@ multiline:
 
 rule-script.out:
 	makeperl {{
-	  $$::pid = $$$$;		# How much is that in Euros? :-)
+	  $$Mpp::pid = $$$$;		# How much is that in Euros? :-)
 	}}
 	&script.pl $(output) d
 ###	2	755	1067451878	1066077772	script.pl
 open my $f, ">>$ARGV[0]" or die "open $ARGV[0]: $!";
-print $f "$0: running $ARGV[1] (", $::pid == $$ ? 'same' : 'different', " pid)\n";
+print $f "$0: running $ARGV[1] (", $Mpp::pid == $$ ? 'same' : 'different', " pid)\n";
 ###	D	755	1067451878	1066078592	answers
 ###	2	644	1067451878	1066078500	answers/function
 zyx:cba foobar

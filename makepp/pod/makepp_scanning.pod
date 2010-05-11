@@ -2,7 +2,7 @@
 
 makepp_scanning -- How makepp finds include files and other hidden dependencies
 
-=for vc $Id: makepp_scanning.pod,v 1.11 2006/10/16 21:55:37 pfeiffer Exp $
+=for vc $Id: makepp_scanning.pod,v 1.14 2009/12/27 23:17:28 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -25,26 +25,28 @@ commands invoking C<sh> and C<libtool>; for these commands, it skips to
 the first word in the command that's not an option and looks it up in
 the table again.
 
-If makepp thinks it's compiling a C/C++ program but can't find a
-scanner, it will give a warning message to let you know.  This usually
-means that you buried your compiler command too deeply in the action for
-makepp to find it.  For example, I have seen rules like this:
+If makepp thinks it's compiling a C/C++ source but can't find a scanner, it
+will give a warning message to let you know.  This usually means that you
+buried your compiler command too deeply in the action for makepp to find it.
+For example, I have seen rules like this:
 
     %.o: %.c
- 	@echo Compiling $< now
- 	@gcc -c $< $(CFLAGS) -o $@
+ 	@echo Compiling $< now; obscure_wrapper gcc -c $< $(CFLAGS) -o $@
 
-The first word of the action here is C<echo>, for which therer is no
-scanner, so makepp will not scan for include files in this case.
+The first words of the actions here are C<echo> and C<obscure_wrapper>, for
+which therer are no scanners, so makepp will not scan for include files in
+this case.  You can ignore the prefixed command by:
 
-=head2 C/C++ compilation
+    register-scanner obscure_wrapper skip-word
 
-The C/C++ scanner is activated by a command beginning with a compile
-program that makepp knows about.  (I've included every compiler I've
-ever heard of, but if I missed your compiler, you can tell makepp about
-it by adding an entry to the C<%Makesubs::scanners> array (see
-F<Makesubs.pm> in the distribution).  Also send me email at
-holt-makepp@gholt.net so I can include it in subsequent releases.
+The following sections document the built in scanners.  In the name you can
+use C<-> interchangeably with C<_>.
+
+=head2 C/C++ compilation (c-compilation, gcc-compilation)
+
+The C/C++ scanner, which handles both languages indifferently, but with a
+special variant for gcc's many options, is activated by a command beginning
+with a compile program that makepp knows about.
 
 It looks at the command for C<-Idir> options specifying the include path
 or C<-Ldir> options specifying the link path.  It then scans any source
@@ -53,11 +55,11 @@ see if there are any source files or libraries mentioned which are not
 listed as dependencies.  It recognizes these by their extension.
 
 This scanner gives a warning message if files included with S<C<#include
-"file.h">> are not found in the include path, or in the directory
-containing the file which is C<#includ>ing, or in F</usr/include>.  No
-warning is given if a file included with S<C<#include E<lt>file.hE<gt>>>
-is not found.  makepp assumes it is in some system include directory
-that the compiler knows about, and that files in system include
+"file.h">> are not found, or not buildable by makepp, in the include path, or
+in the directory containing the file which is C<#includ>ing, or in
+F</usr/include>.  No warning is given if a file included with S<C<< #include
+<file.h> >>> is not found.  Makepp assumes it is in some system include
+directory that the compiler knows about, and that files in system include
 directories won't change.
 
 In addition, files in F</usr/include>, F</usr/local/include>,
@@ -82,7 +84,51 @@ might cause makepp to warn that the include file was not found.  You can
 either ignore the warning messages, or put an empty file C<this.h> out
 there to shut makepp up.
 
-=head2 Libtool
+If your compiler has a funny name, you can say either of
+
+    register-scanner obscure_c_compiler c-compilation
+    register-scanner obscure_gcc_alias gcc-compilation
+
+=head2 Embedded SQL C/C++ compilation (esqlc-compilation)
+
+These commands, which come with the various databases, preprocess special
+sections in otherwise C/C++-like sources, and produce C/C++ headers and
+sources.  This finds EXEC SQL INCLUDE "filename" or $INCLUDE "filename"
+directives.
+
+If your preprocessor is not recognized, you can say
+
+    register-scanner obscure_esqlc_preprocessor esqlc-compilation
+
+=head2 Swig (swig)
+
+Swig (Simplified Wrapper and Interface Generator, http://www.swig.org)
+is a program that converts a C/C++ header file into the wrapper
+functions needed to make your code callable from a variety of other
+languages, such as perl, python, tcl, C#, ruby, ocaml, and probably some
+others that I don't know about.
+
+Makepp understands and parses the swig command line, looking for C<-I> and
+C<-l> options.  It also knows how to scan swig's interface definition files
+(F<.i> files) looking for C<%include>, C<%import>, and also C<#include>
+if C<-includeall> is in effect.
+
+If your swig has a funny name, you can say
+
+    register-scanner obscure_swig_alias swig
+
+=head2 Other special command words (skip-word)
+
+Makepp recognizes the following command words and many more and skips over them
+appropriately in in its search for the correct scanner:
+C<condor_compile>, C<distcc>, C<ignore_error>, C<libtool>, C<noecho>
+C<purify>, C<sh>.
+
+If you have more such commands, you can say
+
+    register-scanner command skip-word
+
+=head3 Libtool
 
 Libtool is a very clever compilation system that greatly simplifies
 making shared libraries by hiding all the system-dependent details away
@@ -97,25 +143,12 @@ makepp at the moment is not able to use the dependency information that
 is stored inside the C<.la> file itself.  This will hopefully change
 soon.
 
-=head2 Swig
+=head2 Suppressing the scan (none)
 
-Swig (Simplified Wrapper and Interface Generator, http://www.swig.org)
-is a program that converts a C/C++ header file into the wrapper
-functions needed to make your code callable from a variety of other
-languages, such as perl, python, tcl, C#, ruby, ocaml, and probably some
-others that I don't know about.
+Sometimes you may not want a rule or a certain command to be scanned.  You can
+turn off scanning with
 
-Makepp understands and parses the swig command line, looking for C<-I> and
-C<-l> options.  It also knows how to scan swig's interface definition files
-(F<.i> files) looking for C<%include>, C<%import>, and also C<#include>
-if C<-includeall> is in effect.
-
-=head2 Other special command words
-
-Makepp recognizes the following command words and skips over them
-appropriately in in its search for the correct scanner:
-C<condor_compile>, C<echo> C<ignore_error> C<libtool>, C<noecho>
-C<purify>, C<sh>.
+    register-scanner cc none
 
 =head2 Quickscan and smartscan
 
@@ -148,7 +181,7 @@ There are 3 ways to hook into this:
 
 If scanner foo is specified in a rule option, and there is a subroutine
 called parser_foo defined in the makefile's package, then that subroutine
-must return an object of type C<ActionParser>, which will be used to
+must return an object of type C<Mpp::ActionParser>, which will be used to
 determine a command parser for every command.
 
 =item 2.
@@ -156,42 +189,48 @@ determine a command parser for every command.
 If scanner foo is specified in a rule option, and there is a subroutine
 called scanner_foo defined in the makefile's package, then that subroutine
 must either do all of the scanning work (which is deprecated), or return
-an object of type C<CommandParser> which will be used to parse every command.
+an object of type C<Mpp::CommandParser> which will be used to parse every command.
 
 =item 3.
 
 If no scanner is specified in a rule option, then an object of the
-C<ActionParser> base class is used.
+C<Mpp::ActionParser> base class is used.
 That object determines the scanner based on the first word of each command.
 The base name is sought as a key in %scanners hash in the makefile's package,
 which is seeded with all of the default scanners.
 This hash can be extended using the register_scanner and
 register_command_parser statements.
 The value from this hash lookup is a coderef that either does the scanning
-work (which is deprecated), or returns an object of type C<CommandParser>.
+work (which is deprecated), or returns an object of type C<Mpp::CommandParser>.
 
 =back
 
-In most cases, objects of type C<CommandParser> should instantiate at least
-one object of type C<Scanner>.
-The C<Scanner> base class takes care of the distinction between quickscan
+In most cases, objects of type C<Mpp::CommandParser> should instantiate at least
+one object of type C<Mpp::Scanner>.
+The C<Mpp::Scanner> base class takes care of the distinction between quickscan
 and smartscan.
-Note that the behavior of C<Scanner> can be markedly affected by this
+Note that the behavior of C<Mpp::Scanner> can be markedly affected by this
 distinction, but that should be transparent to the derived class if it
 is well-formed.
-New derived C<Scanner> classes ought to be tested in both modes.
+New derived C<Mpp::Scanner> classes ought to be tested in both modes.
 
-If you want to specify a particular C<CommandParser> class for a rule, then
+If you write your own C<Mpp::Scanner> class, you should also base your rescanning
+decision on the build info C<RESCAN>.  This gets set by C<makeppreplay> after
+signing files without scanning.  So despite the signatures being consistent, a
+rescan is still necessary.  If your C<Mpp::Scanner> uses the inherited
+C<scan_file1> method, you're probably fine.
+
+If you want to specify a particular C<Mpp::CommandParser> class for a rule, then
 you can specify a scanner with a rule option, and arrange for the parser_*
-subroutine to return an object of type C<ActionParser::Specific>.
+subroutine to return an object of type C<Mpp::ActionParser::Specific>.
 
 For more details, refer to the respective class documentation.
-For examples, see C<CommandParser::Gcc> and C<CommandParser::Vcs>.
+For examples, see C<Mpp::CommandParser::Gcc> and C<Mpp::CommandParser::Vcs>.
 
 =head2 Caching scanner info
 
 If the all of the scanner's important side effects are effected through calls
-to methods of the C<CommandParser> base class, then those side effects can
+to methods of the C<Mpp::CommandParser> base class, then those side effects can
 be cached in the build info file, so that they can be played back by a
 subsequent invocation of makepp without doing all of the costly scanning work.
 This can save quite a bit of time, especially in smartscan mode.
@@ -201,9 +240,9 @@ C<Rule> object's mark_scaninfo_uncacheable method.
 Otherwise, the scanner info retrieved from the build info may be inaccurate,
 causing the build result possibly to be incorrect.
 This method is called automatically when a value from the %scanners hash does
-not return an object of type C<CommandParser>, or when the scanner is specified
+not return an object of type C<Mpp::CommandParser>, or when the scanner is specified
 with a rule option, no parser_* subroutine is defined and the scanner_*
-routine does not return an object of type C<CommandParser>.
+routine does not return an object of type C<Mpp::CommandParser>.
 
 Cached scan info is invalidated using criteria similar to those used for
 determining when the target is out of date.
@@ -221,7 +260,7 @@ to be cached.
 Often you will have just one or few files which contain dependency
 information.  You don't want to write this into a makefile reduntantly (since
 redundancy later often leads to inconsistencies when one update gets
-forgotten).  But you also don't want to write a Scanner?  As a workaround you
+forgotten).  But you also don't want to write a Mpp::Scanner?  As a workaround you
 can generate an include file on the fly.  For example Qt has F<.qrc> files
 which can look like:
 

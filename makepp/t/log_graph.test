@@ -68,7 +68,7 @@ if( is_windows ) {
 1;
 ###	29	644	1170452082	1185994720	makefile
 perl {
-  $CommandParser::ignore_exe = 1; # Don't have some path to compiler in log
+  $Mpp::CommandParser::ignore_exe = 1; # Don't have some path to compiler in log
 }
 
 include makepp.mk
@@ -93,16 +93,20 @@ endif
 
 a: $( a b/b c/c)$(_OBJ_SUFFIX)
 	$(infer_linker $(inputs)) $(inputs) $(LDLIBS) $(LDFLAGS) $(LIBS) -o $(output)
-    ifperl ::is_windows
+    ifperl Mpp::is_windows
 	&mv a.exe a
     endif
+###	2	644	1236523730	1237488299	hint
+This tests neat utilities for analyzing your build.  The failure likely does
+not imply a problem with makepp itself.
 ###	1	644	1170452082	1166207798	makepp.mk
 include makepp1.mk
 ###	0	644	1170452082	1166207809	makepp1.mk
-###	77	644	1170452082	1211310818	both_up_down.pm
+###	78	644	1170452082	1234386321	both_up_down.pm
+use Mpp::File;
 sub rewrite_test {
-  package Rewrite;
-  my $pref = FileInfo::absolute_filename $FileInfo::CWD_INFO;
+  my $pref = absolute_filename $CWD_INFO;
+  package Mpp::Rewrite;
   my $result = "cwd:\n";
   for my $arg ( 0, 1, 2, 4 ) {
     for my $file ( '', qw(/ /a /a/b) ) {
@@ -158,14 +162,14 @@ sub rewrite_test {
   print $fh $result;
 }
 
-$::both_up_down = sub {
+$Mpp::both_up_down = sub {
   &rewrite_test;
   my( $outfile, $up, $down ) = @_;
-  if( ::is_windows > 1 ) {
+  if( Mpp::is_windows > 1 ) {
   } elsif( !fork ) {
     if( !fork ) {
       $$up = 1;
-      push @ARGV, 'b/b.o', ::is_windows ? 'b/b.obj' : ();
+      push @ARGV, 'b/b.o', Mpp::is_windows ? 'b/b.obj' : ();
       $$outfile =~ s/\bboth\b/up/;
     } else {
       wait;
@@ -179,9 +183,9 @@ $::both_up_down = sub {
 }
 ###	23	644	1170452082	1208530258	all_types.pm
 # Fan out into one process per output format.
-$::all_types = sub {
+$Mpp::all_types = sub {
   my( $outfile, $type ) = @_;
-  if( ::is_windows > 1 || !fork ) {
+  if( Mpp::is_windows > 1 || !fork ) {
     $$type = 'txt';
     $outfile =~ s/udg$/txt/;
     open STDOUT, '>', $outfile or die "can't write `$outfile'--$!";
@@ -200,7 +204,7 @@ $::all_types = sub {
 
 # Replace makepp dir with abbreviation <m> (instead of std |m|, due to Ebcdic sorting).
 no warnings 'redefine';
-sub Rewrite::makepp() { defined and s!^$::datadir(?:/|$|(?=:))!<m>! }
+sub Mpp::Rewrite::makepp() { defined and s!^$Mpp::datadir(?:/|$|(?=:))!<m>! }
 ###	6	644	1170452082	1166207697	a.c
 #include "a.h"
 #include "b/b.h"

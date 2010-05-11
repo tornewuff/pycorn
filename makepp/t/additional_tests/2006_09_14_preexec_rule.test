@@ -1,7 +1,7 @@
 ###	SPAR <http://www.cpan.org/scripts/>
 ###	11	644	1143581184	1122590436	Makeppfile
 perl_begin
-	$::preexecute_rule_hook = sub {
+	$Mpp::preexecute_rule_hook = sub {
 		-e 'y' and die;
 		open(OUT, '>', 'y') or die;
 		print OUT "OK\n";

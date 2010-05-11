@@ -1,7 +1,7 @@
 ###	SPAR <http://www.cpan.org/scripts/>
 ###	1	755	1118558856	1212336975	.makepprc
 --rm-stale
-###	28	644	1143572904	965619358	Makeppfile
+###	29	644	1143572904	1234386298	Makeppfile
 #
 # Test making files in directories that don't exist yet.
 #
@@ -10,7 +10,8 @@
 
 perl_begin
   # Make sure that '/' gets parsed properly (not as ''!)
-  die unless FileInfo::file_info('/') == FileInfo::file_info('/.');
+  use Mpp::File;
+  die unless file_info('/') == file_info('/.');
 perl_end
 
 all: a b c

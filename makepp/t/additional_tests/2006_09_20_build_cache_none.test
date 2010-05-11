@@ -5,11 +5,13 @@
 #
 
 !no_symlink && (stat 'build_cache/small')[9] == 1103934737
-###	11	664	1124224809	1180345382	Makeppfile
+###	13	664	1124224809	1233523265	Makeppfile
 # This used to cause an error, so we should test that it works:
 build_cache none
 
-perl { use BuildCacheControl }
+perl {
+  use Mpp::BuildCacheControl;
+}
 
 # Cache entries have no \n, to avoid DOS headaches.
 # The --size option used to be messed up, so check for that:

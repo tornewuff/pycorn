@@ -1,7 +1,7 @@
 ###	SPAR <http://www.cpan.org/scripts/>
 ###	61	664	1164313904	1125528381	makepp_test_script.pl
 # Create the build cache:
-makepp \'builtin', qw{-MBuildCacheControl create ./build_cache};
+makepp \'builtin', qw{-MMpp::BuildCacheControl create ./build_cache};
 
 sub clean {			# Utility to save calling makepp
   unlink qw(my_true sort sort.o), <sort*_build_record .makepp/*>;
@@ -47,7 +47,7 @@ makepp qw{--build-cache build_cache --populate-bc-only};
 clean;
 
 # Clean the BC
-makepp \'builtin', qw{-MBuildCacheControl clean --mtime +-1 ./build_cache};
+makepp \'builtin', qw{-MMpp::BuildCacheControl clean --mtime +-1 ./build_cache};
 
 # This should run the rule yet again
 makepp qw{--build-cache build_cache --populate-bc-only};
@@ -76,7 +76,7 @@ $(phony run): my_true
 	.$/$<
 
 my_true:
-    ifperl ::is_windows < 2
+    ifperl Mpp::is_windows < 2
 	&echo -o $@ "#!/bin/sh"
 	&chmod 755 $@
     else

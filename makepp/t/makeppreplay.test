@@ -1,0 +1,152 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	45	644	1227216359	1229020580	makepp_test_script.pl
+# This test creates some files, also in other dirs, messes them up and wants mppr to recreate them.
+
+local $ENV{X} = 0;			# Set up a dependency mpp won't know about.
+local $ENV{C} = 1;
+eval { makepp '-k' };
+cp qw(out out1);
+
+cp qw(a b);			# Mess up results a bit.
+unlink qw(c dir/e x.c);
+$ENV{X} = 1;			# Do a change mpp wouldn't have done.
+$ENV{C} = 0;
+				# Signatures get adjusted, but because mppr doesn't scan x.c, mpp must, to notice x1.h.
+for my $file ( qw(dd y.c) ) {	# Perform some editing, a standard use case for mppr.
+  open my $fh, '+<', $file or die $!;
+  local $/;
+  my $txt = <$fh>;
+  seek $fh, 0, 0;
+  $txt =~ s/y0/y/;		# Use y.h instead of y0.h, which mppr ignores so mpp must rescan.
+  truncate $fh, 0;
+  print $fh $txt;
+  close $fh;			# For Win.
+}
+wait_timestamp 'a';		# Can have same signature after rebuilding in same second.
+eval { makepp \'replay', qw(-kI. -Mmod=c_cmd MYVAR=5 a -Cdir . -c b c bb cc d xreal.c x.c), <[xy].o [xy].obj>, <[xy] [xy].exe>, 'out' }
+  and die;
+				# Use glob to match Unix or Windows files.
+cp qw(out out2);
+cp qw(cc cc0);
+
+$ENV{C} = 1;
+wait_timestamp qw(x.o y.o);	# Can have same signature after rebuilding in same second.
+eval { makepp '-k' };
+
+-f '.makepp/x1.h.mk' or die "missing .makepp/x1.h.mk\n";
+
+# Make sure all rescan flags have been cleared.
+my $rescan = 0;
+local @ARGV = <.makepp/*.mk dir/.makepp/*.mk>;
+local $/;
+/^RESCAN=/m and $rescan++ while <>;
+die 'rescan' if $rescan != 5;	# a, d, dir/e, dir/f & xreal.c don't need scanning, so they don't lose this flag.
+
+cp 'n_files.win', 'answers/n_files' if is_windows && is_windows < 2;
+
+1;
+###	35	644	1227216620	1229020504	RootMakeppfile.mk
+$(phony all): a c cc d dir/$( e f) out
+
+load_makefile dir		# needed for a
+
+b c:
+	&echo b -o b
+	&expr 0 -o c		# creates c but fails
+
+bb cc:
+	&echo bb -o bb
+	&expr $$ENV{C} -o cc	# creates cc but fails depending on C
+
+perl { use mod qw(c_cmd) }
+
+d: MYVAR=5
+d: dd
+	&cmd d
+
+export E=5
+dir/e: :env E			# check that mppr remembers E
+	&expr &f_ROOT.$$ENV{E} -o $(output)
+
+xreal.c:
+	&expr 'qq!#include <stdio.h>\n#include "x$$ENV{X}.h"!' -o $(output)
+
+x.c: xreal.c
+	&cp -fs --verbose $(input) $(output) # Test symlink if available
+
+CFLAGS = -Idir			# Make dir/y.h a candidate, but not the one mpp would have chosen.
+y.h:				# Same dir has precedence, so the scanner will have this one created.
+	&echo '#define STR "C"' -o y.h
+
+out:
+	.$/x > out
+	.$/y >>out
+###	16	644	1227207921	1228997339	mod.pm
+package mod;
+
+require Exporter;
+@ISA = qw(Exporter);
+
+@EXPORT_OK = qw(c_cmd);
+
+sub c_cmd {
+  open my $fh, '>', $_[0] or
+    die $!;
+  print $fh "$_[0]: " . join( ' ', map $Mpp::Subs::rule->{MAKEFILE}->expand_variable( $_ ), qw(LD MYVAR) );
+				# Pick up a standard and a target specific var.
+  close $fh;
+}
+
+1;
+###	1	644	1228321990	1228590123	dd
+a dep with no special scanner, to edit: y0
+###	1	644	1067451873	1228322580	n_files.win
+8 2 2
+###	1	644	1228321911	1228159851	x0.h
+int main() { puts("a"); return 0; }
+###	1	644	1228321990	1228160207	x1.h
+int main() { puts("b"); return 0; }
+###	3	644	1228321990	1228778886	y.c
+#include <stdio.h>
+#include "y0.h"
+int main() { puts(STR); return 0; }
+###	1	644	1228321911	1228336626	y0.h
+#define STR "A"
+###	D	755	1227216633	1227216621	dir/
+###	5	644	1227216339	1227216284	dir/makefile
+../a:
+	echo a>$(output)
+
+f:
+	&expr &f_ROOT -o $(output)
+###	1	644	1228321911	1228336626	dir/y.h
+#define STR "B"
+###	D	755	1227216644	1227216633	answers/
+###	1	644	1227216633	1227216621	answers/a
+a
+###	1	644	1227216633	1227216621	answers/b
+b
+###	1	644	1227216633	1227216621	answers/c
+0
+###	1	644	1227216633	1227216621	answers/cc
+1
+###	1	644	1227216633	1227216621	answers/cc0
+0
+###	-1	644	1227216633	1227216621	answers/d
+d: ld 5
+###	2	644	1227216633	1228779604	answers/out
+b
+C
+###	2	644	1227216633	1228779602	answers/out1
+a
+A
+###	2	644	1227216633	1228779600	answers/out2
+b
+B
+###	1	644	1067451873	1228322580	answers/n_files
+8 0 2
+###	D	755	1227216644	1227216633	answers/dir/
+###	1	644	1227216633	1227216621	answers/dir/e
+.5
+###	1	644	1227216633	1227216621	answers/dir/f
+..

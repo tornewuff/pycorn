@@ -3,7 +3,7 @@
 export DOT := .
 
 x:
-    ifperl ::is_windows < 2
+    ifperl Mpp::is_windows < 2
 	$$DOT/ec_o OK > $@
     else
 	%DOT%\ec_o OK > $@

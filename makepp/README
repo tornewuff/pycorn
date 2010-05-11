@@ -1,18 +1,18 @@
-Make++ (or makepp) is a drop-in replacement for GNU make which has a
-number of features that guarantee more reliable builds and allow simpler
-build files.  It supports almost all of the syntax that GNU make
-supports, and can be used with makefiles produced by utilities such as
-automake.
+Makepp, a build program which has a number of features that allow for reliable
+builds and simpler build files, is a drop-in replacement for GNU make. It
+supports almost all of the syntax that GNU make supports, and can be used with
+makefiles produced by utilities such as automake. It is called makepp (or
+make++) because it was designed with special support for C++, which has since
+been extended to other languages like Swig or embedded SQL. Also its
+relationship to make is analogous to C++'s relationship to C: it is almost
+100% backward compatible but adds a number of new features and much better
+ways to write makefiles.
 
-makepp at present works on Unix/linux systems and on closely similar
-systems such as Cygwin under Windows NT, since it currently depends Unix
-filename and directory conventions.  Suggestions for porting and code
-contributions are welcome.
-
-makepp is written entirely in perl.  It requires version 5.6 of perl or
-better.  It's distributed under the terms of the perl Artistic License or GPL
-2 or newer, which means that it's freely available to anyone for just about
-any purpose.
+Makepp works on Unix/Linux-like systems, Ebcdic-based emulations like BS2000
+or z/OS and Windows.  It is written entirely in perl.  It requires version 5.6
+of perl or better.  It's distributed under the terms of the perl Artistic
+License or GPL 2 or newer, which means that it's freely available to anyone
+for just about any purpose.
 
 Some perl versions have bugs that cause makepp to fail.  These are:
 o perl 5.6.0 fails in really weird ways on the x86 (and maybe other

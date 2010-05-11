@@ -98,7 +98,7 @@ rc_expansion:
 SHELLVAR != echo Percy Bryce Shell
 
 shell_command:
-    ifperl ::is_windows < 2
+    ifperl Mpp::is_windows < 2
 	exec > $@; \
 	echo "$(shell echo she sells Bourne shells) "; \
 	echo $(shell echo by the C shore) ''
@@ -243,7 +243,7 @@ export $(subst 2,4, $(var)) = y4
 YY = y2
 
 x:
-    ifperl ::is_windows < 2
+    ifperl Mpp::is_windows < 2
 	echo "$$FOO1 $$FOO2 $$FOO3 $$FOO4 $$XX $$Z " > $@ # Call external echo to test export.
     else
 	echo %FOO1% %FOO2% %FOO3% %FOO4% %XX% %Z% > $@

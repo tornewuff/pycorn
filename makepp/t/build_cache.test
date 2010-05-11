@@ -1,6 +1,6 @@
 ###	SPAR <http://www.cpan.org/scripts/>
 ###	59	755	1103935704	1210345644	makepp_test_script.pl
-makepp \'builtin', qw(-MBuildCacheControl create --subdir-chars= ./build_cache);
+makepp \'builtin', qw(-MMpp::BuildCacheControl create --subdir-chars= ./build_cache);
 
 #
 # Now build some junk with makepp.

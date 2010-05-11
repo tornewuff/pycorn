@@ -2,7 +2,7 @@
 
 makeppclean -- Stand-alone cleanup script for makepp
 
-=for cvs $Id: makeppclean.pod,v 1.6 2008/06/01 21:47:19 pfeiffer Exp $
+=for cvs $Id: makeppclean.pod,v 1.7 2009/02/21 11:25:31 pfeiffer Exp $
 
 =head1 SYNOPSIS
 
@@ -55,7 +55,7 @@ limitations are avoided by using makeppclean.
 
 =item --arguments-file=filename
 
-Read the file and parse it as possibly quoted options on one or several lines.
+Read the file and parse it as possibly quoted whitespace- and/or newline-separated options.
 
 =item -l
 
@@ -92,6 +92,10 @@ Descend each named directory recursively.  Symbolic links are not followed.
 =item --verbose
 
 Enable verbose output to STDERR.
+
+=item --version
+
+Print out the version number.
 
 =back
 

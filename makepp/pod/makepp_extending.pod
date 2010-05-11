@@ -2,7 +2,7 @@
 
 makepp_extending -- How to extend makepp using perl
 
-=for vc $Id: makepp_extending.pod,v 1.13 2007/04/27 20:06:18 pfeiffer Exp $
+=for vc $Id: makepp_extending.pod,v 1.15 2009/02/11 23:22:37 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -22,7 +22,7 @@ exceptions to this: automatic variables and the default value of variables
 like CC are actually implemented as functions with no arguments.  Target
 specific vars, command line vars and environment vars are not seen this way.)
 Thus any perl code you write has access to all makefile variables.  Global
-variables are stored in the C<global::> package.  See L<Makefile
+variables are stored in the C<Mpp::global> package.  See L<Makefile
 variables|makepp_statements/"Variables and perl"> for the deails.
 
 Each of the statements (L<ifperl / ifmakeperl|makepp_statements/ifperl>,
@@ -110,7 +110,7 @@ save memory:
 If you need any of the functions normally available in a Makefile (like the
 C<f_> functions), you must put this line into your module:
 
-    use Makesubs;
+    use Mpp::Subs;
 
 The drawback is that the module would be in a different package than a
 function directly appearing in a makefile.  So you need to pass in everything
@@ -143,7 +143,7 @@ this passes all strings to C<run>.
 You can write your commands within the framework of the builtins, allowing you
 to use the same standard options as they have, and the I/O handling they give.
 
-The block operator C<Makecmds::frame> is followed by a single letter option
+The block operator C<Mpp::Cmds::frame> is followed by a single letter option
 list of the builtins (maximally C<qw(f i I o O r s)>).  Even if you specify
 your own option overriding one of these, you still give the single letter of
 the standard option.  Note how we take one of the letter out of C<qw()>,
@@ -157,7 +157,7 @@ else the option value is stored in it.
 
     sub c_my_ocmd {		# Typical output case
       local @ARGV = @_;
-      Makecmds::frame {
+      Mpp::Cmds::frame {
  
  	... print something here with @ARGV, with options already automatically removed
  
@@ -167,7 +167,7 @@ else the option value is stored in it.
     sub c_my_icmd {		# Typical input case with 2 options
       local @ARGV = @_;
       my( $short, $long );
-      Makecmds::frame {
+      Mpp::Cmds::frame {
  
  	... do something here with <>
  
@@ -181,7 +181,7 @@ input record (equivalent to C<&sed '$$_ = "\u\L$$_"'>):
 
     sub c_uc {
       local @ARGV = @_;
-      Makecmds::frame {
+      Mpp::Cmds::frame {
  	print "\u\L$_" while <>;
       } 'f', qw(i I o O r s);
     }
@@ -189,7 +189,7 @@ input record (equivalent to C<&sed '$$_ = "\u\L$$_"'>):
 Within the block handled by frame, you can have nested blocks for performing
 critical operations, like opening other files.
 
-    Makecmds::perform { ... } 'message';
+    Mpp::Cmds::perform { ... } 'message';
 
 This will output message with C<--verbose> (which every command accepts) iff
 the command is successfully run.  But if the block evaluates as false, it dies
@@ -247,31 +247,31 @@ this:
 Now we have to create the signature method.
 
 All signature methods must be their own class, and the class must
-contain a few special items (see Signature.pm in the distribution for
-details).  The class's name must be prefixed with C<Signature::>, so in
-this case our class should be called C<Signature::shared_object>.  We
+contain a few special items (see Mpp/Signature.pm in the distribution for
+details).  The class's name must be prefixed with C<Mpp::Signature::>, so in
+this case our class should be called C<Mpp::Signature::shared_object>.  We
 have to create a file called F<shared_object.pm> and put it into a
-F<Signature> directory somewhere in the perl include path; the easiest
-place might be in the F<Signature> directory in the makepp installation
-(e.g., F</usr/local/share/makepp/Signature> or wherever you installed
+F<Mpp::Signature> directory somewhere in the perl include path; the easiest
+place might be in the F<Mpp/Signature> directory in the makepp installation
+(e.g., F</usr/local/share/makepp/Mpp/Signature> or wherever you installed
 it).
 
 For precise details about what has to go in this class, you should look
-carefully through the file F<Signature.pm> and probably also
-F<Signature/exact_match.pm> in the makepp distribution.  But in our
+carefully through the file F<Mpp/Signature.pm> and probably also
+F<Mpp/Signature/exact_match.pm> in the makepp distribution.  But in our
 case, all we want to do is to make a very small change to an existing
 signature mechanism; if the file is a shared library, we want to have a
 constant signature, whereas if the file is anything else, we want to
 rely on makepp's normal signature mechanism.  The best way to do this is
-to inherit from C<Signature::c_compilation_md5>, which is the signature
+to inherit from C<Mpp::Signature::c_compilation_md5>, which is the signature
 method that is usually chosen when makepp recognizes a link command.
 
-So the file F<Signature/shared_object.pm> might contain the following:
+So the file F<Mpp/Signature/shared_object.pm> might contain the following:
 
     use strict;
-    package Signature::shared_object;
-    use Signature::c_compilation_md5;
-    our @ISA = qw(Signature::c_compilation_md5); # Indicate inheritance.
+    package Mpp::Signature::shared_object;
+    use Mpp::Signature::c_compilation_md5;
+    our @ISA = qw(Mpp::Signature::c_compilation_md5); # Indicate inheritance.
     our $shared_object = bless \@ISA; # A piece of magic that helps makepp find
                                 # the subroutines for this method.  All
                                 # signature methods must have one of these.
@@ -282,7 +282,7 @@ So the file F<Signature/shared_object.pm> might contain the following:
       my ($self,                 # This will be the same as $shared_object.
           $finfo) = @_;          # A special structure that contains everything
                                  # makepp knows about this file.  See
-                                 # FileInfo.pm for details.
+                                 # Mpp/File.pm for details.
  
       if ($finfo->{NAME} =~ /\.s[oa]$/) { # Does the file name end in .so or .sa?
         return $finfo->file_exists ? 'exists' : '';
@@ -291,7 +291,7 @@ So the file F<Signature/shared_object.pm> might contain the following:
                                  # string "exists".
       }
  
-      Signature::c_compilation_md5::signature;
+      Mpp::Signature::c_compilation_md5::signature;
                                  # If the file didn't end in .so or .sa,
                                  # delegate to makepp's usual signature method.
     }
@@ -321,7 +321,7 @@ Since C<libxyz> is a F<.a> file and not a F<.so> file, then C<xyz()> may
 not be pulled in correctly from F<libxyz.a> unless you relink your
 binary.
 
-Signature methods also control not only the string that is used to
+Mpp::Signature methods also control not only the string that is used to
 determine if a file has changed, but the algorithm that is used to
 compare the strings.  For example, the signature method C<target_newer>
 in the makepp distribution merely requires that the targets be newer
@@ -342,7 +342,7 @@ the exported symbols, and also all the symbols that it needs from other
 libraries.  This solves the problem with the example above, and
 guarantees a correct link under all circumstances.  An experimental
 attempt has been made to do this in the makepp distribution (see
-F<Signature/shared_object.pm>), but it will only work with GNU binutils
+F<Mpp/Signature/shared_object.pm>), but it will only work with GNU binutils
 and ELF libraries at the moment.
 
 =item *

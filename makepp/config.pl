@@ -1,12 +1,14 @@
 #!/usr/bin/perl -w
-# $Id: config.pl,v 1.22 2008/07/19 21:47:09 pfeiffer Exp $
+# $Id: config.pl,v 1.25 2009/03/19 22:39:43 pfeiffer Exp $
 #
 # Configure this package.
 #
 
+package Mpp;
+
 use strict;
-use TextSubs ();
-use FileInfo ();		# ensure HOME is set
+use Mpp::Text ();
+use Mpp::File ();		# ensure HOME is set
 
 #
 # First make sure this version of perl is recent enough:
@@ -46,7 +48,7 @@ my $findbin = "none";
 my $makefile = '.';
 my( $bindir, $datadir, $mandir, $htmldir );
 
-TextSubs::getopts
+Mpp::Text::getopts
   [qw(p prefix), \$prefix, 1],
   [qw(b bindir), \$bindir, 1],
   [qw(h htmldir), \$htmldir, 1],
@@ -123,24 +125,24 @@ all: test
 
 test: .test_done
 
-.test_done: *.pm Signature/*.pm Scanner/*.pm CommandParser/*.pm ActionParser/*.pm makepp \
+.test_done: *.pm Mpp/*.pm Mpp/Signature/*.pm Mpp/Scanner/*.pm Mpp/CommandParser/*.pm Mpp/ActionParser/*.pm makepp \
 	t/*.test t/run_tests.pl
-	cd t && PERL=$(PERL) $(PERL) run_tests.pl
+	cd t && PERL=$(PERL) $(PERL) run_tests.pl --hint
 	touch $@
 
 testall: .testall_done
 
-.testall_done: *.pm Signature/*.pm Scanner/*.pm CommandParser/*.pm ActionParser/*.pm makepp \
+.testall_done: *.pm Mpp/*.pm Mpp/Signature/*.pm Mpp/Scanner/*.pm Mpp/CommandParser/*.pm Mpp/ActionParser/*.pm makepp \
 	t/*.test t/*/*.test t/run_tests.pl
-	cd t && PERL=$(PERL) $(PERL) run_tests.pl *.test */*.test
+	cd t && PERL=$(PERL) $(PERL) run_tests.pl --hint *.test */*.test
 	touch $@
 
 distribution: $(VERSION).tar.gz
 
 $(VERSION).tar.gz: README INSTALL LICENSE VERSION makepp.lsm ChangeLog \
 	makepp recursive_makepp makeppclean \
-	Signature/*.pm Scanner/*.pm \
-	BuildCheck/*.pm CommandParser/*.pm ActionParser/*.pm *.mk *.pm \
+	Mpp/*.pm Mpp/Signature/*.pm Mpp/Scanner/*.pm \
+	Mpp/BuildCheck/*.pm Mpp/CommandParser/*.pm Mpp/ActionParser/*.pm *.mk *.pm \
 	pod/*.pod \
 	t/*.test t/*/*.test t/run_tests.pl \
 	config.pl configure install.pl makepp_build_cache_control
@@ -148,15 +150,15 @@ $(VERSION).tar.gz: README INSTALL LICENSE VERSION makepp.lsm ChangeLog \
 	./configure         # Reset Makefile.
 	mkdir $(VERSION) \
 	   $(VERSION)/pod $(VERSION)/t \
-	   $(VERSION)/Signature $(VERSION)/Scanner \
-	   $(VERSION)/CommandParser $(VERSION)/ActionParser
+	   $(VERSION)/Mpp $(VERSION)/Mpp/Signature $(VERSION)/Mpp/Scanner \
+	   $(VERSION)/Mpp/CommandParser $(VERSION)/Mpp/ActionParser
 	for file in $^; do cp $$file $(VERSION)/$$file; done
 	GZIP=-9 tar --create --gzip --file $@ $(VERSION)
 	cd $(VERSION) && make test    # Make sure it all runs.
 	rm -rf $(VERSION)
 
 install: all
-	$(PERL) install.pl $(BINDIR) $(DATADIR) $(MANDIR) $(HTMLDIR) $(FINDBIN)
+	$(PERL) install.pl $(BINDIR) $(DATADIR) $(MANDIR) $(HTMLDIR) $(FINDBIN) $(DESTDIR)
 
 .PHONY: all distribution install test testall
 ];

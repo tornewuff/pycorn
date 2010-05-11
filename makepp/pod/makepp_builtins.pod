@@ -2,12 +2,13 @@
 
 makepp_builtins -- Builtin commands in makepp
 
-=for vc $Id: makepp_builtins.pod,v 1.37 2008/07/30 23:13:36 pfeiffer Exp $
+=for vc $Id: makepp_builtins.pod,v 1.42 2009/02/21 11:25:31 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
 I<L<B<a>wk|/awk>>,E<nbsp>
 L<&B<c>at|/&cat>, I<L</chgrp>>, L</&chmod>, I<L<chown|/chgrp>>, L</&cp>, L</&cut>,E<nbsp>
+I<L<B<d>ate|/date>>,E<nbsp>
 L<&B<e>cho|/&echo>, L</&expr>,E<nbsp>
 I<L<B<f>alse|/false>>,E<nbsp>
 L<&B<g>rep|/&grep>,E<nbsp>
@@ -68,7 +69,7 @@ to several builtins, though the short form is sometimes not available:
 
 =item --arguments-file=filename
 
-Read the file and parse it as possibly quoted options on one or several lines.
+Read the file and parse it as possibly quoted whitespace- and/or newline-separated options.
 
 =item -f
 
@@ -267,7 +268,18 @@ Standard options: C<-A, --args-file, --arguments-file=filename, -f, --force, -v,
 
 =item --link
 
-Try to link the files.  If that fails, copy.
+Try to link the files.  If that fails, try symbolic link, if that is also
+requested, else copy.
+
+=item -s
+
+=item --symbolic
+
+=item --symbolic-link
+
+=item --symlink
+
+Try to symbolically link the files.  If that fails, copy.
 
 =back
 
@@ -358,8 +370,16 @@ Print only lines containing delimiters.
 =back
 
     &cut -c 10-20,-5,25- $(input)
+    &cut -c 'grep $$_ % 3, 0..99' $(input) # 1st 100 columns not multiple of 3
     &cut -d: --fields 0,4 --printf='%10s is %s\n' /etc/passwd
 
+
+=item date
+
+Not built in, but either of these partially does the same thing:
+
+    &expr localtime
+    &expr gmtime
 
 
 =item &echo [option ...] string ...
@@ -478,7 +498,7 @@ Standard options: C<-A, --args-file, --arguments-file=filename, -f, --force, -i,
 --record-size=number, -s, --separator=string, -S, --synclines, --verbose>
 
 The option C<--synclines> only makes sence with C<&perl> if you use
-C<&Makecmds::print> to output C<$_>.  Only C<&grep> has extra options:
+C<&Mpp::Cmds::print> to output C<$_>.  Only C<&grep> has extra options:
 
 =over
 
@@ -525,6 +545,28 @@ As with the normal output, you may modify $_ before returning false.
     &sed '$$_ = uc' f1 f2 f3 -o outfile	# like tr '[:lower:]' '[:upper:]' f1 f2 f3
     &grep '$$. % 3' f1 f2 f3 -o outfile	# eliminate every 3rd line
     &grep -c /match/i f1 f2 f3		# count the lines matching 'match' to STDOUT
+
+Without pushing you to mass generate accessors, here's how you could do it by
+simply putting a comment of RO or RW between each type and desired variable
+name, all on one line.  The generated getter and optionally setter methods go
+into the next found public or protected section:
+
+    # Create get and maybe set method from "type /* R[OW] */ member;".
+    sub cxx_accessors {
+      $acc ||= '';		# Candidate for 5.10.0 state
+      if( m!^\s*(.+?)\s*/\*\s*R([OW])\s*\*/\s*(.+?)\s*;! ) {
+ 	$acc .= "#line $.\n";	# Tell C++ where this came from
+ 	$acc .= "void set\u$3( const $1 &__tmp ) { $3 = __tmp; }"
+ 	  if $2 eq 'W';
+ 	$acc .= "const $1 &get\u$3() const { return $3; }\n";
+      } elsif( /^\s*(?:public|protected)\s*:/ ) {
+ 	$_ .= $acc;
+ 	$acc = '';
+      }
+    }
+ 
+    %.cc: %.cc.in		# Use &sed for I/O handling
+  	&sed --sync-lines &cxx_accessors $(input) -o $(output)
 
 
 

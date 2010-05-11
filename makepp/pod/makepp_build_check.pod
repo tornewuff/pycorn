@@ -2,7 +2,7 @@
 
 makepp_build_check -- How makepp decides to rebuild files
 
-=for vc $Id: makepp_build_check.pod,v 1.9 2007/01/05 22:25:31 pfeiffer Exp $
+=for vc $Id: makepp_build_check.pod,v 1.10 2009/02/09 22:07:39 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -233,10 +233,10 @@ depend solely on the command (which usually contains the names of the inputs):
 =back
 
 Other build check methods are possible.  You can write your own build
-check method by creating a module C<BuildCheck::MyMethod>.  Read the
-documentation in F<BuildCheck.pm> in the makepp distribution. Most
+check method by creating a module C<Mpp::BuildCheck::MyMethod>.  Read the
+documentation in F<Mpp/BuildCheck.pm> in the makepp distribution. Most
 likely, you will want your build check method to inherit from
-C<BuildCheck::exact_match>, so read its documentation too.
+C<Mpp::BuildCheck::exact_match>, so read its documentation too.
 
 It's more commonly useful modify the signature mechanism than to modify
 the build check mechanism directly.  Before you change the build check

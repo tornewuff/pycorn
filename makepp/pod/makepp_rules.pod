@@ -2,7 +2,7 @@
 
 makepp_rules -- How to tell makepp to build something
 
-=for vc $Id: makepp_rules.pod,v 1.23 2008/02/24 21:38:44 pfeiffer Exp $
+=for vc $Id: makepp_rules.pod,v 1.26 2010/02/24 23:29:45 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -568,70 +568,6 @@ be rebuilt.  See L<makepp_build_check> for more details.  This overrides
 any build check method specified with the C<--build-check-method>
 command line option or with the C<build_check> statement.
 
-=head3 signature signature_method X<signature>
-
-     target : dependencies
- 	    : signature md5
- 	  actions
-
-This tells makepp what algorithm to use to determine if the dependencies have
-changed.  See L<makepp_signatures> for more details.  Signature methods which
-are included with the makepp distribution are are C<plain>, C<md5>,
-C<c_compilation_md5>, and C<shared_object>.  This overrides any signature
-method specified with the C<-m> or C<--signature-method> command line options,
-or with the C<signature> statement.
-
-=head3 scanner name X<scanner>
-
-This tells makepp how to scan for include files.  Usually, makepp
-guesses how to do this based on the words in the command itself (see
-L<makepp_scanning> for details).  However, if makepp guesses wrongly,
-you may want to explicitly indicate the scanner, like this:
-
-    %.o: %.abc
- 	: scanner c_compilation
- 	action here
-
-This causes makepp to perform the same scanning that it does for C/C++
-build commands, even if it doesn't recognize the action as a C
-compilation.
-
-Legal values for C<:scanner> are (currently):
-
-=over 4
-
-=item none
-
-Don't bother scanning the command or any files at all.  Makepp will not
-know about any dependencies or targets other than those explicitly
-listed in the rule.  This is the default for all commands that makepp
-does not recognize.
-
-=item c_compilation
-
-Uses the scanner for C/C++ compilation, which looks for include files.
-
-=item esqlc_compilation
-
-Uses the scanner for Embedded SQL in C/C++ (pre)compilation, which looks for
-include files.  If you use Oracle Pro*C, it also understands the config
-parameter, parsing the file and also depending on it.  So, if you have
-C<config=whatever.oracfg>, you can give a more readable variant, by simply
-adding a rule to generate it, like:
-
-    %.oracfg: %.cfg
-	&grep '/^[^#\n]/' $(input) -o $(output)
-
-
-=back
-
-The default scanner depends on the command.  If you do not specify a
-C<:scanner> option, then the first word of the command is examined.  If
-it looks like a compile or link command, then makepp will use the
-C<c_compilation> scanner; otherwise it usese the C<none> scanner.  For
-more details on this, or if you want to write your own scanner or change
-makepp's default scanners, see L<makepp_scanning>.
-
 =head3 env VARIABLE ... X<env>
 
 Add a dependency on the values of the named environment variables.  If
@@ -654,6 +590,60 @@ This is useful if you want to send actions to a job queuing system, but
 the result is assumed to be independent of the queueing parameters, as well
 as to whether the queueing system is used at all.
 
+=head3 include file_or_pattern
+
+Rule varies depending on compiler:
+
+    %.o : %.c
+ 	: include %.d : signature c_compilation_md5
+ 	gcc -MD -c ...
+ 
+    %.o : %.c
+ 	: include %.u : signature c_compilation_md5 # IBM uses a different suffix
+ 	xlc -M -c ...
+ 
+    sub dependify {		# Turn Microsoft's chatter into useful format
+ 	s/(Note: including file: *)?(.+)\n/$1 ? "'$2' " : "'".f_output()."': "/e;
+    }
+    %.o : %.c
+ 	: include %.d : signature c_compilation_md5
+ 	cl -showIncludes -c ... >$(stem).d
+ 	&sed &dependify -o +<$(stem).d
+
+Some compilers (Intel's icc just like gcc above, or IBM's xlc) can produce
+dependency files on the fly.  That is, while they compile, they write a
+makefile that makepp can include.  The advantage over makepp's scanner is that
+it is guaranteed to be 100% correct, where we may only come close.
+
+This option harnesses that in a special way: If the file is not present,
+i.e. typically on the 1st build, normal scanning occurs.  But if the file is
+present, no scanning occurs (which is why we specify a smart signature above
+—— not scanning falls back to the dumb default of timestamp and size).
+Instead it includes the file, before executing the rule.  After successfully
+executing the rule, it forgets whatever it read the first time, given that the
+file might have been outdated.  Instead it reads the file again, if it
+changed, for having up-to-date build info.
+
+WARNING: This is efficient, but inherently unreliable.  The dependency file
+gets produced by the very rule for which it is a dependency.
+
+There is a catch when you remove an C<#include> statement b<and> the
+corresponding file: It will still be mentioned in the dependency file from the
+last time, when it was needed.  In such a case you must edit the dependency
+file to remove the dependency which is no longer fulfillable.
+
+This feature can not be used with a build cache because fetching a file from
+there requires knowing everything about the file.  But a dependency file
+depends on those files makepp learns about by reading it.  Such a circular
+dependency is not normally possible in a reliable build system.  This is an
+exception because after rebuilding and rereading a dependency file everything
+is correct again.
+
+If you build in your repositories, makepp will pick up the depency file from
+the 1st repository which contains one.  This is unlike other files, where it
+takes the 1st with the expected signature.  This is better than for build
+caches, where for lack of signature, it can't even find the file.
+
 =head3 last_chance X<last_chance>
 
 Enable an open-ended rule, such as
@@ -674,6 +664,53 @@ when it erroneously relies on a wildcard to match targets from a previous run.
 
 The C<:last_chance> option is intended to call attention to the special
 behavior of the rule with respect to matching wildcards.
+
+=head3 scanner name X<scanner>
+
+This tells makepp how to scan for include files.  Usually, makepp
+guesses how to do this based on the words in the command itself (see
+L<makepp_scanning> for details).  However, if makepp guesses wrongly,
+you may want to explicitly indicate the scanner, like this:
+
+    %.o: %.abc
+ 	: scanner c_compilation
+ 	action here
+
+This causes makepp to perform the same scanning that it does for C/C++
+build commands, even if it doesn't recognize the action as a C
+compilation.
+
+The default scanner depends on the command.  If you do not specify a
+C<:scanner> option, then the first word of each command is examined.  If
+it looks like a compile or link command, then makepp will use the
+C<c_compilation> scanner; otherwise it usese the C<none> scanner.  For
+more details on this, or if you want to write your own scanner or change
+makepp's default scanners, see L<makepp_scanning>.
+
+Note that this applies to every command in the rule, which may not be what you
+want:
+
+    %.o: %.c : scanner c-compilation
+ 	@echo 'Building $(output)'
+ 	@funny_cc ...
+
+This will also interpret C<echo> as a compiler and deduce its argument
+'Building mymodule.o' as an implicit dependency.  This will lead to the
+complaint that it doesn't know how to build such a file.  In this case you
+would be better off with C<register_scanner>.
+
+=head3 signature signature_method X<signature>
+
+    target : dependencies
+ 	   : signature md5
+ 	actions
+
+This tells makepp what algorithm to use to determine if the dependencies have
+changed.  See L<makepp_signatures> for more details.  Signature methods which
+are included with the makepp distribution are are C<plain>, C<md5>,
+C<c_compilation_md5>, and C<shared_object>.  This overrides any signature
+method specified with the C<-m> or C<--signature-method> command line options,
+or with the C<signature> statement.
 
 =head2 Special characters
 

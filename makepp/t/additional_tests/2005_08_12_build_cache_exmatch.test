@@ -17,7 +17,7 @@ dir1/file1 dir2/file1 :
 	&echo 'BAD' -o >>$(output)
 ###	9	755	1152635933	1123884520	makepp_test_script.pl
 # Create the build cache:
-makepp \'builtin', qw{-MBuildCacheControl create ./build_cache};
+makepp \'builtin', qw{-MMpp::BuildCacheControl create ./build_cache};
 
 # Now build targets
 makepp qw{--build-cache build_cache};

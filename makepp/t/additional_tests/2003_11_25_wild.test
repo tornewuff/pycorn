@@ -5,9 +5,11 @@ rename 'dir/z', 'z';
 rename 'dir/.makepp/log', 'log';
 rename 'log', '.makepp/log';
 1;
-###	8	644	1143325703	1069788272	RootMakeppfile.mk
+###	10	644	1143325703	1234180236	RootMakeppfile.mk
 FILES := $(wildcard *.x)
-perl { FileInfo::file_info('/foo') }
+perl {
+  Mpp::File::path_file_info '/foo';
+}
 ifneq($(filter //, $(wildcard /*)),)
 perl { die }
 endif

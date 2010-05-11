@@ -1,6 +1,6 @@
 ###	SPAR <http://www.cpan.org/scripts/>
 ###	33	755	1164320845	1190063119	makepp_test_script.pl
-makepp \'builtin', qw(-MBuildCacheControl create build_cache);
+makepp \'builtin', qw(-MMpp::BuildCacheControl create build_cache);
 
 # Populate the cache
 makepp '--build-cache=build_cache', '--force-copy-from-bc', '--stop-on-race';

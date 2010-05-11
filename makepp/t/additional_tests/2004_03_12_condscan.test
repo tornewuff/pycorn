@@ -23,8 +23,8 @@ else
 endif
 
 $(phony default): main1 main2
-	perl { Makecmds::c_cp 'answers/x1' unless -e x1 }
-	perl { Makecmds::c_cp 'answers/x3' unless -e x3 }
+	perl { Mpp::Cmds::c_cp 'answers/x1' unless -e x1 }
+	perl { Mpp::Cmds::c_cp 'answers/x3' unless -e x3 }
 
 %$(_OBJ_SUFFIX): %.c
 	:smartscan

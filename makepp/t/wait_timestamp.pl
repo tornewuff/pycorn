@@ -41,6 +41,6 @@ sub wait_timestamp(@) {
 
 # If called as a standalone program or pseudo-standalone from run(), call the
 # function.
-wait_timestamp( @ARGV ) if !caller or caller eq 'Makesubs';
+wait_timestamp( @ARGV ) if !caller or caller eq 'Mpp::Subs';
 
 1;

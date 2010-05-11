@@ -1,5 +1,17 @@
 ###	SPAR <http://www.cpan.org/scripts/>
-###	31	644	1151616989	1080781993	Makeppfile
+###	11	755	1119219345	1231331952	makepp_test_script.pl
+makepp qw(gone2 generated stale);
+cp 'generated', 'generated-1';
+cp 'stale', 'stale-1';
+
+unlink 'gone';
+eval { makepp qw(-k --rm-stale) };
+cp 'generated', 'generated-2';
+cp 'stale', 'stale-2';
+-f 'subdir/foo' or die; # Verify that it wasn't spuriously removed by makepp
+
+makepp qw(generated stale x STALE=1);
+###	37	644	1151616989	1231331948	Makeppfile
 $(phony default): *
 
 perl_begin
@@ -26,37 +38,40 @@ x:
 0/y:
     &touch $@
 
+gone2: gone1
+       &cp gone1 gone2
+
+gone1: gone
+       &cp gone gone1
+
 generated:
     &echo $(only_generated *) -o $@
 
 stale:
     &echo $(only_stale *) -o $@
-###	D	755	1080782838	1080782836	answers
-###	1	644	1080782836	1080782836	answers/stale
-b
-###	1	644	1080782836	1080782836	answers/stale-1
-
-###	1	644	1080782836	1080782836	answers/generated
-a b d generated stale x
-###	1	644	1080782836	1080782836	answers/generated-1
-
-###	1	644	1080782836	1080782836	answers/x
-1
+###	0	644	1080781634	1080781634	c
+###	2	644	1119219345	1080782214	d.x
+#include "subdir/foo"
+#include "0"
+###	0	644	1231330532	1231330532	gone
 ###	D	755	1080782838	1080782836	subdir
 ###	4	644	1080782838	1080782836	subdir/Makeppfile
 bar:
 	&touch foo bar
 
 prebuild bar
-###	0	644	1080781634	1080781634	c
-###	2	644	1119219345	1080782214	d.x
-#include "subdir/foo"
-#include "0"
-###	7	755	1119219345	1080782214	makepp_test_script.pl
-makepp 'generated', 'stale';
-cp 'generated', 'generated-1';
-cp 'stale', 'stale-1';
+###	D	755	1080782838	1080782836	answers
+###	1	644	1080782836	1080782836	answers/generated
+a b d generated stale x
+###	1	644	1080782836	1080782836	answers/generated-1
+gone1 gone2
+###	1	644	1080782836	1080782836	answers/generated-2
+a b d generated gone1 gone2 stale
+###	1	644	1080782836	1080782836	answers/stale
+b
+###	1	644	1080782836	1080782836	answers/stale-1
 
-makepp '--rm-stale';
--f 'subdir/foo' or die; # Verify that it wasn't spuriously removed by makepp
-makepp 'generated', 'stale', 'x', 'STALE=1';
+###	1	644	1080782836	1080782836	answers/stale-2
+
+###	1	644	1080782836	1080782836	answers/x
+1

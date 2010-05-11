@@ -1,0 +1,179 @@
+=head1 NAME
+
+makeppreplay -- Fast repeater of selected makepp actions
+
+=for vc $Id: makeppreplay.pod,v 1.4 2009/02/21 11:25:31 pfeiffer Exp $
+
+=head1 DESCRIPTION
+
+L<-B<A>|/_2da_filename>,
+  L<--argsfile|/_2da_filename>,E<nbsp>
+L<-B<c>|/_2dc>,
+  L<-C|/_2dc_dirname>,E<nbsp>
+L<--B<d>irectory|/_2dc_dirname>,E<nbsp>
+L<-B<I>|/_2di_dir>,
+  L<--include|/_2di_dir>,E<nbsp>
+L<-B<k>|/_2Dk>,
+  L<--keep-going|/_2Dk>,E<nbsp>
+L<-B<M>|/_2Dm_module>,
+  L<--module|/_2dm_module>,E<nbsp>
+L<--B<r>oot-directory|/_2dc>,E<nbsp>
+L<-B<t>|/_2dt>,
+  L<--temporary|/_2dt>
+
+B<makeppreplay> S<[ I<option> ... ]> S<[ I<VAR=value> ]> S<[ I<target> ... ]>
+
+B<mppr> S<[ I<option> ... ]> S<[ I<VAR=value> ]> S<[ I<target> ... ]>
+
+Makeppreplay tries to do the same things makepp did.  It does this solely
+based on the remembered build info, saving much time by not reading makefiles,
+not parsing commands, not scanning files and not looking at every repository
+file, to see whether it fits.  But unlike makepp it reuses all repository
+links it finds.
+
+It does not know about phony or default targets, so you have to give it real
+files or directories, as a shortcut for all files makepp has built therein.
+By default it builds all files makepp built in the current or chosen directory.
+
+This approach is only correct when there are no structural changes, i.e. no
+different modules to be linked, no moved files, no different C<#include>
+statements, which should possibly have caused those files to be (re)built.
+After updating from version control, or when building against a repository,
+where others may have caused such changes, you should call makepp once after
+potential changes (e.g. in the morning after an overnight repository update),
+to be sure your build infos are up to date.
+
+Not reading makefiles means, it will not know any subs (Perl functions)
+defined in them.  For this you should put all your functions into an external
+module.  It will also not know about any variable settings, which is only a
+problem if your Perl code accesses them (because in rule actions they have
+already been expanded).
+
+=head1 TODO
+
+This is still experimental and imperfect.
+
+=over
+
+=item *
+
+Build up a complete dependency tree starting from the given targets and decide
+which of them to build based on their build check methods.  That requires the
+method to be remembered in the build info.
+
+=item *
+
+After implementing the previous bullet item, accept more makepp opts, like C<-j>
+or C<--dont-build>.
+
+=item *
+
+Allow build cache with implicit C<--no-populate-bc> (because makeppreplay
+doesn't guarantee a correct build).  Makepp might later publish to the build
+cache anything it retains.
+
+=item *
+
+Have makepp remember build info for all failed commands and for those it
+didn't attempt because their dependencies failed.  This is only partially
+possible, because dependencies may only be found out after building the files
+that require them.  What should happen with (a has no build info):
+
+    a: b
+    b: c
+	cmd_producing_a_and_b
+
+=back
+
+=head1 OPTIONS
+
+Options include some of the makepp options, plus two new ones, for loading
+modules that would normally be loaded from a makefile.
+
+=over 4
+
+=item -A filename
+
+=item --args-file=filename
+
+=item --arguments-file=filename
+
+Read the file and parse it as possibly quoted whitespace- and/or newline-separated options.
+
+=item -c
+
+=item --root-directory
+
+Cd up to the directory containing a RootMakeppfile.
+
+=item -C dirname X<-C> X<--directory>
+
+=item --directory=dirname
+
+Cd to the given directory before loading the makefile and trying to build the
+targets.  This is more or less equivalent to specifying a directory with
+C<-F>, except that subsequent C<-C>, C<-f>, C<-F>, C<-I> and C<-R> options are
+interpreted relative to the new directory, rather than the old one.
+
+=item -I dir
+
+=item --include=dir
+
+=item --include-dir=dir
+
+Add I<dir> to Perl load path C<@INC>.
+
+=item -k
+
+=item --keep-going
+
+Build as many files as possible, even if some of them have errors.  By
+default, makepp stops when it encounters the first error, even if there
+are other files that need to be built that don't depend on the erroneous
+file.
+
+=item -M module[=arg,...]
+
+=item --module=module[=arg,...]
+
+Load module and import any functions it exports.
+
+=item -t
+
+=item --temporary
+
+Makeppreplay modifies the build info of all files it touched and of all
+dependencies it found modified.  It marks them in such a way that makepp
+nevertheless knows that it needs to rescan these files.  But with this option
+you can prevent these modifications, so that makepp will simply condsider all
+files makeppreplay created as incorrect.
+
+=item --version
+
+Print out the version number.
+
+=back
+
+=head1 EXAMPLES
+
+Probably the most common use is relinking either a program or a library after
+editing a source file:
+
+    makeppreplay subdir/foo.o bin/bar
+    mppr subdir/foo.o lib/libbar.so
+
+=head1 ENVIRONMENT
+
+Makeppreplay looks at the following environment variable:
+
+=over
+
+=item MAKEPPREPLAYFLAGS
+
+Any options you may want to always pass.
+
+=back
+
+=head1 AUTHOR
+
+Daniel Pfeiffer (occitan@esperanto.org)

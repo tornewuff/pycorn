@@ -2,7 +2,7 @@
 
 makepp_functions -- Functions in makepp
 
-=for vc $Id: makepp_functions.pod,v 1.36 2008/06/02 20:12:59 pfeiffer Exp $
+=for vc $Id: makepp_functions.pod,v 1.37 2008/09/01 07:49:18 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -102,21 +102,21 @@ used, and you just want to pick one of them.  For example, here is the
 default definition of several common variables that makepp supplies if
 you do not put one in your makefile:
 
-    CC = $(find_program gcc egcc pgcc c89 cc)
+    CC = $(find_program gcc egcc pgcc c89 cc) # and more, depending on machine
     F77 = $(find_program f77 g77 fort77)
     CXX = $(find_program g++ c++ pg++ cxx CC aCC)
 
-If none of the programs is found, S<C<$(find_program )>> returns the
-first one.  This usually won't result in a functional makefile, but it
-will tend to make for better error messages.  For example, if you do
-something like this:
+If none of the programs is found, S<C<$(find_program )>> returns the string
+not-found, and logs what ws not found.  This usually won't result in a
+functional makefile, but it will tend to make for better error messages.  For
+example, if you do something like this:
 
     %.o : %.c
  	$(CC) $(inputs) -o $(outputs)
 
 and makepp can't find a C compiler in the list above, it will substitute
-"gcc" anyway.  Otherwise the shell would attempt to execute the source
-file and the resulting error message might be really strange.
+not-found.  Otherwise the shell would attempt to execute the source file and
+the resulting error message might be really strange.
 
 =item find_upwards filename X<find_upwards>
 

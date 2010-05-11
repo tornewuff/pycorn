@@ -1,0 +1,85 @@
+###	SPAR <http://www.cpan.org/scripts/>
+###	4	755	1265715914	1265748017	is_relevant.pl
+#
+# Figure out if using a compiler where we know how to activate on-the-fly dep generation.
+#
+makepp 'CHECK_COMPILER=1';
+###	9	755	1265379162	1266604527	makepp_test_script.pl
+makepp 'B1H=1';
+n_files 'n_files1';
+
+rename 'a2.z', 'a.z';
+makepp;
+n_files 'n_files2';
+
+unlink 'b1.h';
+makepp;
+###	46	644	1265379162	1265747981	RootMakeppfile
+ifdef CHECK_COMPILER
+  makeperl {{
+    POSIX::_exit '$(notdir $(CC))' !~ /\b(?:g|icc|xlc|cl)/;
+  }}
+endif
+
+DEP_SUFFIX = d
+OBJ_SUFFIX = o
+
+ifmakeperl '$(CC)' =~ /\bcl/
+  sub dependify {{
+    s/(Note: including file: *)?(.+)\n/$1 ? "'$2' " : "'".f_output()."': "/e;
+  }}
+  OBJ_SUFFIX = obj
+else ifmakeperl '$(CC)' =~ /\bxlc/
+  DEP_SUFFIX = u
+  DEP_OPT = -M
+else
+  DEP_OPT = -MD
+endif
+
+makepp_no_builtin = 1
+
+$(phony all): a.x b.$(OBJ_SUFFIX) c.$(OBJ_SUFFIX)
+
+a.x: a.y :include a.$(DEP_SUFFIX)
+	&echo 'a.x: a.y a.z' -o a.$(DEP_SUFFIX)
+	&cat a.y a.z -o a.x
+
+b.h:
+	&echo $(if $(B1H), '#include "b1.h"') -o $(output) # Dep must be eliminated when rereading
+
+b.c:
+	&echo '#include "b.h"\nvoid f() {}' -o $(output)
+
+b.$(OBJ_SUFFIX): pre			# Dep must not be forgotten when rereading, or would rebuild next time
+
+%.$(OBJ_SUFFIX): %.c $[perl $Mpp::has_md5_signatures && ':signature c_compilation_md5'] :include %.$(DEP_SUFFIX)
+  ifmakeperl '$(CC)' =~ /\bcl/
+	cl -showIncludes -c $(input) >$(stem).d
+	&sed &dependify -o +<$(stem).d
+  else
+	$(CC) $(DEP_OPT) -c $(input) -o $(output)
+  endif
+
+b.$(OBJ_SUFFIX): post			# Dep must not be forgotten when rereading
+###	0	644	1265379162	1265379162	b1.h
+###	1	644	1265379162	1265668242	a.y
+y
+###	1	644	1265379162	1265668277	a.z
+z
+###	1	644	1265379162	1265668277	a2.z
+zz
+###	2	644	1265379162	1265669395	c.c
+#include "b.h"
+void f() {}
+###	0	644	1265379162	1265576341	pre
+###	0	644	1265379162	1265576339	post
+###	D	755	1265379162	1265379162	answers
+###	2	644	1265379162	1265668930	answers/a.x
+y
+zz
+###	1	644	1265379162	1055628127	answers/n_files1
+8 1 0
+###	1	644	1265379162	1055628127	answers/n_files2
+7 1 0
+###	1	644	1265379162	1055628127	answers/n_files
+0 1 0

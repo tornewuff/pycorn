@@ -1,7 +1,9 @@
 #!/usr/bin/perl -w
-use strict;
+# $Id: makeppinfo,v 1.7 2009/02/11 23:22:37 pfeiffer Exp $
 
-# $Id: makeppinfo,v 1.3 2007/10/22 19:04:31 pfeiffer Exp $
+package Mpp;
+
+use strict;
 
 our $VERSION = '@VERSION@';
 use Config;
@@ -12,9 +14,9 @@ use POSIX ();
 #
 # Do this early, because the END block defined below shall be the first seen
 # by perl, such that it is the last executed.  It leaves the process via
-# POSIX::_exit, so that no expensive garbage collection of FileInfos occurs.
-# All other places can use die or normal exit.  If you define additional END
-# blocks in any module, you must take care to not reset $?.
+# POSIX::_exit, so that no expensive garbage collection of Mpp::File objects
+# occurs.  All other places can use die or normal exit.  If you define
+# additional END blocks in any module, you must take care to not reset $?.
 #
 END {
   close STDOUT; close STDERR;
@@ -37,7 +39,7 @@ BEGIN {
 				# Add '.' to the path in case the user is
 				# running it with "perl makeppclean" even if
 				# . is not in his path.
-      if (-f "$_/FileInfo.pm") { # Found something we need?
+      if( -d "$_/Mpp" ) {	# Found something we need?
 	$datadir = $_;
 	last;
       }
@@ -51,16 +53,16 @@ BEGIN {
   unshift @INC, $datadir;
 }
 
-use Utils;
-use FileInfo qw(file_info file_exists relative_filename);
-use FileInfo_makepp;
+use Mpp::Utils;
+use Mpp::File;
+use Mpp::FileOpt;
 
 my( $keylist, $quiet, $traverse, @keys_not, @keys );
-TextSubs::getopts
+Mpp::Text::getopts
   ['k', qr/key(?:s|list)/, \$keylist, 1],
   [qw'q quiet', \$quiet],
   [qw't traverse', \$traverse],
-  [undef, 'version', undef, undef, \&FileInfo::version],
+  [undef, 'version', undef, undef, \&Mpp::File::version],
   [qr/[h?]/, 'help', undef, undef, \&usage];
 
 $SIG{__WARN__} = sub {} if $quiet && $quiet > 1;
@@ -87,33 +89,21 @@ while( @ARGV ) {
   }
   next if exists $seen{int $finfo};
   undef $seen{int $finfo};
-  unless( file_exists $finfo ) {
-    warn 'makeppinfo: file `' . relative_filename( $finfo ) . "' not found\n";
-    next;
-  }
-  my $build_info_fname = FileInfo::build_info_fname $finfo;
-  my $fh;
-  unless( open $fh, $build_info_fname ) {
-    warn "makeppinfo: build info file `$build_info_fname' not found\n"
-      unless $no_warn;
-    next;
-  }
-  my $build_info = FileInfo::parse_build_info_file $fh;
-  unless( $build_info ) {
-    warn "makeppinfo: build info file `$build_info_fname' corrupted\n";
-    next;
-  }
+  warn 'makeppinfo: file `' . relative_filename( $finfo ) . "' not found\n"
+    unless file_exists $finfo;
+
+  my $build_info = Mpp::File::load_build_info_file $finfo
+    or next;
 
   $cwd = file_info $build_info->{CWD}, exists $finfo->{DIRCONTENTS} ? $finfo : $finfo->{'..'}
     if $traverse && exists $build_info->{CWD};
   if( $build_info->{DEP_SIGS} && $build_info->{SORTED_DEPS} ) {
     my @dep_sigs = split /\cA/, delete $build_info->{DEP_SIGS};
-    my @sorted_deps = split /\cA/, $build_info->{SORTED_DEPS};
+    my @sorted_deps = split /\cA/, delete $build_info->{SORTED_DEPS};
     push @ARGV, map file_info( $_, $cwd ), @sorted_deps
       if $traverse;
-    $build_info->{SORTED_DEPS} = '';
-    $build_info->{SORTED_DEPS} .= sprintf "\n%-22s %s", shift @dep_sigs, shift @sorted_deps
-      while @dep_sigs;
+    $build_info->{'DEP_SIGS SORTED_DEPS'} = join "\n", '',
+      map sprintf( "%-22s %s", $_, shift @sorted_deps ), @dep_sigs;
   }
 
   if( $keylist ) {
@@ -159,9 +149,8 @@ sub usage {
   print << 'END_OF_USAGE';
 Usage: makeppinfo [file ...]
 
-For each file print a human readable version of makepp's build info.
-SORTED_DEPS has the DEP_SIGS prepended.  Tagged lists have the tag
-prepended.
+For each file print a human readable version of makepp's build info.  DEP_SIGS
+and SORTED_DEPS get merged.  Tagged lists have the tag prepended.
 
 -k LIST, --keys=LIST or --keylist=LIST
 	Show only messages with, !without or ^without keys, {bash,patterns}.

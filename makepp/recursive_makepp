@@ -6,7 +6,7 @@
 # The parent makepp process sets the environment variable MAKEPP_SOCKET
 # to be the name of a file that we're supposed to write information about the
 # cwd and make command.
-# $Id: recursive_makepp,v 1.3 2008/06/01 21:41:32 pfeiffer Exp $
+# $Id: recursive_makepp,v 1.4 2009/09/25 20:09:53 pfeiffer Exp $
 #
 
 use Cwd;
@@ -22,7 +22,7 @@ use IO::Socket;
 
 my $socket_name = $ENV{'MAKEPP_SOCKET'};
 				# Where are we supposed to send the output?
-defined($socket_name) or 
+defined($socket_name) or
   die "$0: not invoked from makepp\n";
 
 my $socket = IO::Socket::UNIX->new(Peer => $socket_name,
@@ -55,14 +55,14 @@ while (($var, $val) = each %ENV) { # Send the environment back too.
   $message .= "$var=$val\n";
 }
 
-print($socket $message . "\01END\01") or # Send to makepp.
+print $socket $message . "\01END\01" or # Send to makepp.
   die "recursive makepp: error writing to socket--$!\n";
 
 my $response;
 
-while (sysread($socket, $_, 1000)) {	# Wait for a response before we proceed.
-  $response .= $_;
-}
+sysread $socket, $response, 16384;
+$response .= $_
+  while sysread $socket, $_, 16384; # Wait for rest of response before we proceed.
 
 if ($response =~ s/^(\d+)\s+//) { # Status is the first word of the response.
   $status = $1;

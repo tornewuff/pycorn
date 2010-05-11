@@ -2,7 +2,7 @@
 ###	13	644	1113847363	1113847363	Makeppfile
 # This tests that scanner c_compilation finds an #include in an IDL file.
 # And that this happens from a C compiler including the output without
-# an undefined value being returned from Scanner::include.
+# an undefined value being returned from Mpp::Scanner::include.
 
 %.h %.c: %.idl
 	: scanner c_compilation

@@ -2,7 +2,7 @@
 
 makepp_incompatibilities -- Incompatibilities between makepp and GNU make
 
-=for vc $Id: makepp_incompatibilities.pod,v 1.19 2008/06/02 20:13:34 pfeiffer Exp $
+=for vc $Id: makepp_incompatibilities.pod,v 1.20 2008/10/15 21:30:24 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -99,8 +99,8 @@ The C<SHELL> variable is currently partially ignored.  Makepp always uses
 F</bin/sh> unless C</usr/xpg4/bin/sh> or C</sbin/xpg4/sh> is found or unless
 you export the C<SHELL> variable in your makefile.  But if you do, the command
 parser might not fully understand what your shell command does.  On Windows
-ActiveState Perl you must instead set your SHELL variable before calling
-makepp.
+Strawberry or ActiveState Perl you must instead set your SHELL variable
+B<before> calling makepp.
 
 =item *
 

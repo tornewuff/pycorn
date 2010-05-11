@@ -2,7 +2,7 @@
 
 makepp_faq -- Frequently asked questions about makepp
 
-=for vc $Id: makepp_faq.pod,v 1.5 2007/10/22 19:19:22 pfeiffer Exp $
+=for vc $Id: makepp_faq.pod,v 1.8 2010/02/24 23:29:45 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -64,20 +64,24 @@ L<makepplog, mppl|makepplog> or L<makeppgraph, mppg|makeppgraph>.
 
 Makepp records all it knows about a file, for reuse on the next run.  Though
 it takes some understanding of makepp's internals, dumping it with
-C<makeppinfo, mppi> for one or more files, usually gives a clue what is wrong.
+L<makeppinfo, mppi|makeppinfo> for one or more files, usually gives a clue
+what is wrong.
 
 =head2 External tools
 
 =head3 Can I use cc -M or gcc -MM?
 
 The short answer is yes.  The long answer is that they have the advantage of
-knowing the effect of even the last weird compiler option, where makepp only
-comes pretty close.  The disadvantage is that they have no idea of the build
-rules, so they can not reliably depend on yet to be built files, which
-includes files to be fetched from a L<repository|makepp_repositories>.  And
-they are not extensible to other languages, as makepp's
-L<scanner|makepp_scanning> is.  Usually you are at least as well off, not
-resorting to these tools.
+knowing the effect of even the last weird compiler option, and sub-includes
+hidden in some compiler internal directory, where makepp only comes pretty
+close.  The disadvantage is that they have no idea of the build rules, so they
+can not reliably depend on yet to-be-built files, which includes files to be
+fetched from a L<repository|makepp_repositories>.  And they are not extensible
+to other languages, as makepp's L<scanner|makepp_scanning> is.  Usually you
+are at least as well off, not resorting to these tools.
+
+Nonetheless, some compilers can produce this as a by-product.  If you'd rather
+use this see L<:include|makepp_rules/include_file_or_pattern>.
 
 =head3 Can I use CCache, Compilercache or cachecc1?
 

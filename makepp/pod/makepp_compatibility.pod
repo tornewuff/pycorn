@@ -2,7 +2,7 @@
 
 makepp_compatibility -- Compatibility list for makepp
 
-=for vc $Id: makepp_compatibility.pod,v 1.17 2008/08/09 09:34:03 pfeiffer Exp $
+=for vc $Id: makepp_compatibility.pod,v 1.22 2010/04/22 20:35:25 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -35,52 +35,56 @@ has the structure " OS#x|x|x#x|x|...#".  Here 'x' means success, '/' means
 failure, empty means not tested, and anything else is a footnote link to the
 list below.  The first two lines are special, based on the OS field being
 empty.  This is converted to html by install.pl and readable as is in other
-formats.
+formats.  The 1st header line is currently not dynamic.
 
-		#||	5.6		#||||||||			5.8					# 5.10  #
+		#||	5.6		#|||||||||			5.8						#|	 5.10	# 5.12	#
 
-		# .0	| .1	| .2	# .0	| .1	| .2	| .3	| .4	| .5	| .6	| .7	| .8	# .0	#
+		# .0	| .1	| .2	# .0	| .1	| .2	| .3	| .4	| .5	| .6	| .7	| .8	| .9	# .0	| .1	# .0	#
 
- GNU/Linux (x86)# x	| x	| req	# x	| x	| x	| x	| x	|	| x	| x	| x	# x	#
+ GNU/Linux (x86)# x	| x	| req	# x	| x	| x	| x	| x	|	| x	| x	| x	| x	# x	| x	# x	#
 
- GNU/Linux (amd64)#	|	|	#	|	|	|	|	| x	|	|	|	#	#
+ GNU/Linux (amd64)#	|	|	#	|	|	|	|	| x	|	|	|	|	#	|	#	#
 
- GNU/Linux (alpha)#	| x	|	#	|	|	|	|	|	|	|	|	#	#
+ GNU/Linux (alpha)#	| x	|	#	|	|	|	|	|	|	|	|	|	#	|	#	#
 
- FreeBSD (x86)	#	| x	| x	#	|	|	|	|	|	|	|	| x	# x	#
+ GNU/Linux (S/390)#	|	| x	#	|	|	|	|	|	|	|	| x	| x	# x	| x	#	#
 
- NetBSD (alpha)	#	|	|	#	|	|	|	|	|	|	|	|	# x	#
+ FreeBSD (x86)	#	| x	| x	#	|	|	|	|	|	|	|	| x	|	# x	|	#	#
 
- OpenBSD (x86)	#	|	|	# x	|	|	|	|	|	|	|	|	#	#
+ NetBSD (alpha)	#	|	|	#	|	|	|	|	|	|	|	|	|	# x	|	#	#
 
-
- AIX (PPC)	#	|	|	#	| x	| x	|	|	|	|	| x	| x	#	#
-
- Darwin (PPC)	# x	|	|	#	|	|	|	|	|	|	|	|	#	#
-
- HP/UX (IA64)	#	|	|	# HPUX	|	|	| HPUX	|	|	|	|	|	#	#
-
- Irix		#	|	|	#	|	|	|	|	|	|	|	| x	#	#
-
- Reliant (Mips)	# Nest	| Nest	|	#	|	|	|	|	|	|	|	|	#	#
-
- Solaris (Sparc)# x	| req	|	# x	| x	| x	| x	| x	| x	| x	| x	| x	# x	#
-
- Solaris (64bit)#	|	|	#	| x	|	|	|	|	|	|	| x	#	#
-
- Solaris (x86)	#	| x	|	#	| x	|	|	|	|	|	|	| x	#	#
+ OpenBSD (x86)	#	|	|	# x	|	|	|	|	|	|	|	|	|	#	|	#	#
 
 
- BS2000 (S/390)	#	| x	|	#	| x	|	|	|	|	|	|	|	#	#
+ AIX (PPC)	#	|	|	#	| x	| x	|	|	|	|	| x	| x	|	#	|	#	#
 
- z/OS USS (S/390)#	|	|	#	|	|	|	|	|	|	|	| zOS	#	#
+ Darwin (PPC)	# x	|	|	#	|	|	|	|	|	|	|	|	|	#	|	#	#
+
+ HP/UX (IA64)	#	|	|	# HPUX	|	|	| HPUX	|	|	|	|	|	|	#	|	#	#
+
+ Irix		#	|	|	#	|	|	|	|	|	|	|	| x	|	#	|	#	#
+
+ Reliant (Mips)	# Nest	| Nest	|	#	|	|	|	|	|	|	|	|	|	#	|	#	#
+
+ Solaris (Sparc)# x	| req	|	# x	| x	| x	| x	| x	| x	| x	| x	| x	| x	# x	|	# x	#
+
+ Solaris (64bit)#	|	|	#	| x	|	|	|	|	|	|	| x	|	#	|	#	#
+
+ Solaris (x86)	#	| x	|	#	| x	|	|	|	|	|	|	| x	|	#	|	#	#
 
 
- Cygwin (x86)	#	|	|	#	|	|	|	|	|	|	| Win	| x	# x	#
+ BS2000 (S/390)	#	| x	|	#	| x	|	|	|	|	|	|	|	|	# /	|	#	#
 
- MinGW MSYS	#	| Win	|	#	|	|	|	|	|	|	|	|	#	#
+ z/OS USS (S/390)#	|	|	#	|	|	|	|	|	|	|	| zOS	|	# /	|	#	#
 
- Windows	# Win	| Win	|	# x	| x	| x	| x	| x	|	| x	| x	| x	# x	#
+
+ Cygwin (x86)	#	|	|	#	|	|	|	|	|	|	| Win	| x	|	# x	|	#	#
+
+ MinGW MSYS	#	| Win	|	#	|	|	|	|	|	|	|	|	|	#	|	#	#
+
+ Stawberry	#	|	|	#	|	|	|	|	|	|	|	| x	| x	# x	| x	#	#
+
+ ActiveState Win# Win	| Win	|	# x	| x	| x	| x	| x	|	| x	| x	| x	| x	# x	| x	# x	#
 
 =for html </table>
 
@@ -100,7 +104,7 @@ probably ok using these Perls.
 
 =item Win
 
-There are 3 different Perl environments on Windows, which normally extend one
+There are 4 different Perl environments on Windows, which normally extend one
 another when installed in parallel.  Here they have been tested with a minimal
 PATH, so as to separate them completely:
 
@@ -108,15 +112,15 @@ PATH, so as to separate them completely:
 
 =item *
 
-Cygwin fairly closely emulates GNU/Linux and gives the best results.  Perl
+B<Cygwin> fairly closely emulates GNU/Linux and gives the best results.  Perl
 5.8.7 has a small problem with environment vars, making one test fail.  In the
 long gone past, parallel builds didn't work, but it hasn't be verified which
 version of Cygwin or Perl made them usable.
 
 =item *
 
-MinGW stays close to Windows, giving it only a Unixy look and feel.  It has a
-clever workaround for lack of symbolic links, namely copying instead (C<&ln>
+B<MinGW> stays close to Windows, giving it only a Unixy look and feel.  It has
+a clever workaround for lack of symbolic links, namely copying instead (C<&ln>
 has stolen this idea).  Alas this is not good enough for the B<repository>
 mechanism, so that isn't available, in addition to the Cygwin deficiencies.
 
@@ -126,19 +130,27 @@ makeppgraph test), at least with MD5 support.  But with very few packages
 
 =item *
 
-On ActiveState Perl with only native Windows most customary Unix commands are
-missing, and the "shell" is extremely primitive.  A maximal use of makepp's
-builtin commands and embedded Perl can increase makefile portability.  While
-Windows programs can handle normal slashes as directory separators, this does
-not work for command names.  Those should be written as F<dir$/command>, where
-C<$/> is a forward or backward slash, depending on the environment.  If you
-tell makepp, via the SHELL variable, where to find a a Unix-like Shell, you
-don't have these worries.
+On B<Strawberry> Perl with only native Windows most customary Unix commands
+(except Gnu compilers) are missing, and the "shell" is extremely primitive.  A
+maximal use of makepp's builtin commands and embedded Perl can increase
+makefile portability.  The builtin C<&ln> command may need C<set
+MAKEPP_LN_CP=1> or C<3>, depending on your file system.
+
+While Windows programs can handle normal slashes as directory separators, this
+does not work for command names.  Those should always be portably written as
+F<dir$/command>, where C<$/> gets replaced by a forward or backward slash,
+depending on the environment.  If you tell makepp, via the SHELL variable,
+where to find a a Unix-like Shell, you don't have these worries.
 
 It cannot do smart recursive makes (but who would want them, since they are
-known to be a broken paradigm) and B<parallel> builds.  Perl 5.6.0 fails on
-quite a few tests, especially with $SHELL, 5.6.1 fails on two tests.  It will
-rewrite FileInfo.pm so as to have a needed workaround for an lstat bug.
+known to be a broken paradigm) and B<parallel> builds.
+
+=item *
+
+B<ActiveState> Perl is very similar to Strawberry, as far as makepp goes,
+though it doesn't come with Gnu compilers.  Perl 5.6.0 fails on quite a few
+tests, especially with $SHELL, 5.6.1 fails on two tests.  Up to 5.8.6, it will
+rewrite Mpp/File.pm so as to have a needed workaround for an lstat bug.
 
 =back
 
@@ -168,17 +180,17 @@ time when working on them:
 =item NFS
 
 NFS may reorder file operations at its discretion, leading to unexpected
-relationships between time stamps.  This is relevant for the build info meta
-files, which makepp stores alongside each file.  Especially in build caches,
-with their concurrent access, some workaround handling was necessary, but it
-seems to work fine.
+relationships between time stamps.  This is relevant for the build info
+meta-data files, which makepp stores alongside each file.  Especially in build
+caches, with their concurrent access, some workaround handling was necessary,
+but it is shown by load test to work fine.
 
 =item Windows CIFS on Gnu/Linux
 
 A few special characters are not allowed in filenames.  Links are emulated by
 copying while symbolic linking fails.  Apparently write operations come back
 before they are visible on disk, which confuses makepp about the success of
-the commands it executes.  Several tests fail due to this.  On the bright
+the commands it executes.  Six out of 76 tests fail due to this.  On the bright
 side, timestamps have a precision of 100 nanoseconds (though the observed
 obtainable differences are only about a centisecond).  This is much better
 than most older Unix file systems -- alas perl's C<stat> function has no
@@ -187,9 +199,9 @@ access to this very welcome precision.
 =item Windows Server Share on Cygwin
 
 The same CIFS disk that was works so badly on Linux, passes all tests on
-Cygwin.  Possibly there are options that might improve something.
+Cygwin.  Possibly there are CIFS mount options that might improve something.
 
-=item Unix SMBFS on Gnu/Linux
+=item Unix SMBFS from Gnu/Linux
 
 Linking and symbolic linking fails.  No other tests fail.  I have no access to
 a more realistic Windows SMB server, where the situation might be different.
@@ -198,7 +210,7 @@ a more realistic Windows SMB server, where the situation might be different.
 
 A few special characters are not allowed in filenames.  Linking and symbolic
 linking fails.  The file permission mask and owner are mount options, while
-the time stamps are not settable.  One test fails.
+the time stamps are not settable.
 
 =back
 

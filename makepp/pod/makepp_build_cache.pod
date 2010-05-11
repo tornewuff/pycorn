@@ -2,7 +2,7 @@
 
 makepp_build_cache -- How to set up and use build caches
 
-=for vc $Id: makepp_build_cache.pod,v 1.21 2008/07/09 20:51:26 pfeiffer Exp $
+=for vc $Id: makepp_build_cache.pod,v 1.22 2009/02/09 22:07:39 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -373,12 +373,12 @@ In fact this little script is a wrapper to the following command, which you
 might want to call directly in your cron jobs, where the path to
 C<makeppbuiltin> might be needed:
 
-    makeppbuiltin -MBuildCacheControl command ...
+    makeppbuiltin -MMpp::BuildCacheControl command ...
 
 You can also use these commands from a makefile after loading them, with a
 C<&>-prefix as follows for the example of C<create>:
 
-    perl { use BuildCacheControl } # It's a Perl module, so use intead of include.
+    perl { use Mpp::BuildCacheControl } # It's a Perl module, so use intead of include.
  
     my_cache:
 	&create $(CACHE_OPTIONS) $(output) # Call a loaded builtin.
@@ -528,7 +528,7 @@ does, sometimes people turn off access time on their file systems because it
 adds a lot of extra disk I/O which can be harmful on battery powered
 notebooks, or in disk speed optimization.
 (But this is potentially fixable -- see the UTIME_ON_IMPORT comment in
-BuildCache.pm.)
+Mpp/BuildCache.pm.)
 
 =item -b
 

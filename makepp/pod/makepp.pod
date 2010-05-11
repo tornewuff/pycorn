@@ -2,7 +2,7 @@
 
 makepp -- Compatible but improved replacement for make
 
-=for vc $Id: makepp.pod,v 1.27 2007/05/17 11:48:39 pfeiffer Exp $
+=for vc $Id: makepp.pod,v 1.30 2010/04/22 20:52:42 pfeiffer Exp $
 
 =head1 SYNOPSIS
 
@@ -13,18 +13,17 @@ B<makepp> S<[ -e ]> S<[ -C I<dir> ]> S<[ -f I<makefile>]> S<[ -F I<makefile_or_d
 
 B<mpp> [-options] S<[ I<VAR=value> ... ]> S<[ I<target> ... ]>
 
-=head1 UPGRADE WARNING
-
-Many things have changed, meaning if you upgrade from 1.40 (or even a newer
-CVS version), you will probably have a full rebuild.  Especially as of
-2004-12-10, the names of the metainformation files under .makepp have changed.
-To get rid of the old ones, call C<makeppclean -r> before calling makepp.
-
 =head1 DESCRIPTION
 
-Makepp is a build program like make that supports all the features of GNU
-make, but has a number of additional features to make writing makefiles much
-easier and to make builds much safer.
+Makepp, a build program which has a number of features that allow for reliable
+builds and simpler build files, is a drop-in replacement for GNU make. It
+supports almost all of the syntax that GNU make supports, and can be used with
+makefiles produced by utilities such as automake. It is called makepp (or
+make++) because it was designed with special support for C++, which has since
+been extended to other languages like Swig or embedded SQL. Also its
+relationship to make is analogous to C++'s relationship to C: it is almost
+100% backward compatible but adds a number of new features and much better
+ways to write makefiles.
 
 These pages describe the beta of upcoming Version 1.50.  It passes an
 extensive test-suite, and is used in several big projects.  Occasionally there
@@ -157,6 +156,10 @@ A stand-alone utility to graphically analyze dependencies and the reasons for a 
 =item L<makepplog, mppl|makepplog>
 
 A stand-alone utility to analyze dependencies and the reasons for a rebuild.
+
+=item L<makeppreplay, mppr|makeppreplay>
+
+A stand-alone utility to repeat things makepp has done, but much faster.
 
 =back
 
@@ -408,19 +411,18 @@ Makepp can use arbitrary perl subroutines for textual substitution in
 the makefile.  If you know perl, you are not constrained at all by the
 set of makepp's builtin textual manipulation functions.
 
-You can also simply write perl code in your makefile.  Make variables
-are actually simply stored as perl variables, so you can manipulate them
-with the full power of the entire perl language.
+You can also simply write perl code in your makefile.  You can manipulate Make
+variables with the full power of the entire perl language.  See
+L<makepp_variables> for details.
 
 =item Logging of build decisions
 
-By default, makepp makes a file called C<.makepp_log> that contains a
-description of every file that it tried to build, what rule was used to
-build it, what it depended on, and (if the file was rebuilt) which
-dependency was different.  This can be extremely useful for debugging a
-makefile--if you're wondering why makepp decided to rebuild a file, or
-why it didn't, you can just look in the log file where it explains the
-decisions.
+By default, makepp makes a log-file viewable with L<makepplog, mppl|makepplog>
+that contains a description of every file that it tried to build, what rule
+was used to build it, what it depended on, and (if the file was rebuilt) why.
+This can be extremely useful for debugging a makefile--if you're wondering why
+makepp decided to rebuild a file, or why it didn't, you can just look in the
+log file where it explains the decisions.
 
 =item Improved support for parallel builds
 

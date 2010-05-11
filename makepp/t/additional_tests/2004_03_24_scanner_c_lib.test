@@ -40,7 +40,7 @@ endif
 
 perl {{
   my $n_files = $two_more ? 8 : 6;
-  $n_files .= ::is_windows ? ' 2' : ' 1';
+  $n_files .= Mpp::is_windows ? ' 2' : ' 1';
   open my $fh, '>answers/n_files' or die;
   print $fh "$n_files 0\n";
 }}

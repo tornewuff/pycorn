@@ -1,8 +1,9 @@
-#!/home/utils/perl-5.8.8/bin/perl -w
+#!/usr/bin/perl -w
+# $Id: makepplog,v 1.33 2010/02/24 23:28:27 pfeiffer Exp $
+
+package Mpp;
 
 use strict;
-
-# $Id: makepplog,v 1.25 2008/05/17 14:08:37 pfeiffer Exp $
 
 # Shall we put a period after each message?  Or once for all before the \n when printing?
 my %log_msg =
@@ -33,7 +34,7 @@ my %log_msg =
   BUILD_RECURSIVE => 'Rebuild %s because command is recursive invocation of make',
 
   CACHED_DEP => 'Building %s as a cached scanned dependency of %s',
-  DEL_STALE => 'Removing stale generated file %s',
+  DEL_STALE => 'Removing stale generated file or symlink %s',
   DEPEND => ' Targets %s depend on %s',
   IFEQ => 'if(n)eq comparing %s with %s at %s',
   INCL => '%s includes %s',
@@ -68,18 +69,21 @@ my %log_msg =
   REP_OUTDATED => 'Removing outdated repository link %s',
   REP_SKIP => 'Skipping generated repository file %s',
 
+  RULE_ALL => 'Attempt to recover a rule for all files in %s',
   RULE_ALT => 'Alternate rules (%s and %s) for target %s',
   RULE_DISCARD_MAKE => ' Rule %s discarded because it invokes $(MAKE)',
+  RULE_EXTEND => 'Add target %s to rule for %s',
   RULE_FAILED => '*** This failed from rule %s',
   RULE_IGN_MAKE => ' Rule %s ignored because it invokes $(MAKE)',
   RULE_IGN_PATTERN => ' Rule %s ignored because it is a pattern rule',
   RULE_NEARER => ' Rule %s chosen because it is from a nearer makefile',
   RULE_NEARER_KEPT => ' Rule %s kept because it is from a nearer makefile',
+  RULE_NEW => 'Recover rule for %s from previous build info',
   RULE_SHORTER => ' Rule %s chosen because it has a shorter chain of inference',
 
   SCAN => 'Scanning %s',
   SCAN_CACHED => 'Using cached scanner info for %s',
-  SCAN_C_NOT => 'Not scanning %s due to $Scanner::C::dont_scan_hook',
+  SCAN_C_NOT => 'Not scanning %s due to $Mpp::Scanner::C::dont_scan_hook',
   SCAN_INFO => ' Trying to retrieve scan info for %s',
   SCAN_INFO_FROM => 'Using %s to retrieve scan info',
   SCAN_INFO_NOT => 'Couldn\'t use %s to retrieve scan info because %s',
@@ -98,7 +102,7 @@ my %log_msg =
  );
 
 # This list contains a hashref for every logging version, which is the list
-# index.  Logging versions must be incremented in makepp's ::log function
+# index.  Logging versions must be incremented in makepp's Mpp::log function
 # every time one or more symbol's meaning changes incompatibly.  Removing a
 # symbol, e.g. when renaming it, only requires moving the element from
 # %log_msg to $obsolete_msg[<current log version>].  But if a change to the
@@ -136,7 +140,7 @@ BEGIN {
 				# Add '.' to the path in case the user is
 				# running it with "perl makepp" even if
 				# . is not in his path.
-      if( -f "$_/Glob.pm" ) {	# Found something we need?
+      if( -d "$_/Mpp" ) {	# Found something we need?
 	$datadir = $_;
 	last;
       }
@@ -150,9 +154,10 @@ BEGIN {
   unshift @INC, $datadir;
 }
 
-use Utils;
-use FileInfo_makepp;
-use TextSubs ();
+use Mpp::Utils;
+use Mpp::File;
+use Mpp::FileOpt;
+use Mpp::Text ();
 
 my( $cwd, $instdir, $keylist, $noindent, $rename, $tabulate, $uniq );
 my( @logfiles, $outfile );
@@ -162,7 +167,7 @@ my $showkey = '';
 
 {
   my $tmp;
-  TextSubs::getopts
+  Mpp::Text::getopts
     ['c', qr/current[-_]?working[-_]?dir(?:ectory)/, \$cwd, 0, 0],
     ['C', qr/current[-_]?working[-_]?dir(?:ectory)[-_]?and[-_]?up/, \$cwd, 1],
     [qw(f follow), \$follow],
@@ -175,6 +180,7 @@ my $showkey = '';
     [qw(p prefix), \$prefix, 0, 'makepplog: '],
     [qw(t tabulate), \$tabulate],
     ['u', qr/uniq(?:ue)?/, \$uniq],
+    [undef, 'version', undef, undef, \&Mpp::File::version],
 
     [qr/[h?]/, 'help', undef, 0, \&usage];
 }
@@ -185,6 +191,8 @@ sub usage { print << 'END_OF_USAGE'; exit 0 }
 Usage: makepplog [-options]
 Render and optionally filter what makepp logged about the last build.
 
+-A or --args-file=filename
+	Take additional args from named file.
 -c, --current-working-dir or --current-working-directory
 	Make all files under current dir, be relative to it.
 -C N, --current-working-dir-and-up=N or --current-working-directory-and-up=N
@@ -207,6 +215,8 @@ Render and optionally filter what makepp logged about the last build.
 	Put each list item on a new line.
 -u, --uniq or --unique
 	Don't repeat lines about inclusion or scanning.
+--version
+	Print out the current version.
 
 Look at @htmldir@/makepplog.html for more details,
 or at http://makepp.sourceforge.net/@BASEVERSION@/makepplog.html
@@ -220,10 +230,10 @@ sub instdir {
     s<(:\d+\()((/?)[^\)]*)> {
       my $ret = $1;
       for( $3 ? "$2" : "$instdir/$2" ) {
-	my $finfo = FileInfo::file_info $_;
-	FileInfo::dereference $finfo;
-	$_ = FileInfo::absolute_filename $finfo;
-	Rewrite::cwd $cwd if defined $cwd;
+	my $finfo = file_info $_;
+	dereference $finfo;
+	$_ = absolute_filename $finfo;
+	Mpp::Rewrite::cwd $cwd if defined $cwd;
 	$ret .= $_;
       }
       $ret;
@@ -232,9 +242,9 @@ sub instdir {
 }
 
 if( $instdir && defined $cwd ) {
-  $rename = sub { Rewrite::cwd $cwd || &instdir };
+  $rename = sub { Mpp::Rewrite::cwd $cwd || &instdir };
 } elsif( defined $cwd ) {
-  $rename = sub { Rewrite::cwd $cwd };
+  $rename = sub { Mpp::Rewrite::cwd $cwd };
 } elsif( $instdir ) {
   $rename = \&instdir;
 }
@@ -323,7 +333,7 @@ for my $logfile ( @logfiles ) {
 	      $dir_name{$3} = '???';
 	      warn "Corrupt log file (probably because of concurrent write access to $logfile)" unless $warned_corrupt++;
 	  }
-	  for( "$dir_name{$3}/$2" ) {
+	  for( $dir_name{$3} eq '/' ? "/$2" : "$dir_name{$3}/$2" ) {
 	    $dir_name{$1} = $_;	# Might be a dir.
 	    &$rename() if $rename;
 	    $file_name{$1} = $_;
@@ -361,6 +371,7 @@ for my $logfile ( @logfiles ) {
 	  printf "$prefix$showkey$indent$log_msg{INCL}\n",
 	    "`$file_name{$incl}'",
 	    '`' . (join $tabulate ? "',\n$prefix$showkey$indent  `" : "', `", map $file_name{$_}, @incl) . "'";
+	  no warnings 'deprecated';    # TODO: replace the goto
 	  goto INCL if $key eq 'INCL'; # Next one follows right behind.
 	  undef $incl;
 	}

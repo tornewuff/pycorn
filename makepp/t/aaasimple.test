@@ -13,6 +13,8 @@ file2:
 
 file1:
 	&echo 1 -o $(target)
+###	1	644	1236523730	1236523730	hint
+This test is fundamental.  Something is totally wrong!
 ###	D	755	1067451873	965332260	answers
 ###	1	644	1067451873	965332255	answers/file1
 1

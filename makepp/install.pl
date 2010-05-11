@@ -3,21 +3,16 @@
 # This script asks the user the necessary questions for installing
 # makepp and does some heavy HTML massageing.
 #
-# $Id: install.pl,v 1.78 2008/07/19 21:32:36 pfeiffer Exp $
+# $Id: install.pl,v 1.89 2010/04/22 20:35:25 pfeiffer Exp $
 #
 
-use Config;
-use File::Copy;
-use TextSubs ();
-use FileInfo ();		# ensure HOME is set
-
-system $^X, 'makepp', '--version'; # make sure it got a chance to apply workarounds.
+package Mpp;
 
 #
 # First make sure this version of perl is recent enough:
 #
-eval { require 5.006 };
-if ($@) {			# Not recent enough?
+BEGIN {
+  eval { require 5.006 };
   die "I need perl version 5.6 or newer.  If you have it installed somewhere
 already, run this installation procedure with that perl binary, e.g.,
 
@@ -25,8 +20,15 @@ already, run this installation procedure with that perl binary, e.g.,
 
 If you don't have a recent version of perl installed (what kind of system are
 you on?), get the latest from www.perl.com and install it.
-";
+" if $@;			# Not recent enough?
 }
+
+use Config;
+use File::Copy;
+use Mpp::Text ();
+use Mpp::File ();		# ensure HOME is set
+
+system $^X, 'makepp', '--version'; # make sure it got a chance to apply workarounds.
 
 print 'Using perl in ' . PERL . ".\n";
 
@@ -35,12 +37,14 @@ print 'Using perl in ' . PERL . ".\n";
 # files.
 #
 our $eliminate = '';		# So you can say #@@eliminate
-$eliminate = $eliminate if ::is_perl_5_6;
+$eliminate = $eliminate if Mpp::is_perl_5_6;
 open(VERSION, "VERSION") || die "You are missing the file VERSION.  This should be part of the standard distribution.\n";
 our $VERSION = <VERSION>;
+close VERSION;
 our $BASEVERSION = $VERSION;
 chomp $VERSION;
-close VERSION;
+warn "Makepp will be installed with DOS newlines, as you unpacked it.\n" if $VERSION =~ tr/\r//d;
+				# Native Windows chomps \r.
 
 if( $VERSION =~ s/beta// ) {
   $BASEVERSION = $VERSION;
@@ -50,8 +54,8 @@ if( $VERSION =~ s/beta// ) {
 # including year) followed by the count of files checked in that day.  This
 # assumes that we have at least three check ins a year.
 #
-  my %VERSION;
-  for( <makepp *.pm */*.pm makepp_builtin_rules.mk> ) {
+  my %VERSION = qw(0/00/00 0 00/00/00 0); # Default in case all modules change on same day.
+  for( <makepp Mpp{,/*,/*/*}.pm makepp_builtin_rules.mk> ) {
     open my( $fh ), $_;
     while( <$fh> ) {
       if( /\$Id: .+,v [.0-9]+ ([\/0-9]+)/ ) {
@@ -136,8 +140,7 @@ HTML documentation directory [$prefix/share/makepp/html]: ") ||
   "$prefix/share/makepp/html";
 $htmldir_val = $htmldir;
 
-use vars qw/$findbin/;
-$findbin = shift @ARGV;
+my $findbin = shift @ARGV;
 defined($findbin) or $findbin = read_with_prompt("
 Where should the library files be sought relative to the executable?
 Enter \"none\" to seek in $datadir [none]: ") || "none";
@@ -149,27 +152,68 @@ if($findbin) {
     if $htmldir eq $datadir . "/html";
 }
 
+my $destdir = shift @ARGV;
+
 @sig_num{split ' ', $Config{sig_name}} = split ' ', $Config{sig_num};
 $USR1 = $sig_num{USR1}; $USR1 = $USR1; 	# suppress used-only-once warning
 
-substitute_file( $_, $bindir, 0755, 1 ) for
-  qw(makepp makeppbuiltin makeppclean makeppgraph makeppinfo makepplog makepp_build_cache_control);
-
-substitute_file( $_, $datadir, 0644 ) for
-  qw(recursive_makepp FileInfo_makepp.pm BuildCacheControl.pm);
+if( $destdir ) {
+  for( $bindir, $datadir, $mandir, $htmldir_val ) {
+    s/$prefix/$destdir/o if defined;
+  }
+}
 
 make_dir("$datadir/$_") for
-  qw(ActionParser BuildCheck CommandParser Scanner Signature);
-foreach $module (qw(AutomakeFixer BuildCache FileInfo Glob MakeEvent
-		    Makecmds Makefile Makesubs RecursiveMake Repository
-		    Rule TextSubs Utils
+  qw(Mpp Mpp/ActionParser Mpp/BuildCheck Mpp/CommandParser Mpp/Scanner Mpp/Signature);
+
+our $useoldmodules = '';
+if( $ENV{MAKEPP_INSTALL_OLD_MODULES} ) {
+  my %packages =		# The renamed or multipackage cases.
+   (BuildCache => [qw(BuildCache BuildCache BuildCache::Entry)],
+    FileInfo => ['FileInfo=File'],
+    FileInfo_makepp => [qw(FileInfo_makepp=FileOpt FileInfo_makepp=File)],
+    Makecmds => ['Makecmds=Cmds'],
+    MakeEvent =>
+      [qw(MakeEvent=Event MakeEvent=Event MakeEvent::Process=Event::Process MakeEvent::WaitingSubroutine=Event::WaitingSubroutine)],
+    Makesubs => ['Makesubs=Subs'],
+    Rule => [qw(Rule Rule DefaultRule DefaultRule::BuildCheck)],
+    TextSubs => ['TextSubs=Text']);
+  for $module ( split ' ', $ENV{MAKEPP_INSTALL_OLD_MODULES} ) {
+    $useoldmodules .= "use $module ();\n"
+      if $module =~ s/\+//;
+    $module = $packages{$module} || [$module]; # Create simple cases on the fly.
+    my( $old, $new ) = shift @$module;
+    $new = ($old =~ s/=(.+)//) ? $1 : $old;
+    my $file = $old;
+    if( $file =~ s!(.+)::!$1/! ) {
+      -d "$datadir/$1" or make_dir("$datadir/$1");
+    }
+    open my $fh, '>', "$datadir/$file.pm" or die "can't create $old.pm\n";
+    print $fh "# generated backwards compatibility wrapper\nuse Mpp::$new;\n";
+    for( @$module ? @$module : "$old=$new" ) {
+      $new = (s/=(.+)//) ? $1 : $_;
+      print $fh "%${_}:: = %Mpp::${new}::;\n";
+    }
+    print $fh '1;';
+  }
+}
+
+substitute_file( $_, $bindir, 0755, 1 ) for
+  qw(makepp makeppbuiltin makeppclean makeppgraph makeppinfo makepplog makeppreplay makepp_build_cache_control);
+
+substitute_file( $_, $datadir, 0644 ) for
+  qw(recursive_makepp Mpp/FileOpt.pm Mpp/BuildCacheControl.pm);
+
+copy("Mpp.pm", "$datadir/Mpp.pm");
+chmod 0644, "$datadir/Mpp.pm";
+foreach $module (qw(AutomakeFixer BuildCache File Glob Event Cmds Makefile
+		    Subs Recursive Repository Rule Text Utils
 
 		    ActionParser ActionParser/Legacy ActionParser/Specific
 
 		    BuildCheck BuildCheck/architecture_independent
 		    BuildCheck/exact_match BuildCheck/ignore_action
-		    BuildCheck/symlink BuildCheck/target_newer
-		    BuildCheck/only_action
+		    BuildCheck/only_action BuildCheck/target_newer
 
 		    CommandParser CommandParser/Esqlc CommandParser/Gcc
 		    CommandParser/Swig CommandParser/Vcs
@@ -180,8 +224,8 @@ foreach $module (qw(AutomakeFixer BuildCache FileInfo Glob MakeEvent
 		    Signature Signature/c_compilation_md5 Signature/md5
 		    Signature/shared_object Signature/verilog_simulation_md5
 		    Signature/verilog_synthesis_md5)) {
-  copy("$module.pm", "$datadir/$module.pm");
-  chmod 0644, "$datadir/$module.pm";
+  copy("Mpp/$module.pm", "$datadir/Mpp/$module.pm");
+  chmod 0644, "$datadir/Mpp/$module.pm";
 }
 
 foreach $include (qw(makepp_builtin_rules makepp_default_makefile)) {
@@ -235,9 +279,9 @@ sub highlight_keywords() {
     $pre && !/define|export|global|override/ && s!\G(\s*)([^&\s].*?)(?=\s*:(?:$|.*?[^;{]\n))!$1<u>$2</u>!m;
 
   # highlight rule options
-  s!(: *)(build_c(?:ache|heck)|quickscan|scanner|signature|smartscan)(&nbsp;| +)([-/\w]+)!$1<b>$2</b>$3<u>$4</u>! or
+  s!(: *)(build_c(?:ache|heck)|foreach|include|scanner|signature)(&nbsp;| +)([-_/\w%.]+)!$1<b>$2</b>$3<u>$4</u>!g or
   # repeat the above, because they may appear in C<> without argument
-  s!(: *)(foreach|quickscan|scanner|signature|smartscan)\b!$1<b>$2</b>!;
+  s!(: *)(build_c(?:ache|heck)|foreach|include|last_chance|quickscan|scanner|signature|smartscan)\b!$1<b>$2</b>!g;
 }
 
 sub highlight_variables() {
@@ -305,7 +349,8 @@ if ($htmldir_val ne 'none') {
 	       makeppclean => 'makeppclean',
 	       makeppgraph => 'makeppgraph',
 	       makeppinfo => 'makeppinfo',
-	       makepplog => 'makepplog');
+	       makepplog => 'makepplog',
+	       makeppreplay => 'makeppreplay');
   for( @pods ) {
     my $pod = $_;
     (my $file = $_) =~ s/pod$/html/;
@@ -330,7 +375,8 @@ if ($htmldir_val ne 'none') {
 	    'makeppclean.html' => '~1',
 	    'makeppgraph.html' => '~2',
 	    'makeppinfo.html' => '~3',
-	    'makepplog.html' => '~4');
+	    'makepplog.html' => '~4',
+	    'makeppreplay.html' => '~5');
   my $home = ($htmldir_val =~ /\/[0-9.]+(?:\/|$)/);
   my @links =
       sort { (exists $order{$a} ? $order{$a} : $nolink{$a}) cmp (exists $order{$b} ? $order{$b} : $nolink{$b}) }
@@ -417,7 +463,8 @@ if ($htmldir_val ne 'none') {
 
 	if( /^(.*#.*\|.*\|.*#.*\|.*\|.*)<\/pre>$/ ) { # Special case for compatibility table.
 
-	  my @list = split /[#|]/, $1;
+	  my $row = $1;
+	  my @list = split /[#|]/, $row;
 	  s/^\s+//, s/\s+$// for @list;
 	  if( $list[0] ) {
 	    $_ = '<tr><th align="left">' . shift( @list ) . '</th>';
@@ -436,7 +483,12 @@ if ($htmldir_val ne 'none') {
 	    shift @list;
 	    $_ = '<tr><th></th>';
 	    if( $list[0] ne '.0' ) {
-	      $_ .= '<th colspan="3">5.6</th><th colspan="' . (@list - 4) . '">5.8</th><th>5.10</th>';
+	      (undef, @list) = split /#/, $row;
+	      for my $elem ( @list ) {
+		my $span = $elem =~ tr/|//d + 1;
+		$elem =~ tr/ \t//d;
+		$_ .= "<th colspan='$span'>&nbsp;$elem&nbsp;</th>";
+	      }
 	    } else {
 	      for my $elem ( @list ) {
 		$_ .= "<th>&nbsp;$elem&nbsp;</th>";
@@ -460,8 +512,8 @@ if ($htmldir_val ne 'none') {
 	    $empty_line = '';
 	  }
 
-	  s!^([%\$]? ?)(makepp(?:builtin|clean|log|graph|_build_cache_control)?)\b!$1<b>$2</b>!g or
-	  s!^([%\$]? ?)(mpp(?:[bclg]c{0,2})?)\b!$1<b>$2</b>!g or
+	  s!^([%\$]? ?)(makepp(?:builtin|clean|log|graph|replay|_build_cache_control)?)\b!$1<b>$2</b>!g or
+	  s!^([%\$]? ?)(mpp(?:[bclgr]c{0,2})?)\b!$1<b>$2</b>!g or
 				# g creates BOL \G for keywords
 	    highlight_keywords;
 	  highlight_variables;

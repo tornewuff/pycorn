@@ -1,3 +1,315 @@
+2010-04-22  Daniel Pfeiffer  <occitan@esperanto.org>
+
+Snapshot makepp-1.50.100422.tgz, version 1.50-04221-02242-02094 on CPAN.
+
+	* Mpp/Utils.pm (Mpp::Rewrite::cwd): Work around a 5.12.0 crash.
+
+	* install.pl:
+	* pod/makepp_compatibility.pod: Mention 5.12 as working.
+
+	* pod/makepp_command.pod: Mention --sandbox as a workaround for -j
+	on native Win.
+
+2010-02-25  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* Mpp/Makefile.pm (parse_rule):
+	* t/rule_include.test: Use :scanner none if :include file found.
+
+	* makepp (parse_command_line): Order options alphabetically.
+
+	* makepplog (instdir): Erstwhile workaround for 5.11 deprecation.
+
+	* pod/makepp_rules.pod:
+	* pod/makepp_faq.pod: Update about new behaviour of :include.
+
+	* pod/makepp_repositories.pod: Remove long outdated limitation of
+	only parsing the 1st command of an action.  Explain about
+	--dont-read.
+
+	* pod/makepp_compatibility.pod: Add more tested versions.
+
+2010-02-09  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* Mpp/Makefile.pm (parse_rule):
+	* makepp (build_target_done):
+	* Mpp/FileOpt.pm (set_additional_dependencies): Handle :include of
+	generated dependency file. (Suggested by Yoni Londner)
+	(get_rule): Remove unneeded label colliding with a reserved word
+	in perl 5.11.
+
+	* Mpp/Subs.pm (scanner_none):
+	* Mpp/ActionParser.pm (parse_rule): Keep promise that scanner none
+	shuts up.
+
+	* Mpp/Rule.pm (sorted_dependencies): Use only NAME for same
+	dependency given multiply.
+
+	* t/rule_include.test: New test.
+
+	* install.pl (highlight_keywords): Handle :include & :last_chance.
+
+2009-12-27  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* Mpp/Subs.pm (scanner_skip_word): Make it work per rule.
+	(s_register_scanner): Make prefix "scanner_" optional and allow
+	"-".
+
+	* Mpp/Makefile.pm (parse_rule): Allow "-" in :scanner.
+
+	* Mpp/ActionParser.pm (parse_rule): Suppress "action scanner not
+	found" warning with skip-word.  Clearer suggestion.
+
+	* Mpp/Rule.pm (parser): Simplify.
+
+	* t/additional_tests/2009_12_27_skip_word_unix.test: New test.
+
+	* pod/makepp_command.pod: Mention primacy of RootMakeppfile.
+
+	* pod/makepp_rules.pod: Explain pitfall of :scanner.
+
+	* pod/makepp_scanning.pod: Mention all command parsers explicitly.
+
+	* pod/makepp_statements.pod (register_scanner): Mention changes.
+
+2009-09-25  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* makepp: Some (only Solaris?) perls hang when changing $0 before
+	%ENV.
+
+	* makeppclean (deletable):
+	* Mpp/FileOpt.pm (load_build_info_file):
+	* t/additional_tests/2004_12_14_clean.test: Fix regression about
+	cleaning files modified outside of mpp.
+
+	* Mpp/Makefile.pm (skip_makefile_until_else_or_endif)
+	(_read_makefile_line_stripped_1):
+	* t/builtins.test: Have exactly 1 space for continuation \, gmake
+	compatibility issue reported by Adam McLaurin.
+
+	* recursive_makepp: Optimize reading.
+
+2009-07-16  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* Mpp/Text.pm (pattern_substitution): Remove gmake incompatible
+	restriction of needing % in patsubst replacement. (Thanks to Jason
+	Kankiewicz.)
+
+	* Mpp/Subs.pm (f_info): Provide missing function.
+	(f_basename, f_dir, f_dir_noslash, f_join, f_notdir, f_sort)
+	(f_subst, f_suffix): Optimize.
+
+	* Mpp/Recursive.pm: Move traditional-rec end message here.
+
+	* install.pl: Check for V5.6 before any compiler errors kick in.
+
+2009-03-19  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* makepp:
+	* makeppreplay: Use __DATA__, to fix --help.
+
+	* Mpp.pm (log): Try unwritable logfile only once.
+
+	* config.pl:
+	* install.pl: Provide $DESTDIR for Gentoo's indirect install.
+
+	* t/run_tests.pl: Give hints when tests fail.
+
+	* Mpp/Utils.pm: Rename package Rewrite to Mpp::Rewrite.
+
+	* Mpp/FileOpt.pm (version): Don't put DOS newline into $VERSION if
+	unpacked wrongly.
+
+2009-02-21  Daniel Pfeiffer  <occitan@esperanto.org>
+
+Snapshot makepp-1.50.090221.tgz, version 1.50-02212-021122-02107 on CPAN.
+
+	* Mpp/Makefile.pm (expand_variable):
+	* Mpp/Subs.pm (s_global): Rename package global to Mpp::global.
+
+	* makeppgraph:
+	* makepplog:
+	* Mpp/Utils.pm:
+	* t/log_graph.test: Rename package Rewrite to Mpp::Rewrite.
+
+	* install.pl: Don't put DOS newline into $VERSION if unpacked wrongly.
+
+2009-02-12  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* Mpp/File.pm: Export generously, saving a lot of qualifying all
+	over.
+
+2009-02-10  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	Huge change: all symbols in package main moved to package Mpp.
+	Mpp/Frame.pm becomes Mpp.pm.
+
+2009-02-09  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	Huge change: all modules moved to package Mpp.
+
+2009-02-06  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* BuildCheck/exact_match.pm: Move options for subclasses into
+	singleton, saving silly wrappers.
+
+	* BuildCheck/symlink.pm: Remove deprecated check.
+
+2009-02-03  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* Makecmds.pm:
+	* Makesubs.pm: Cleanly separate these modules, and make the latter "our" based.
+
+2009-01-31  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* Mpp/Frame.pm: New module picks up many things that used to be in
+	makepp.
+
+	* makeppreplay: Use new module to handle signals properly and do
+	logging.
+
+	* Makecmds.pm (print): Respect --sync-lines in replacement (but
+	not in input file).
+
+2009-01-08  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* makepp:
+	* Rule.pm:
+	* FileInfo_makepp.pm: Handle all variants of symlink changes.
+	With --rm-stale also rm files whose stale dependencies get rm`ed,
+	or where it can't initially be decided if it's really stale.
+
+	* BuildCheck/exact_match.pm: Extend arch-change explanation to any
+	similar pairs.
+
+	* makeppreplay (load_build_info_file): A single DEP_SIGS looks
+	like a content_based sig, but isn't.
+
+	* t/run_tests.pl: Add page break between makepp* invocations and
+	backup log files.
+
+	* t/additional_tests/2009_01_08_symlink.test: New test.
+
+	* t/additional_tests/2004_04_01_stale_repository.test:
+	* t/additional_tests/2004_11_02_repository_rmstale.test:
+	* t/additional_tests/2004_03_31_stale.test: Test more stale files
+	being removed.
+
+	* pod/makepp_statements.pod: Document how to debug perl {}.
+
+2008-12-21  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* makepp: Fix -c.
+	(perform): Concat current to previous error message and don't say
+	"no update necessary" when we abort with an error.
+
+	* stress-test.pl (StressTestUtils.pm): Make it a normal module so
+	it can be loaded by mppr.
+
+2008-12-14  Daniel Pfeiffer  <occitan@esperanto.org>
+
+Snapshot makepp-1.50.081214.tgz, version 1.50-12149-11231-10151 on CPAN.
+
+	* makeppreplay
+	* FileInfo_makepp.pm
+	* Makefile.pm
+	* Rule.pm
+	* Scanner.pm: Update mppr-modified or -recognized build infos, and
+	mark them with new info RESCAN.
+
+	* ActionParser.pm (parse_rule): Remember relative path for &cmd
+	source.
+
+	* Makesubs.pm (%scanners): Recognize all known Shells.
+
+	* Makecmds.pm (&cp): New opt --symlink.
+
+	* makepp (build_target_done): Calculate SORTED_DEPS and DEP_SIGS
+	only once, because they are the same for all targets.
+
+	* makeppinfo: Warn about missing files, but show build info even
+	if sig mismatches.  In that case don't show SIGNATURE.
+
+2008-11-23  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* makeppreplay, t/makeppreplay.test: New very fast command and test.
+
+	* makepp
+	* FileInfo_makepp.pm
+	* Makefile.pm
+	* Rule.pm
+	* Utils.pm: Support makeppreplay by differentiating via new constant MAKEPP.
+
+	* FileInfo.pm: Don't leave testfile on Windows.
+
+	* ActionParser.pm (parse_rule): Use simpler filename accessor.
+
+	* makeppbuiltin, makeppgraph: Support Perl style -Mmod=arg,...
+
+2008-11-02  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* t/run_tests.pl: Default of running only basic tests works again.
+	Each test now gets its own tdir, to avoid (Windows) problems where
+	it couldn't be cleaned because it was randomly locked.
+	($source_path): "our" for finding builtins.test.
+	(-b, -k, -m, -n & -s): New options.
+
+	* t/run_all.t: Path to makepp and -n moved to run_tests.pl.  '--'
+	passes through options.
+
+	* t/additional_tests/2006_02_18_makeppbuiltin.test: Adapt to
+	run_tests change.
+
+2008-10-15  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	Mention Strawberry Perl as working.
+
+	* makepp: Rewrite on Win ActiveState only up to 5.8.6.
+
+2008-09-28  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* Makefile.pm (find_root_makefile_upwards): When importing a
+	RootMakeppfile from a repository, check that this hadn't been done
+	previously in a lower directory.
+
+	* ActionParser.pm (parse_rule): Add dependency on user perl
+	command in such a way that it will not occasionally be temporarily
+	dropped.
+
+	* makepp (build_dependencies_done): Fix evaluation order.
+
+	* Glob.pm:
+	* FileInfo.pm (dir_stat_array):
+	* FileInfo_makepp.pm (build_info_string): Optimize.
+
+2008-09-02  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* FileInfo.pm:
+	* FileInfo_makepp.pm:
+	* Makefile.pm:
+	* Makesubs.pm: Make EXISTS be undef/exists based, to save quite some memory.
+
+	* Repository.pm (symlink): Move here from FileInfo.pm, as nobody else uses it.
+
+2008-09-01  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* makepp:
+	* FileInfo_makepp.pm:
+	* Rule.pm:
+	* makepplog: 
+	* t/additional_tests/2004_04_01_stale_repository.test: Handle
+	stale symlinks in, via or without repository cleanly.
+
+	* BuildCheck/exact_match.pm: Use cheaper "unless".
+
+	* makeppgraph (--up, --down): Accept these advertised options.
+
+	* pod/makepp_functions.pod: Fix find-program doc to "not-found".
+
+2008-08-19  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* FileInfo_makepp.pm (exists_or_can_be_built_or_remove): Treat
+	chmod 0 as inexstant, rather than internal error.
+
 2008-08-09  Daniel Pfeiffer  <occitan@esperanto.org>
 
 Snapshot makepp-1.50-cvs-080810.tgz, version 1.50-08093-08048-07303 on CPAN.
@@ -15,7 +327,7 @@ Snapshot makepp-1.50-cvs-080810.tgz, version 1.50-08093-08048-07303 on CPAN.
 	renaming of only '.' to '_dot_'.
 
 	* makepp (find_makepp_info, ..._register): Abolish wrapper useful
-	only when file_info was object oriented.
+	only when FileInfo was object oriented.
 
 	* Makesubs.pm: Directly get my $cwd, when that was all $makefile
 	was used for.
@@ -151,7 +463,7 @@ Snapshot makepp-1.50-cvs-080810.tgz, version 1.50-08093-08048-07303 on CPAN.
 	recursive make to separate modules.
 
 	* t/run_tests.pl:
-	* makepp (makepprc): Look for and load file .makepp.
+	* makepp (makepprc): Look for and load file .makepprc.
 	(usage): Inline it, putting text into DATA section to save memory.
 
 	* Makecmds.pm (frame):

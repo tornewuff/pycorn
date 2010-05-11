@@ -4,16 +4,16 @@ register_scanner ./nop scanner_skip_word
 CC := .$/nop $(CC)
 
 $(phony default): main.o
-	perl { Makecmds::c_cp 'answers/x' unless -e x }
+	perl { Mpp::Cmds::c_cp 'answers/x' unless -e x }
 
 $(phony main.o): main.c
 	: smartscan
 	-$(CC) $(CFLAGS) $(CPPFLAGS) -c $(input) -o $(output) && echo "NOK" > x
 
 perl_begin
-  use Scanner::Verilog;
-  my $s = new Scanner::Verilog(
-    FileInfo::file_info('main.o')->get_rule, '.'
+  use Mpp::Scanner::Verilog;
+  my $s = new Mpp::Scanner::Verilog(
+    Mpp::File::file_info('main.o')->get_rule, '.'
   );
   $s->continue_scanning;
   $s->get_context;

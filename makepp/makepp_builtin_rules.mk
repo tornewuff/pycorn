@@ -1,4 +1,4 @@
-# $Id: makepp_builtin_rules.mk,v 1.25 2008/05/24 21:42:27 pfeiffer Exp $
+# $Id: makepp_builtin_rules.mk,v 1.27 2009/02/10 22:55:49 pfeiffer Exp $
 # Please do NOT use this as an example of how to write a makefile.  This is
 # NOT A typical makefile.
 #
@@ -14,7 +14,7 @@
 # in here, because then (a) the $(origin ) function doesn't work; (b) the
 # values won't be visible except in rules, because this file is loaded after
 # everything else in the makefile is processed.	 Standard variables are
-# implemented as functions that have no arguments (see Makesubs.pm).
+# implemented as functions that have no arguments (see Mpp/Subs.pm).
 #
 
 #
@@ -26,14 +26,14 @@ _OBJ_SUFFIX = .o
 _OUTPUT = -o $(output)
 _EXE_SUFFIX =
 
-ifperl FileInfo::case_sensitive_filenames
+ifperl Mpp::File::case_sensitive_filenames
   #
   # Uppercase C as a suffix is indistinguishable from a lowercase C on a case-insensitive
   # file system.
   #
   _CPP_SUFFIXES += C
 endif
-ifperl ::is_windows
+ifperl Mpp::is_windows
 
   iftrue $(filter %cl %cl.exe %bcc32 %bcc32.exe %fl %fl.exe, $(CC) $(CXX) $(FC))
     _OBJ_SUFFIX = .obj

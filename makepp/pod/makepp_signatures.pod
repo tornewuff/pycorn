@@ -2,7 +2,7 @@
 
 makepp_signatures -- How makepp knows when files have changed
 
-=for vc $Id: makepp_signatures.pod,v 1.12 2007/05/06 10:40:53 pfeiffer Exp $
+=for vc $Id: makepp_signatures.pod,v 1.13 2009/02/09 22:07:39 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -38,7 +38,7 @@ C<signature> statement (see L<makepp_statements/signature>), or for all
 makefiles at once using the C<-m> or C<--signature-method> command line option
 (see L<makepp_command/-m>).
 
-=head2 Signature methods included in the distribution
+=head2 Mpp::Signature methods included in the distribution
 
 =over 4
 
@@ -88,7 +88,7 @@ It checks if a file's name looks like C or C++ source code, including things
 like Corba IDL.  If it does, this method applies.  If it doesn't, it falls
 back to plain signatures for binary files (determined by name or else by
 content) and else to L</md5>.  Alas you can currently tune what is to be
-considered C or binary only by subclassing C<Signature::c_compilation_md5> to
+considered C or binary only by subclassing C<Mpp::Signature::c_compilation_md5> to
 get a new signature type and there overriding or extending the methods
 C<recognizes_file> and C<excludes_file>.
 
@@ -206,9 +206,9 @@ in turn fall back to others.
 
 You can, if you want, define your own methods for calculating file
 signatures and comparing them.  You will need to write a perl module to
-do this.  Have a look at the comments in C<Signature.pm> in the
+do this.  Have a look at the comments in C<Mpp/Signature.pm> in the
 distribution, and also at the existing signature algorithms in
-C<Signature/*.pm> for details.
+C<Mpp/Signature/*.pm> for details.
 
 Here are some cases where you might want a custom signature method:
 

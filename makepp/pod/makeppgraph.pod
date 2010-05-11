@@ -2,7 +2,7 @@
 
 makeppgraph -- Graphical analysis of the dependency graph
 
-=for vc $Id: makeppgraph.pod,v 1.11 2008/06/01 21:47:19 pfeiffer Exp $
+=for vc $Id: makeppgraph.pod,v 1.13 2009/02/21 11:25:31 pfeiffer Exp $
 
 =head1 SYNOPSIS
 
@@ -170,7 +170,7 @@ occurrence where you can see all its attributes.  Due to IE's limited Unicode
 support, vertical arrows are used for include relations, instead of the usual
 dotted arrows.
 
-=head2 Textual Graphe
+=head2 Textual Graph
 
 This is a simple indentation-based format that can be perused with any text
 viewer.  This means you can usually study much bigger graphs than with the
@@ -240,7 +240,7 @@ displayed from left "top" to right "bottom" due to the width of the nodes.)
 
 =item --arguments-file=filename
 
-Read the file and parse it as possibly quoted options on one or several lines.
+Read the file and parse it as possibly quoted whitespace- and/or newline-separated options.
 
 =item -b
 
@@ -320,9 +320,9 @@ This option can be given multiple times, e.g. for merging all the logs from
 C<--traditional-recursive-make>.  But the dependencies you hid from makepp
 through the evil recursion paradigm can't of course show up here.
 
-=item -M module
+=item -M module[=arg,...]
 
-=item --module=module
+=item --module=module[=arg,...]
 
 Load module and import any functions it exports.
 
@@ -377,6 +377,10 @@ F<.udg> file.
 This option is only meaningful if you provide one or more patterns.  It will
 then only select the targets which depend on and/or include the matched files.
 
+=item --version
+
+Print out the version number.
+
 =back
 
 
@@ -403,8 +407,9 @@ the same node, which accumulates the combined dependencies and dependees.
 
 On the other hand you can just rename names to (usually) shorter names, so as
 to reduce the width of nodes, which can be far to wide with absolute
-filenames.  There are a few predefined function you can use for this.  These
-return true if they did something so you can combine them as in:
+filenames.  There are a few predefined functions in package C<Mpp::Rewrite>,
+in which your code also runs, you can use for this.  These return true if they
+did something so you can combine them as in:
 
     --rename='cwd( 1 ) || &home || &usr'
 

@@ -2,16 +2,13 @@
 
 makepp_command -- Command line syntax for makepp
 
-=for vc $Id: makepp_command.pod,v 1.39 2008/06/01 22:01:16 pfeiffer Exp $
+=for vc $Id: makepp_command.pod,v 1.44 2010/04/22 20:36:21 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
-    makepp [-options] [VAR=value] [target1 target2 ...]
-    mpp [-options] [VAR=value] [target1 target2 ...]
-
-L<--B<A>|/_2dI_3dfilename>,
+L<-B<A>|/_2da_filename>,
   L<--assume-new|/_2DW_filename>,
-  L<--argsfile|/_2d_2dargsfile_3dfilename>,
+  L<--argsfile|/_2da_filename>,
   L<--assume-old|/_2Do_filename>,E<nbsp>
 L<-B<b>|/_2d_2dbuild_2dcache>,
   L<--build-cache|/_2d_2dbuild_2dcache>,
@@ -93,6 +90,10 @@ L<-B<v>|/_2Dv>,
 L<-B<W>|/_2DW_filename>,
   L<--what-if|/_2DW_filename>
 
+B<makepp> S<[ I<option> ... ]> S<[ I<VAR=value> ]> S<[ I<target> ... ]>
+
+B<mpp> S<[ I<option> ... ]> S<[ I<VAR=value> ]> S<[ I<target> ... ]>
+
 Makepp supports most of the command line options and syntax that other makes
 support.  The hyphens between the words are always optional, and can also be
 replaced by an underscore.  You specify a list of targets to build on the
@@ -114,7 +115,7 @@ Options include most of the standard make options, plus a few new ones.
 
 =item --arguments-file=filename
 
-Read the file and parse it as possibly quoted options on one or several lines.
+Read the file and parse it as possibly quoted whitespace- and/or newline-separated options.
 
 =item -W filename X<-W> X<--assume-new>
 
@@ -345,11 +346,12 @@ targets relative to the current directory like this:
 
 =item --load-makeppfile=Makefile
 
-Loads the specified makefile I<before> any other makefiles, but do not
-consider this option for the purposes of determining the default target.  If
-no other makefile is specified, then one is sought using the usual rules.  If
-the specified makefile is the same makefile that is found using the usual
-rules, then this option has no effect.
+Loads the specified makefile I<before> any other makefiles, except for
+C<RootMakeppfile>, or C<RootMakeppfile.mk> above it, but do not consider this
+option for the purposes of determining the default target.  If no other
+makefile is specified, then one is sought using the usual rules.  If the
+specified makefile is the same makefile that is found using the usual rules,
+then this option has no effect.
 
 =item --force-copy-from-bc
 
@@ -377,6 +379,12 @@ the commands have finished.  This prevents output from several different
 commands from being mixed together on the display, but it does mean that
 you might have to wait a little longer to see the output.
 
+Native Windows Perls (i.e. Strawberry and ActiveState), because they do not
+support the Unix fork/exec paradigm, do not allow this option (Cygwin works
+fine!).  As a partial replacement, you can use the
+L<--sandbox|/_2D_2Dsandbox_3Dfilename> option there, though this is far less
+comfortable.
+
 =item -k
 
 =item --keep-going
@@ -389,7 +397,7 @@ file.
 =item --log-file=logfilename
 
 Changes the name of the log file to the indicated name.  By default, the
-log file is called C<.makepp_log>.
+log file is called C<.makepp/log>.
 
 =item --no-implicit-load
 
@@ -565,7 +573,7 @@ targets and build info files correspond exactly.
 Don't bother writing a detailed description of what was done to the log
 file.  By default, makepp writes out an explanation of every file that
 it tried to build, and why it built it or did not build it, to a file
-called C<.makepp_log>.  This can be extremely valuable for debugging a
+called C<.makepp/log>.  This can be extremely valuable for debugging a
 makefile--makepp tells you what it thought all of the dependencies were,
 and which one(s) it thought changed.  However, it does take some extra
 CPU time, and you might not want to bother.
@@ -637,12 +645,11 @@ directory.
 
 =item --repository=dir X<--repository>
 
-Specify the given directory as a repository (see L<makepp_repositories>
-for details).  Repositories are added in the order specified on the
-command line, so the first one you specify has precedence.  All files in
-the directory (and all its subdirectories) are automatically and
-temporarily linked to the current directory (and subdirectories) if they
-are needed.
+Specify the given directory as a repository (see L<makepp_repositories> for
+details).  Repositories are added in the order specified on the command line,
+so the first one you specify has precedence.  All files in the directory (and
+all its subdirectories) are automatically linked to the current directory (and
+subdirectories) if they are needed.
 
 If you just specify a directory after C<-R>, its contents are linked into the
 current directory.  You can link its contents into any arbitrary place in the
@@ -713,9 +720,9 @@ Verbose mode.  Explains what it is trying to build, and why each file is
 being built.  This can be useful if you think a file is being rebuilt
 too often.
 
-This option actually takes what would be written to the log file and
-displays it on the screen.  It's usually easier to run makepp and then
-look at F<.makepp_log>.
+This option actually takes what would be written to the log file and displays
+it on the screen.  It's usually easier to run makepp and then look at the
+output of L<makepplog>, which allows various selections and some rewriting.
 
 =item --version
 

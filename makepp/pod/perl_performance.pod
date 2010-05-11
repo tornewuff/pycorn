@@ -2,7 +2,7 @@
 
 makepp_perl_performance -- How to make perl faster
 
-=for vc $Id: perl_performance.pod,v 1.7 2008/08/04 21:57:02 pfeiffer Exp $
+=for vc $Id: perl_performance.pod,v 1.8 2008/09/28 21:20:07 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -148,7 +148,8 @@ instead:
 =item Group calls to print
 
 Individual calls to print, or print with separate arguments are very
-expensive.  Build up the string in memory and print it in one go.
+expensive.  Build up the string in memory and print it in one go.  If you can
+accumulate over 3kb, syswrite is more efficient.
 
     perl -MBenchmark -we 'timethis -10, sub { print STDERR $_ for 1..5 }' 2>/dev/null
     perl -MBenchmark -we 'timethis -10, sub { print STDERR 1..5 }' 2>/dev/null
@@ -166,8 +167,9 @@ expensive.  Build up the string in memory and print it in one go.
 
 Perl becomes quite slow with many small hashes.  If you don't need them, use
 something else.  Object orientation works just as well on an array, except
-that the members can't be accessed by name.  For the sake of comparability we
-use numeric keys here:
+that the members can't be accessed by name.  But you can use numeric constants
+to name the members.  For the sake of comparability we use plain numeric keys
+here:
 
     my $i = 0; our %a = map +($i++, $_), "a".."j"; timethis -10, sub { $b = $a{int rand 10} }
                our @a = "a".."j";                  timethis -10, sub { $b = $a[rand 10] }

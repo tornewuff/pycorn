@@ -16,13 +16,13 @@ $(phony clean):
 	&rm -f $(ANIMALS)
 ###	15	755	1152636440	1125017144	makepp_test_script.pl
 # Create the build cache:
-makepp \'builtin', qw{-MBuildCacheControl create ./build_cache};
+makepp \'builtin', qw{-MMpp::BuildCacheControl create ./build_cache};
 
 makepp qw{--build-cache build_cache --force_copy_from_bc};
 
 # clean (incoming.dir should be empty already, so use age threshold of 2 hours)
 # threshold for everything else covers stuff less than 1 day in the future.
-makepp \'builtin', qw{-MBuildCacheControl clean --mtime +-1 ./build_cache};
+makepp \'builtin', qw{-MMpp::BuildCacheControl clean --mtime +-1 ./build_cache};
 
 unlink './build_cache/build_cache_options.pl' or die;
 rmdir './build_cache/incoming.dir' || die;

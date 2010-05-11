@@ -40,6 +40,9 @@ d:
 
 e:
 	&echo $@ $(XVAR) -o $@
+###	2	644	1236523730	1237488485	hint
+This tests the old fashioned way of doing multi-directory builds.  The failure
+does not imply that the makepp-way of doing things is broken.
 ###	D	755	1067451878	1078122244	subdir1
 ###	14	644	1067451878	978375202	subdir1/Makefile
 

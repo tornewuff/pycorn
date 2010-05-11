@@ -1,6 +1,6 @@
 ###	SPAR <http://www.cpan.org/scripts/>
-###	2	644	1103317920	1210345400	is_relevant.pl
-is_windows < 1 &&		# ActiveState doesn't export empty vars
+###	2	644	1103317920	1224089613	is_relevant.pl
+is_windows < 1 &&		# Strawberry and ActiveState don't export empty vars
 is_windows != -2		# Msys 5.6.1 dumps on delete from %ENV
 ###	20	755	1100740057	1210256087	makepp_test_script.pl
 $ENV{FOO} = '';
@@ -38,8 +38,8 @@ perl_begin
  open(RESCAN, '>', "rescan") or die;
  close(RESCAN);
 
- { package CommandParser::foo;
-    our @ISA = qw/CommandParser/;
+ { package Mpp::CommandParser::foo;
+    our @ISA = qw/Mpp::CommandParser/;
     sub xparse_command {
 	my $self = shift;
 	open(RESCAN, '>', "rescan") or die;
@@ -50,8 +50,8 @@ perl_begin
  }
 
  sub parser_foo {
-    require ActionParser::Specific;
-    return new ActionParser::Specific("foo");
+    require Mpp::ActionParser::Specific;
+    return new Mpp::ActionParser::Specific("foo");
  }
 perl_end
 

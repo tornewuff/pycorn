@@ -2,7 +2,7 @@
 
 makepplog -- Textual analysis of the build log
 
-=for vc $Id: makepplog.pod,v 1.9 2008/06/01 21:47:19 pfeiffer Exp $
+=for vc $Id: makepplog.pod,v 1.10 2009/02/21 11:25:31 pfeiffer Exp $
 
 =head1 SYNOPSIS
 
@@ -30,7 +30,7 @@ at any time, and even on a different machine.
 
 =item --arguments-file=filename
 
-Read the file and parse it as possibly quoted options on one or several lines.
+Read the file and parse it as possibly quoted whitespace- and/or newline-separated options.
 
 =item -c
 
@@ -111,7 +111,7 @@ All scanning related messages.
 =item --showkey
 
 This prefixes each output line with the internal name of the message key, for
-use with C<--perl>.
+use with C<--keys>.
 
 =item -l filename
 
@@ -164,6 +164,10 @@ easily become longer than a screenful.
 =item --unique
 
 Report each found include statement and each scan output only once.
+
+=item --version
+
+Print out the version number.
 
 =back
 

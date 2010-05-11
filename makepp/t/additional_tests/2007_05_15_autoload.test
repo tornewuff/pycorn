@@ -13,7 +13,7 @@ $(phony test): a.$(X) b.$(X)
 a b:
 	&echo $@ -o $@
 	# Now make sure we don't build built-ins:
-    ifperl ::is_windows < 1
+    ifperl Mpp::is_windows < 1
 	-source /dev/null
     endif
 	case 1 in 1) echo "OK";; esac

@@ -17,6 +17,9 @@ int main()
   printf("%d %d %d %d\n", __LINE__, X, X2, Y);
   return 0;
 }
+###	2	644	1236523730	1236523995	hint
+This test either requires makepp to find a known compiler in your PATH,
+or you must provide one in the environment variable CC.
 ###	1	644	1067451873	1055628127	n_files.win
 2 1 0
 ###	1	644	1067451873	1055626466	x.h

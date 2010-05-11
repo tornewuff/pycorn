@@ -1,16 +1,16 @@
 ###	SPAR <http://www.cpan.org/scripts/>
 ###	3	755	1067451881	1211218113	is_relevant.pl
 # When testing an already installed version, this test doesn't make sence.
-substr +($::makepp_dir = $makepp_path), -7, 7, '';
--f "$::makepp_dir/install.pl";
+substr +($Mpp::makepp_dir = $makepp_path), -7, 7, '';
+-f "$Mpp::makepp_dir/install.pl";
 ###	16	644	1164353916	1211381577	makepp_test_script.pl
 my $cwd = cwd;
 
-chdir $::makepp_dir;		# install.pl and config.pl are to be run here
-my $cmd = "$::makepp_dir/install.pl";
+chdir $Mpp::makepp_dir;		# install.pl and config.pl are to be run here
+my $cmd = "$Mpp::makepp_dir/install.pl";
 system_intabort \$cmd, PERL, $cmd, "$cwd/instbin", "$cwd/instshare", ('none') x 3;
 
-$cmd = "$::makepp_dir/config.pl";
+$cmd = "$Mpp::makepp_dir/config.pl";
 system_intabort \$cmd, PERL, $cmd, "--makefile=$cwd/config.mk", '-p', $cwd, '-hnone', '-mnone';
 makepp "-f$cwd/config.mk", '--dont-build=all', 'install';
 

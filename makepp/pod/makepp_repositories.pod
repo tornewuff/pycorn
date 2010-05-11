@@ -3,7 +3,7 @@
 makepp_repositories -- How to use repositories for variant builds, for
 maintaining a central set of sources, and other things
 
-=for vc $Id: makepp_repositories.pod,v 1.18 2008/07/19 21:44:20 pfeiffer Exp $
+=for vc $Id: makepp_repositories.pod,v 1.20 2010/02/24 23:30:30 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -15,9 +15,13 @@ functionality to the C<VPATH> variable in some versions of make, but (unlike
 C<VPATH>) you do not have to do anything special to your makefile to get them
 to work.
 
-Repositories are specified with the C<-R> or C<--repository> command
-line option (see L<makepp_command/-R>) or with the C<repository>
-statement (see L<makepp_statements/repository>) in the makefile.
+Repositories are specified with the C<-R> or C<--repository> command line
+option (see L<makepp_command/-R>) or with the C<repository> statement (see
+L<makepp_statements/repository>) in the makefile.  Note that if you have a
+habit of calling makepp in different subdirectories of your build tree, it is
+easy to accidentally reimport a repository somewhere else.  As a safeguard
+against this, if you use F<RootMakeppfile>, makepp will refuse to start if it
+finds one above or below where it would be imported.
 
 Repositories are useful in several different situations:
 
@@ -245,7 +249,12 @@ You can do it all with one command, like this:
        makepp -R alternate-build=. -F alternate-build
 
 (C<-F> changes to that directory before loading the makefile.  See
-L<makepp_command/-F> for details.  You must specify C<-R> before C<-F>.)
+L<makepp_command/-F> for details.  You must specify C<-R> before C<-F>.)  Note
+that this example puts the new build tree inside the repository.  That will
+not work if you use a F<RootMakeppfile> because makepp safeguards against
+nested trees.  It's also not a good idea if you use F<**>, because if you ever
+build in the repository it will also find edited and generated files in this
+subtree.
 
 Assigning a different location in the file system may be also useful for
 more complicated builds, where there are several library subdirectories.
@@ -348,13 +357,14 @@ form):
 
 =back
 
-=head3 Don't build in a repository
+=head3 Don't build in a repository during use
 
-A repository is meant to be read-only while it is being used as a
-repository.  Makepp will B<not> work properly if you change files in
-your repository during the course of a build.  Before it starts the
-build, makepp gets a list of all the files that exist in the repository,
-and never updates its list, except for files it expects to appear.
+A repository is meant to be read-only while it is being used as a repository.
+Makepp will B<not> work properly if you change files in your repository during
+the course of a build.  Nightly builds may be ok for you, if noone else uses
+the repository at that time.  Before it starts the build, makepp gets a list
+of all the files that exist in the repository, and never updates its list,
+except for files it expects to appear.
 
 If you need a repository that's changing as you build, you might want to
 consider makepp's build cache mechanism (see L<makepp_build_cache>).
@@ -403,41 +413,13 @@ a subdirectory called C<.libs> which contains the actual object files.  To
 prevent build mistakes, makepp refuses to link in a C<.la> file from a
 repository.  Hopefully in the future libtool will be better supported.
 
-
-Many hidden dependencies related to compilation are caught by the
-command line scanner.  If your compiler uses the common unix compilation
-flags (e.g., C<-I>, C<-D>, etc.), then makepp will usually figure out
-where all your include files are.  However, if the compilation command
-is not the first command on the command line, then makepp may not
-realize it's a compilation and it won't find the hidden dependencies.
-For example, consider this command from the KDE distribution:
-
-    # This command checks to make sure all global symbols in the library are
-    # properly defined, by linking a dummy program.
- 
-    libkdecore.la.closure: $(libkdecore_la_OBJECTS) $(libkdecore_la_DEPENDENCIES)
-    	&echo "int main() {return 0;}" -o libkdecore_la_closure.cpp
-    	libtool --mode=compile $(CXX) $(CXXFLAGS) -c libkdecore_la_closure.cpp
-    	libtool --mode=link $(CXX) libkdecore_la_closure.lo $(libkdecore_la_LDFLAGS) $(libkdecore_la_OBJECTS) $(libkdecore_la_LIBADD) $(LIBS)
-
-The rule action contains not just one compilation command but two;
-makepp will only look at the first one.  As a result, this makefile will
-not work with repositories.
-
-Note that it would work fine if this multi-line action were broken up
-into several single-line rules:
-
-    libkdecore_la_closure.cpp:
-    	&echo "int main() {return 0;}" -o libkdecore_la_closure.cpp
- 
-    libkdecore.la.closure: $(libkdecore_la_OBJECTS) $(libkdecore_la_DEPENDENCIES) \
-    	libkdecore_la_closure.lo
-    	libtool -mode=link $(CXX) -o $(output) $(inputs) $(libkdecore_la_LIBADD) $(LIBS)
-
-You may have to be careful if you have any homegrown scripts that create
-files that makepp doesn't know about.  For correct builds, it is vitally
-important to list B<all> targets and dependencies (or determine them
-automatically by scanning).
+Many hidden dependencies related to compilation are caught by the command line
+scanner.  If your compiler uses the common unix compilation flags (e.g.,
+C<-I>, C<-D>, etc.), then makepp will usually figure out where all your
+include files are.  You may have to be careful if you have any homegrown
+scripts that create files that makepp doesn't know about.  For correct builds,
+it is vitally important to list B<all> targets and dependencies (or determine
+them automatically by scanning).
 
 =head3 Putting absolute filenames into programs
 
@@ -470,7 +452,7 @@ of the number of foreseen files (so called inodes), even though there is
 plenty of space left.  In this case the sysadmin will need to tune the file
 system.
 
-=head2 Overriding repository copies with local copies
+=head2 Overriding repository copies
 
 If you make any modifications to a file locally, makepp will ordinarily
 realize this and recompile the file using the local copy rather than the
@@ -484,9 +466,8 @@ contains it?  If the developer removes the local copy, makepp will
 happily put in the copy from the repository, and the build will proceed
 as if the file existed.
 
-The best current technique (alas not for user root) for this problem is to
-make the file that you want not to include in the build process unreadable,
-like this:
+One technique (alas not for user root) for this problem is to make the file
+that you want not to include in the build process unreadable, like this:
 
     chmod a-rw file-to-be-excluded
 
@@ -499,6 +480,10 @@ make a local directory that has the same name but is unwritable.  If you
 want makepp to ignore the directory entirely, then make it unreadable
 too.  (Read-only directories are searched but targets in them are
 usually not built.)
+
+The other way to do this is calling makepp with one or more exclusion options:
+
+    mpp -R /path/to/rep --dont-read=/path/to/rep/file-to-be-excluded
 
 =head2 Don't use repositories for files which can change!
 
@@ -524,7 +509,7 @@ directory:
     # module1/Makeppfile
     ../include/%.h : include/%.h
     	&cp $(input) $(output)
-    # You could also (more efficiently) do the following:
+    # You could also (more efficiently but problematic on Windows) do the following:
     #    &ln -r $(input) $(output)
 
 Makepp might still try to build files that happen to be in a repository if

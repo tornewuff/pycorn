@@ -17,7 +17,7 @@ newsort: sort.c
 #
 
 # Create the build cache:
-makepp \'builtin', qw{-MBuildCacheControl create ./build_cache};
+makepp \'builtin', qw{-MMpp::BuildCacheControl create ./build_cache};
 
 # Now build targets
 makepp qw{--build-cache build_cache --md5check-bc};

@@ -6,7 +6,7 @@
 
 # Former 2005_07_28_mkdir_wildcard.test
 perl_begin
-	FileInfo::lstat_array FileInfo::file_info 'repository';
+	Mpp::File::lstat_array Mpp::File::file_info 'repository';
 	mkdir 'repository/x2';
 	open(OUT, '>', 'repository/x2/f2') or die;
 	close(OUT);

@@ -1,6 +1,6 @@
 ###	SPAR <http://www.cpan.org/scripts/>
-###	3	644	1148062992	1210873871	is_relevant.pl
-is_windows < 1			# ActiveState can crash
+###	3	644	1148062992	1224089593	is_relevant.pl
+is_windows < 1			# Strawberry and ActiveState can crash
   and !no_link
   and fork ? wait>0 : exit	# Make sure we can fork.
 ###	65	755	1103935704	1185997009	makepp_test_script.pl
@@ -24,7 +24,7 @@ while( defined( my $val = $ENV{"STRESS_PREFIX$i"} )) {
   $hosts[$i++] = $val;
 }
 
-makepp \'builtin', '-MBuildCacheControl', 'create', $cache
+makepp \'builtin', '-MMpp::BuildCacheControl', 'create', $cache
   unless -d $cache;
 
 $i = 0;
@@ -36,7 +36,7 @@ for( @hosts ) {
   my $pid = fork;
   unless( $pid ) {		# We're the child now
     my @cmd = ($ENV{PERL}, './stress_test.pl',
-	       "dir$i", $end, 0.5, $force_copy, $ENV{PERL}, $::makepp_path, $cache);
+	       "dir$i", $end, 0.5, $force_copy, $ENV{PERL}, $Mpp::makepp_path, $cache);
     if( $_ ) {			# Host prefix given for this one.
       chomp(my $pwd = `/bin/pwd`);
       @cmd = "$_ \"sh -c 'cd $pwd && exec @cmd'\"";
@@ -63,7 +63,7 @@ while( 1 ) {
   }
   %pids or last;
   $no_clean or
-    makepp \'builtin', '-MBuildCacheControl', qw{clean --verbose --mtime +-1 --in-mtime +-1}, $cache;
+    makepp \'builtin', '-MMpp::BuildCacheControl', qw{clean --verbose --mtime +-1 --in-mtime +-1}, $cache;
 }
 
 unlink 'answers/build_cache_stress' unless $insist || -f 'build_cache_stress';
@@ -89,7 +89,7 @@ print STDERR "$subdir done\n";
 exit 0;
 ###	19	644	1103936101	1185560328	Makeppfile.in
 perl_begin
-  $::build_cache_error_hook = sub {
+  $Mpp::build_cache_error_hook = sub {
     # If this file doesn't show up, then there hasn't been any stress, so the
     # test isn't doing its job (and thus it fails even if it reveals no bugs).
     open my $fh, '>', '../build_cache_stress' or die $!;

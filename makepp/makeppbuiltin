@@ -1,7 +1,9 @@
 #!/usr/bin/perl -w
 #use strict;			# TODO: explore why this breaks the builtins.
 
-# $Id: makeppbuiltin,v 1.13 2008/05/17 14:26:14 pfeiffer Exp $
+# $Id: makeppbuiltin,v 1.17 2009/02/11 23:22:37 pfeiffer Exp $
+
+package Mpp;
 
 our $VERSION = '@VERSION@';
 
@@ -21,7 +23,7 @@ BEGIN {
 				# Add '.' to the path in case the user is
 				# running it with "perl makepp" even if
 				# . is not in his path.
-      if( -f "$_/Glob.pm" ) {	# Found something we need?
+      if( -d "$_/Mpp" ) {	# Found something we need?
 	$datadir = $_;
 	last;
       }
@@ -35,12 +37,12 @@ BEGIN {
   unshift @INC, $datadir;
 }
 
-$Makesubs::rule->{MAKEFILE}{PACKAGE} = '';
+$Mpp::Subs::rule->{MAKEFILE}{PACKAGE} = 'Mpp'; # Make it same as ours in eval_or_die
 
-use Utils;
-use FileInfo ();
-use TextSubs ();
-use Makecmds;
+use Mpp::Utils;
+use Mpp::File;
+use Mpp::Text ();
+use Mpp::Cmds;
 
 sub eval_or_die($) {
   if( wantarray ) {
@@ -53,14 +55,17 @@ sub eval_or_die($) {
     $result;
   }
 }
-{ no warnings 'redefine'; *Makecmds::eval_or_die = \&eval_or_die }
+{ no warnings 'redefine'; *Mpp::Cmds::eval_or_die = \&eval_or_die }
 
 
 sub metahelp { print STDERR "usage: $0", <<'EOF' }
  [metaoption ...] command [option ...] [argument ...]
-  options depend on the command, while metaoptions are these:
-  -I|--include=dir	dir to load module from
-  -M|--module=module	module with your functions
+Options depend on the command, while metaoptions are these:
+
+-I or --include=dir
+	dir to load module from
+-M or --module=module[=arg,...]
+	module with your functions
 Look at @htmldir@/makeppbuiltin.html for wrapper details,
 or at http://makepp.sourceforge.net/@BASEVERSION@/makeppbuiltin.html
 or type "man makeppbuiltin".
@@ -81,7 +86,7 @@ sub getopts_help(@) {
   shift @opts if 'HASH' eq ref $opts[0];
   my %short;
   for( @opts ) {
-    my $long = TextSubs::_getopts_long( $_ );
+    my $long = Mpp::Text::_getopts_long( $_ );
     my $short = $_->[0];	# Show only the 1st short opt (e.g. --fields & --force)
     $_ = (($short && !$short{$short}) ? "$_->[0], --$long" : $long) .
       ($_->[3] ? '=arg' : '');
@@ -98,7 +103,7 @@ sub getopts_help(@) {
 }
 
 
-my $re = join '|', grep { exists &{"Makecmds::$_"} && s/^c_// } keys %Makecmds::;
+my $re = join '|', grep { exists &{"Mpp::Cmds::$_"} && s/^c_// } keys %Mpp::Cmds::;
 
 # This function exists so we can efficiently run many tests in one process.
 sub doit {
@@ -107,35 +112,35 @@ sub doit {
 
   if( $0 =~ /($re)[^\/]*$/ ) {	# Yes, found a builtin.
     $0 = $1;
-    $cmd = "Makecmds::c_$0";
+    $cmd = "Mpp::Cmds::c_$0";
   } else {
     my $tmp;
-    TextSubs::getopts 1,
+    Mpp::Text::getopts 1,
       ['I', qr/include(?:[-_]?dir)?/, \$tmp, 1, sub { unshift @INC, $tmp }],
-      [qw(M module), \$tmp, 1, sub { eval_or_die "use $tmp" }],
+      [qw(M module), \$tmp, 1, sub { $tmp =~ s/=(.*)/ qw($1)/ and $tmp =~ tr/,/ /; eval_or_die "use $tmp" }],
       [qr/[h?]/, 'help', undef, 0, sub { &metahelp; &helpfoot }],
-      [0, 'version', undef, 0, \&FileInfo::version];
+      [0, 'version', undef, 0, \&Mpp::File::version];
     &metahelp, &helpfoot if !@ARGV;
 
     $tmp = $0;			# 1st argument must be the command name.
     $0 = shift @ARGV;
     if( !exists &{$cmd = "c_$0"} ) {
-      $cmd = "Makecmds::c_$0";
+      $cmd = "Mpp::Cmds::c_$0";
       die "$tmp: $0 is not a makepp builtin command.\n" if !exists &$cmd;
     }
   }
 
   if( @ARGV and $ARGV[0] eq '-?' || $ARGV[0] eq '--help' ) {
     no warnings;
-    *TextSubs::getopts = \&getopts_help; # Let the seemingly normal call handle this.
+    *Mpp::Text::getopts = \&getopts_help; # Let the seemingly normal call handle this.
   }
 
   if( !$ENV{INSTALL_LOG} && $cmd =~ /install$/ ) {
-    require Makefile;
-    Makefile::find_root_makefile_upwards( $FileInfo::CWD_INFO );
+    require Mpp::Makefile;
+    Mpp::Makefile::find_root_makefile_upwards( $CWD_INFO );
 				# Fill ->{ROOT} if RootMakeppfile found.
   } elsif( $cmd =~ /preprocess$/ ) {
-    require Makefile;
+    require Mpp::Makefile;
   }
   &$cmd( @ARGV );
 }

@@ -1,9 +1,9 @@
 ###	SPAR <http://www.cpan.org/scripts/>
 ###	11	755	1083168750	1083168738	Makeppfile
-# test Makefile::unshift_makefile_lines
+# test Mpp::Makefile::unshift_makefile_lines
 
 perl {
-  Makefile::unshift_makefile_lines <<'__HERE';
+  Mpp::Makefile::unshift_makefile_lines <<'__HERE';
 $(phony pass):
 	perl {}
 __HERE

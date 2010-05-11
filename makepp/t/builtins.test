@@ -199,7 +199,7 @@ our @EXPORT = 'c_uc';
 
 sub c_uc {
   local @ARGV = @_;
-  Makecmds::frame {
+  Mpp::Cmds::frame {
     print "\u\L$_" while <>;
   } 'f', qw(i I o O r s); # fails in 5.6: qw(f i I o O r s);
 }
@@ -221,6 +221,11 @@ pqrs	tuvw	xyz{	|}~
 ###	0	644	1107332258	1105783994	dir2
 ###	1	644	1107332258	1107331351	grep.in
 aha,foo,bar,with a,without
+###	4	644	1236528312	1236528312	hint
+This tests links and symbolic links, among other things.  If your file system
+doesn't support either of these, you can try running this test with a
+workaround that consists in setting the environment variable MAKEPP_LN_CP to
+1, 2 or 3.  If you want to use the &ln builtin later on, always set it.
 ###	22	644	1153676973	1181388272	preprocess.test
 
 # empty & comment
@@ -386,7 +391,7 @@ date
 # empty & comment not gone
 con- \
     tinuation
-no  continuation
+no continuation
 v1 += 5
 override v2 := 
 define v3
@@ -399,14 +404,14 @@ include plain text
 # empty & comment not gone
 con- \
     tinuation
-no  continuation
+no continuation
 show aa = ; v1 = 5; v2 = 5; v3 = long var; v4 = 1
 include plain text
 
 # empty & comment not gone
 con- \
     tinuation
-no  continuation
+no continuation
 show aa = ; v1 = 5 5; v2 = 5 5; v3 = long var; v4 = 1
 include plain text
 ###	2	644	1139987227	1217368876	answers/sed.out
