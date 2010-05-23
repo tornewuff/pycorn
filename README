@@ -62,10 +62,22 @@ And.. that's it for now. There is no way to import any modules which aren't
 built into the interpreter as all file access fails right now, and Python's
 builtin readline is really stupid so you can't even backspace.. but it works!
 
+BINARY RELEASES
+===============
+
+Pycorn is not very useful as a binary image at this point, because the builtin
+Python code is not yet finished, and so it is expected that people will want to
+play around with the Python code and build a new image from it.
+
+However, the actual native binary contains only the minimum amount of code to
+start up the interpreter and begin to import stuff, and binary releases contain
+a prebuilt copy of this binary. This means you don't need a compiler.
+
 REQUIREMENTS
 ============
 
-Pycorn requires several things in order to build:
+Pycorn requires several things in order to build, even if you are using a
+binary release:
 
 1) Add the makepp directory in the pycorn source tree to your PATH. makepp is a
 nice make replacement with lots of nifty features; used primarily because I
@@ -73,9 +85,10 @@ hate make's handling of subdirectories. See http://makepp.sourceforge.net/ for
 their project page. I've included a version in the tree because it's a CVS
 snapshot, and an uncommon tool.
 
-2) You need an arm-eabi crosscompiler toolchain, and newlib 1.17. To build one
-automatically, install the header files for libgmp, libmpfr and ncurses (the
-dev packages for them from your distro), then run:
+2) If you aren't using a binary release, you need an arm-eabi crosscompiler
+toolchain, and newlib 1.17. To build one automatically, install the header
+files for libgmp, libmpfr and ncurses (the dev packages for them from your
+distro), then run:
 
 cd toolchain; makepp TOOLSPREFIX=/dir/to/install/to
 
@@ -84,11 +97,13 @@ install one from somewhere else, newlib must be built to expect reentrant
 syscalls and without its own embedded syscalls or it will not work; better to
 use this one.
 
-3) Install autoconf. Python's configure script needs regeneration after
-patching for cross-compilability.
+3) If you aren't using a binary release, install autoconf. Python's configure
+script needs regeneration after patching for cross-compilability.
 
 BUILDING
 ========
+
+If you are using a binary release, skip step 1.
 
 1) Run "makepp hello/hello.uimage". This is a "hello world" program which
 should load into u-boot and print on the default platform serial port.
