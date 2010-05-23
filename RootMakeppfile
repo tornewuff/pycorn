@@ -1,9 +1,9 @@
 include common.mk
 
 ifndef USE_BINARIES
-$(phony all): hello/all pykern/all
+$(phony all): hello/all pycorn/all
 else
-$(phony all): pykern/all
+$(phony all): pycorn/all
 endif
 
-$(phony run): pykern/run
+$(phony run): pycorn/run

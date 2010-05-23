@@ -116,9 +116,9 @@ assuming you have QEMU installed. The bootloader will be configured
 automatically so it should just run. Hit C-a x (C-a a x under screen) to kill
 QEMU.
 
-2) Run "makepp pykern/pykern.uimage". This is the python interpreter as a
-kernel.
+2) Run "makepp pycorn/pycorn.uimage". This is the python interpreter, with the
+minimum amount of code to boot pycorn built into it.
 
 3a) Again, if you have an actual Verdex board it should run from u-boot.
 
-3b) Otherwise, "makepp pykern/run" to launch it in QEMU.
+3b) Otherwise, "makepp pycorn/run" to launch it in QEMU.

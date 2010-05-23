@@ -2,7 +2,7 @@ OBJECTS = main.o getpath.o frozen.o $(EXTMODULES) $(ROOT)/python/libpython2.5.a
 SYSLIBS := -lm
 RAMDISK := initrd.zip
 
-$(phony all): pykern.flash
+$(phony all): pycorn.flash
 
 include python/pyinclude.mk
 include common.mk
@@ -30,6 +30,6 @@ initrd.zip: $( $(INITRDDIRS))/** $(ROOT)/python/stamp-initrd makezip.py
 	python makezip.py $(output) $(INITRDDIRS) $(ROOT)/python/initrd
 
 ifdef USE_BINARIES
-pykern.uimage: $(MACHPATH)/$(MACH)-pykern.uimage
+pycorn.uimage: $(MACHPATH)/$(MACH)-pycorn.uimage
 	&cp -f $(input) $(output)
 endif

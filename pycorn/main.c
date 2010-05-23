@@ -1,5 +1,5 @@
 /*
- * Main pykern function. Just calls Python for now.
+ * Main pycorn function. Just calls Python for now.
  *
  * Copyright 2008 Torne Wuff
  *
