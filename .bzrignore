@@ -9,14 +9,14 @@ downloads/*.bz2
 downloads/*.gz
 python/hostpy
 python/targetpy
-pykern/frozen.c
-pykern/initrd.zip
+pycorn/frozen.c
+pycorn/initrd.zip
 python/hostpgen
 python/include
 python/quilt
 python/frozen
 python/initrd
-pykern/frozen/bootstrap/version.py
+pycorn/frozen/bootstrap/version.py
 arch/arm/metal/ext/_metalcpu_coproc.S
 arch/arm/metal/ext/_metalcpu_coproc.h
 arch/arm/metal/initrd/metal/_coprocmap.py
