@@ -10,7 +10,7 @@
 #
 
 import _metalcpu
-import metal._coprocmap as cpmap
+import _coprocmap as cpmap
 from metal import mem, register, bits
 from metal.bits import Field, Bits
 
