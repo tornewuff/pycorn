@@ -3,6 +3,8 @@
 *.bin
 *.uimage
 *.flash
+*.o
+*.a
 stamp-*
 python/Python-*
 downloads/*.bz2
