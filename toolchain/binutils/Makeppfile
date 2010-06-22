@@ -1,7 +1,3 @@
-BINUTILSVER := 2.19.1
-BINUTILSTAR := binutils-$(BINUTILSVER).tar.bz2
-BINUTILSDIR := binutils-$(BINUTILSVER)
-
 include toolchain.mk
 
 stamp-install: stamp-build

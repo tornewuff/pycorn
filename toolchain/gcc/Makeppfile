@@ -1,17 +1,13 @@
-GCCVER := 4.4.1
-GCCTAR := gcc-core-$(GCCVER).tar.bz2
-GCCDIR := gcc-$(GCCVER)
-
 include toolchain.mk
 
 stamp-install: stamp-build
 	cd build; make install
 	&touch $(output)
 
-stamp-build: stamp-sources ../binutils/stamp-install
+stamp-build: stamp-sources ../binutils/stamp-install ../newlib/stamp-sources
 	rm -rf build
 	&mkdir build
-	cd build; CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" CFLAGS_FOR_TARGET="-O2" LDFLAGS_FOR_TARGET="" ../$(GCCDIR)/configure --enable-languages=c --disable-multilib --with-gcc --with-gnu-ld --with-gnu-as --disable-shared --disable-threads --disable-nls --disable-libmudflap --disable-libssp --disable-libgomp --target=$(TOOLSTARGET) --with-newlib --prefix=$(absolute_filename $(TOOLSPREFIX))
+	cd build; CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" CFLAGS_FOR_TARGET="-O2" LDFLAGS_FOR_TARGET="" ../$(GCCDIR)/configure --enable-languages=c --disable-multilib --with-gcc --with-gnu-ld --with-gnu-as --disable-shared --disable-threads --disable-nls --disable-libmudflap --disable-libssp --disable-libgomp --target=$(TOOLSTARGET) --with-newlib --with-headers=../../newlib/$(NEWLIBDIR)/newlib/libc/include --prefix=$(absolute_filename $(TOOLSPREFIX))
 	cd build; make
 	&touch $(output)
 

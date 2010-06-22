@@ -1,7 +1,3 @@
-NEWLIBVER := 1.17.0
-NEWLIBTAR := newlib-$(NEWLIBVER).tar.gz
-NEWLIBDIR := newlib-$(NEWLIBVER)
-
 include toolchain.mk
 
 stamp-install: stamp-build

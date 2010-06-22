@@ -1,7 +1,3 @@
-GDBVER := 6.8
-GDBTAR := gdb-$(GDBVER).tar.bz2
-GDBDIR := gdb-$(GDBVER)
-
 include toolchain.mk
 
 stamp-install: stamp-build
