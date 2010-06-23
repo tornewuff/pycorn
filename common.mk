@@ -26,6 +26,9 @@ include $(MACHPATH)/$(MACH).mk
 # Include arch-independant metal code
 include $(ROOT)/metal/metal.mk
 
+PYTHONVER := 2.5.5
+PYTHONVERMINOR := 2.5
+
 # Rules
 
 ifndef USE_BINARIES

@@ -1,13 +1,10 @@
-PYTHONVER := 2.5.5
-PYTHONVERMINOR := 2.5
+include common.mk
 
 libpython$(PYTHONVERMINOR).a: stamp-target
 	cp -p targetpy/$(output) $(output)
 
 FREEZEMODS := $(&cat freezelist)
 INITRDMODS := $(&cat initrdlist)
-
-include common.mk
 
 stamp-initrd: stamp-sources
 	rm -rf initrd
