@@ -12,13 +12,13 @@ include common.mk
 stamp-initrd: stamp-sources
 	rm -rf initrd
 	&mkdir initrd
-	cp -p Python-$(PYTHONVER)/Lib/$(INITRDMODS) initrd
+        cd Python-$(PYTHONVER)/Lib && cp -p --parents $(INITRDMODS) ../../initrd
 	&touch stamp-initrd
 
 stamp-frozen: stamp-sources
 	rm -rf frozen
 	&mkdir frozen
-	cp -p Python-$(PYTHONVER)/Lib/$(FREEZEMODS) frozen
+        cd Python-$(PYTHONVER)/Lib && cp -p --parents $(FREEZEMODS) ../../frozen
 	&touch stamp-frozen
 
 stamp-include: stamp-target stamp-sources
