@@ -1,0 +1,18 @@
+include common.mk
+
+hostpgen: stamp-host
+	cp -p build/Parser/pgen $(output)
+
+stamp-host: stamp-sources
+	rm -rf build
+	&mkdir build
+	cd build; ../Python-$(PYTHONVER)/configure
+	cd build; make
+	&touch stamp-host
+
+stamp-sources Python-$(PYTHONVER)/configure: $(ROOT)/downloads/Python-$(PYTHONVER).tar.bz2
+	rm -rf Python-$(PYTHONVER)
+	tar jxf $(input)
+	&touch $(output)
+
+no_implicit_load Python-$(PYTHONVER) build

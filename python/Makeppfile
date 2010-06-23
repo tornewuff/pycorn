@@ -1,7 +1,7 @@
 include common.mk
 
 libpython$(PYTHONVERMINOR).a: stamp-target
-	cp -p targetpy/$(output) $(output)
+	cp -p build/$(output) $(output)
 
 FREEZEMODS := $(&cat freezelist)
 INITRDMODS := $(&cat initrdlist)
@@ -22,25 +22,15 @@ stamp-include: stamp-target stamp-sources
 	rm -rf include
 	&mkdir include
 	cp -p Python-$(PYTHONVER)/Include/*.h include
-	cp -p targetpy/pyconfig.h include
+	cp -p build/pyconfig.h include
 	&touch stamp-include
 
-stamp-target: stamp-sources hostpgen $(LDDEPS)
-	rm -rf targetpy
-	&mkdir targetpy
-	cd targetpy; MACHDEP=pycorn CFLAGS="$(LDFLAGS)" ../Python-$(PYTHONVER)/configure --host=arm-eabi --without-signal-module
-	cd targetpy; make HOSTPGEN=$(CURDIR)/hostpgen EXTRA_CFLAGS="$(PYCFLAGS)" libpython$(PYTHONVERMINOR).a
+stamp-target: stamp-sources $(ROOT)/hostpy/hostpgen $(LDDEPS)
+	rm -rf build
+	&mkdir build
+	cd build; MACHDEP=pycorn CFLAGS="$(LDFLAGS)" ../Python-$(PYTHONVER)/configure --host=arm-eabi --without-signal-module
+	cd build; make HOSTPGEN=../../hostpy/hostpgen EXTRA_CFLAGS="$(PYCFLAGS)" libpython$(PYTHONVERMINOR).a
 	&touch stamp-target
-
-hostpgen: stamp-host
-	cp -p hostpy/Parser/pgen $(output)
-
-stamp-host: stamp-sources
-	rm -rf hostpy 
-	&mkdir hostpy
-	cd hostpy; ../Python-$(PYTHONVER)/configure
-	cd hostpy; make Parser/pgen
-	&touch stamp-host
 
 stamp-quilt: $(ROOT)/downloads/Python-$(PYTHONVER).tar.bz2
 	rm -rf quilt
@@ -64,4 +54,4 @@ stamp-sources: $(ROOT)/downloads/Python-$(PYTHONVER).tar.bz2
 	&touch $(output)
 endif
 
-no_implicit_load Python-$(PYTHONVER) hostpy targetpy
+no_implicit_load Python-$(PYTHONVER) build
