@@ -1,4 +1,3 @@
-#!/usr/bin/python
 #
 # Tool to generate assembly code used to access ARM coprocessor registers.
 # 

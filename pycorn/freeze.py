@@ -1,4 +1,3 @@
-#!/usr/bin/python
 #
 # Basic tool to freeze python code.
 #

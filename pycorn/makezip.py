@@ -1,4 +1,3 @@
-#!/usr/bin/python
 #
 # Simple tool to zip up a bunch of python modules into a single zipfile.
 #
