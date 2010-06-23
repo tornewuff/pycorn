@@ -5,9 +5,11 @@ hostpgen: stamp-host
 
 stamp-host: stamp-sources
 	rm -rf build
+	rm -rf install
 	&mkdir build
-	cd build; ../Python-$(PYTHONVER)/configure
+	cd build; ../Python-$(PYTHONVER)/configure --prefix=$(absolute_filename $(ROOT)/hostpy/install)
 	cd build; make
+	cd build; make install
 	&touch stamp-host
 
 stamp-sources Python-$(PYTHONVER)/configure: $(ROOT)/downloads/Python-$(PYTHONVER).tar.bz2

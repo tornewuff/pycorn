@@ -11,6 +11,7 @@ python/Python-*
 downloads/*.bz2
 downloads/*.gz
 hostpy/build
+hostpy/install
 python/build
 pycorn/frozen.c
 pycorn/initrd.zip
