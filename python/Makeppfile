@@ -25,11 +25,11 @@ stamp-include: stamp-target stamp-sources
 	cp -p build/pyconfig.h include
 	&touch stamp-include
 
-stamp-target: stamp-sources $(ROOT)/hostpy/hostpgen $(LDDEPS)
+stamp-target: stamp-sources $(LDDEPS)
 	rm -rf build
 	&mkdir build
 	cd build; MACHDEP=pycorn CFLAGS="$(LDFLAGS)" ../Python-$(PYTHONVER)/configure --host=arm-eabi --without-signal-module
-	cd build; make HOSTPGEN=../../hostpy/hostpgen EXTRA_CFLAGS="$(PYCFLAGS)" libpython$(PYTHONVERMINOR).a
+	cd build; make HOSTPGEN=$(findfile hostpgen) EXTRA_CFLAGS="$(PYCFLAGS)" libpython$(PYTHONVERMINOR).a
 	&touch stamp-target
 
 stamp-quilt: $(ROOT)/downloads/Python-$(PYTHONVER).tar.bz2

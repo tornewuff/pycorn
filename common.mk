@@ -7,7 +7,7 @@ include $(ROOT)/config.mk
 CC := $(PREFIX)gcc
 AR := $(PREFIX)ar
 OBJCOPY := $(PREFIX)objcopy
-HOSTPY := $(ROOT)/hostpy/install/bin/python
+PYTHON := hostpython
 
 # Paths
 ARCHPATH := $(ROOT)/arch/$(ARCH)
@@ -31,8 +31,6 @@ PYTHONVER := 2.5.5
 PYTHONVERMINOR := 2.5
 
 # Rules
-
-$(HOSTPY): $(ROOT)/hostpy/stamp-host
 
 ifndef USE_BINARIES
 ifdef OBJECTS

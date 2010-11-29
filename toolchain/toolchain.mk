@@ -18,4 +18,8 @@ NEWLIBVER := 1.17.0
 NEWLIBTAR := newlib-$(NEWLIBVER).tar.gz
 NEWLIBDIR := newlib-$(NEWLIBVER)
 
+PYTHONVER := 2.5.5
+PYTHONTAR := Python-$(PYTHONVER).tar.bz2
+PYTHONDIR := Python-$(PYTHONVER)
+
 export PATH := $(TOOLSPREFIX)/bin:$(PATH)

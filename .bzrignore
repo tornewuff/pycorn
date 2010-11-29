@@ -6,16 +6,12 @@
 *.o
 *.a
 stamp-*
-hostpy/Python-*
 python/Python-*
 downloads/*.bz2
 downloads/*.gz
-hostpy/build
-hostpy/install
 python/build
 pycorn/frozen.c
 pycorn/initrd.zip
-hostpy/hostpgen
 python/include
 python/quilt
 python/frozen
@@ -32,3 +28,5 @@ toolchain/newlib/newlib-*
 toolchain/newlib/build
 toolchain/gdb/gdb-*
 toolchain/gdb/build
+toolchain/python/Python-*
+toolchain/python/build

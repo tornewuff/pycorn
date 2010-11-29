@@ -1,0 +1,21 @@
+include toolchain.mk
+
+stamp-install: stamp-build
+	cd build; make libinstall sharedinstall oldsharedinstall
+	cp -p build/python $(TOOLSPREFIX)/bin/hostpython
+	cp -p build/Parser/pgen $(TOOLSPREFIX)/bin/hostpgen
+	&touch $(output)
+
+stamp-build: stamp-sources
+	rm -rf build
+	&mkdir build
+	cd build; CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" ../$(PYTHONDIR)/configure --prefix=$(absolute_filename $(TOOLSPREFIX))
+	cd build; make
+	&touch $(output)
+
+stamp-sources $(PYTHONDIR)/configure: $(ROOT)/downloads/$(PYTHONTAR)
+	rm -rf $(PYTHONDIR)
+	tar jxf $(input)
+	&touch $(output)
+
+no_implicit_load $(PYTHONDIR) build

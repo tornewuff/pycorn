@@ -23,11 +23,11 @@ frozen/bootstrap/version.py: stamp-version : signature md5
 	bzr version-info --python > $(output)
 
 frozen.c: $( $(FREEZEDIRS))/**/*.py $(ROOT)/python/stamp-frozen freeze.py
-	$(HOSTPY) freeze.py $(output) $(FREEZEDIRS) $(ROOT)/python/frozen
+	$(PYTHON) freeze.py $(output) $(FREEZEDIRS) $(ROOT)/python/frozen
 endif
 
 initrd.zip: $( $(INITRDDIRS))/** $(ROOT)/python/stamp-initrd makezip.py
-	$(HOSTPY) makezip.py $(output) $(INITRDDIRS) $(ROOT)/python/initrd
+	$(PYTHON) makezip.py $(output) $(INITRDDIRS) $(ROOT)/python/initrd
 
 ifdef USE_BINARIES
 pycorn.uimage: $(MACHPATH)/$(MACH)-pycorn.uimage
