@@ -1,4 +1,4 @@
-# $Id: Mpp.pm,v 1.5 2009/03/19 22:40:11 pfeiffer Exp $
+# $Id: Mpp.pm,v 1.9 2010/09/13 21:02:52 pfeiffer Exp $
 
 =head1 NAME
 
@@ -13,6 +13,10 @@ This package contains basic stuff for makepp.
 package Mpp;
 
 use strict;
+
+BEGIN {
+  eval "sub ARCHITECTURE() { '$Config{archname}' }"; # Get a tag for the architecture.
+}
 
 use Mpp::Text;
 
@@ -49,6 +53,8 @@ our $quit_signo = signo 'QUIT';
 
 my $logfh;
 our @close_fhs = \(*STDOUT, *STDERR);
+my $warn_level = 1;		# Default to warning.
+
 our $critical_sections = 0;
 
 our $n_files_changed = 0;	# Keep track of the number of files that
@@ -63,6 +69,7 @@ our $build_cache_hits = 0;	# Number of the files changed that were
 				# imported from a build cache.
 our $rep_hits = 0;		# Number of the files changed that were
 				# imported from a rep.
+our $print_directory = 1;	# Default to printing it.
 our $log_level = 2;		# Default to logging. 1: STDOUT, 2: $logfile
 sub log($@);
 
@@ -153,16 +160,16 @@ my $logfile;			# Other than default log file.
 our $parallel_make = 0;		# True if we're in parallel make mode.
 our $profile = 0;		# Log messages about execution times.
 our $verbose;
-our $silent_execution;
+our $quiet_flag;		# Default to printing informational messages.
 
 $SIG{__WARN__} = sub {
-  my $level = ($_[0] =~ /^(?:error|info): /s) ? '' : 'warning: ';
-				# TODO: should we return if !$warn_level && $1 ne 'error'?
-  print STDERR "$progname: $level$_[0]";
+  my $level = ($_[0] =~ /^(?:error()|info): /s) ? '' : 'warning: ';
+  my $error = defined $1;
   if( $log_level == 2 ) {
     &Mpp::log() unless defined $logfh; # Only open the file.
     print $logfh "*** $level$_[0]";
   }
+  print STDERR "$progname: $level$_[0]" if $error or $warn_level;
 };
 
 
@@ -235,7 +242,7 @@ sub log($@) {
       }
     }
     push @close_fhs, $logfh;
-    print $logfh "2\01$invocation\n";
+    printf $logfh "2\01%s\nVERSION\01%s\01%vd\01%s\01\n", $invocation, $Mpp::VERSION, $^V, ARCHITECTURE;
 
     # If we're running with --traditional-recursive-make, then print the directory
     # when we're entering and exiting the program, because we may be running as
@@ -357,9 +364,11 @@ sub perform(@) {
   my $status;
   my $start_pid = $$;
   my $error_message = $@ || '';
-  $error_message or eval { $status = &wait_for }; # Wait for args to be built.
+  unless( $error_message ) {
+    eval { $status = &wait_for }; # Wait for args to be built.
 				# Wait for all the children to complete.
-  $error_message .= $@ if $@;	# Record any new error messages.
+    $error_message .= $@ if $@;	# Record any new error messages.
+  }
   {
     my $orig = '';
     if($error_message) {
@@ -395,7 +404,9 @@ signal propagation.$orig Stopped}
     }
   }
 
-  if( $n_files_changed || $rep_hits || $build_cache_hits || $n_phony_targets_built || $failed_count ) {
+  if( $quiet_flag ) {
+    # Suppress following chatter.
+  } elsif( $n_files_changed || $rep_hits || $build_cache_hits || $n_phony_targets_built || $failed_count ) {
     print "$progname: $n_files_changed file" . ($n_files_changed == 1 ? '' : 's') . ' updated' .
       ($rep_hits ? ", $rep_hits repository import" . ($rep_hits == 1 ? '' : 's') : '') .
       ($build_cache_hits ? ", $build_cache_hits build cache import" . ($build_cache_hits == 1 ? '' : 's') : '') .
@@ -413,15 +424,16 @@ signal propagation.$orig Stopped}
   exit 0;
 }
 
-our @common_options =
+our @common_opts =
   (
-    ['n', qr/(?:just[-_]?print|dry[-_]?run|recon)/, \$Mpp::dry_run],
-
     ['k', qr/keep[-_]?going/, \$keep_going],
 
     [undef, qr/log(?:[-_]?file)?/, \$logfile, 1],
 
+    ['n', qr/(?:just[-_]?print|dry[-_]?run|recon)/, \$Mpp::dry_run],
     [undef, qr/no[-_]?log/, \$log_level, undef, 0], # Turn off logging.
+    [undef, qr/no[-_]?print[-_]?directory/, \$print_directory, 0, undef],
+    [undef, qr/no[-_]?warn/, \$warn_level, undef, 0],
 
     [undef, 'profile', \$profile, undef, sub {
        if( !$hires_time ) {
@@ -431,16 +443,17 @@ our @common_options =
        }
      }],
 
-    [qw(s silent), \$silent_execution],
+    ['s', qr/quiet|silent/, \$quiet_flag],
 
     [qw(v verbose), undef, undef, sub {
        $verbose = 2;		# Value 2 queried only by Mpp/Cmds.
        $log_level = 1;		# Send the log to stdout instead.  Don't make
 				# this the option variable, as it must be
 				# exactly 1, not just true.
+       $warn_level = 0;		# Warnings will be output via logging.
      }],
-    [qr/[h?]/, 'help', undef, undef, sub { local $/; print <DATA>; exit 0 }],
-    [undef, 'version', undef, undef, \&Mpp::File::version]
+
+    splice @Mpp::Text::common_opts
   );
 
 1;

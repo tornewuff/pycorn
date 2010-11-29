@@ -1,4 +1,4 @@
-# $Id: Rule.pm,v 1.102 2010/02/09 22:34:27 pfeiffer Exp $
+# $Id: Rule.pm,v 1.108 2010/11/17 21:35:52 pfeiffer Exp $
 use strict qw(vars subs);
 
 package Mpp::Rule;
@@ -8,7 +8,7 @@ use Mpp::File;
 use Mpp::FileOpt;
 use Mpp::Text;
 use Mpp::BuildCheck::exact_match;
-use Mpp::ActionParser;
+use Mpp::Lexer;
 use Mpp::Cmds;
 
 our $unsafe;			# Perl code was performed, that might leave files open or chdir.
@@ -78,8 +78,9 @@ sub makefile { $_[0]{MAKEFILE} }
 
 #
 # This subroutine is called to find all the targets and dependencies of the
-# rule.	 It does so by repeatedly expanding the dependency and target string,
-# and repeatedly scanning the command, until there are no further changes.
+# rule.  It does so by expanding the dependency and target string, and
+# lexically analysing the action, which in turn parses the commands, which
+# scans some types of input files, like C for #include statements.
 #
 # Usage:
 #   ($all_targets, $all_dependencies, $action_string, $env_deps) =
@@ -92,6 +93,7 @@ sub makefile { $_[0]{MAKEFILE} }
 # dependencies to current values. $oinfo is the requested target, which is
 # used only to determine where to look for cached scan information.
 #
+my $action_prefix = qr/(?:[-+\@]\s*|noecho\s+|ignore_error\s+)*/;
 sub find_all_targets_dependencies {
   my ($self, $oinfo, $dont_scan) = @_;
 
@@ -206,7 +208,7 @@ sub find_all_targets_dependencies {
       $makefile->expand_text($_, $self->{RULE_SOURCE});
 				# Get the text of the command.
     }
-  } split /^((?:[\@-]|noecho\s+|ignore_error\s+)*perl\s*\{(?s:\{.*?\}\})?.*\n?)/m, $self->{COMMAND_STRING};
+  } split /^(${action_prefix}perl\s*\{(?s:\{.*?\}\})?.*\n?)/m, $self->{COMMAND_STRING};
 
   $command_string =~ s/^\s+//;	# Strip out leading and trailing whitespace
   $command_string =~ s/\s+$//;	# so we don't trigger unnecessary rebuilds
@@ -224,9 +226,9 @@ sub find_all_targets_dependencies {
   # scan from scratch. (Well, not completely from scratch, because the cached
   # lists of include directives can still be used if they're up-to-date.)
   if( my $msg = $self->load_scaninfo( $oinfo, $command_string, \@explicit_dependencies )) {
-    Mpp::log SCAN_RULE => $oinfo, $msg
+    Mpp::log LEX_RULE => $oinfo, $msg
       if $Mpp::log_level;
-    unless(eval { $self->parser->parse_rule($command_string, $self) }) {
+    unless( eval { $self->lexer->lex_rule( $command_string, $self ) } ) {
       die $@ if $@ && $@ ne "SCAN_FAILED\n";
       $self->{SCAN_FAILED} ||= 1;
     }
@@ -458,17 +460,17 @@ sub add_implicit_env_dependency {
   $self->add_env_dependency($name);
 }
 
-=head2 set_signature_method_scanner
+=head2 set_signature_class
 
-   $rule->set_signature_method_scanner($name)
+   $rule->set_signature_class($name)
 
 Like set_signature_method_default, except that it takes a class name
 instead of an object, and it caches how the signature method was set by a
-scanner.
+command parser.
 
 =cut
 
-sub set_signature_method_scanner {
+sub set_signature_class {
   my ($self, $name) = @_;
   my $signature = eval "use Mpp::Signature::$name; \$Mpp::Signature::${name}::$name" ||
     eval "use Signature::$name; \$Signature::${name}::$name" # TODO: provisional
@@ -632,7 +634,7 @@ sub load_scaninfo_single {
   return 'the build command changed' if $command_string ne $command;
 
   my $saved_signature_method = $self->{SIGNATURE_METHOD};
-  $self->set_signature_method_scanner($sig_method)
+  $self->set_signature_class($sig_method)
     if $sig_method;
 
   # Trump up a dummy scanner object to help us look for files.
@@ -932,11 +934,9 @@ are running with -n (dry run mode).
 =cut
 
 sub print_command {
-  local $_ = $_[1];		# Access the command string.
-  1 while s/^\s*([-\@]|noecho\s+|ignore_error\s+)//m;
-				# Strip out any things that control printing,
-				# because we always want to print with -n.
-  print "$_\n";
+  my $cmd = $_[1];		# Access the command string.
+  $cmd =~ s/^$action_prefix//gmo; # Don't print prefix.
+  print "$cmd\n";
   undef;			# No build handle.
 }
 
@@ -976,8 +976,8 @@ sub append {
 sub split_actions {
   pos( $_[1] ) = 0;
   $_[1] =~ /\G\s*/gc;
-  $_[1] =~ /\G((?:[\@-]|noecho\s+|ignore_error\s+)*)(?:(?:make)?perl\s*(\{(?s:\{.*?\}\})?.*)|(&)?(.*))\s*/gcm;
-  #	      1					   1		       2		   2 3 3 4  4
+  $_[1] =~ /\G($action_prefix)(?:(?:make)?perl\s*(\{(?s:\{.*?\}\})?.*)|(&)?(.*))\s*/cgmo;
+  #	      1		     1			 2		 2     3 3 4  4
 }
 
 =head2 $rule->setup_environment()
@@ -1027,7 +1027,7 @@ sub exec_or_die {
 #
 my $true = (-x '/bin/true') ? '/bin/true' : '/usr/bin/true';
 sub execute_command {
-  my( $self, undef, $build_cwd, $all_targets, $all_dependencies ) = @_; # Name the arguments.
+  my( $self, undef, $build_cwd, $all_targets, $all_dependencies ) = @_; # Name the arguments.  [1] goes to split_actions.
 
   # On Windows, native actions don't fork, and so we have to continue to
   # defer signals so that we can reliably mark failed targets as such --
@@ -1037,7 +1037,7 @@ sub execute_command {
   # while the system is running they are blocked by the makepp process
   # automatically.
   &Mpp::reset_signal_handlers if !Mpp::is_windows; # unless constant gives a warning in some variants of 5.6
-  chdir( $build_cwd );		# Move to the correct directory.
+  chdir $build_cwd;		# Move to the correct directory.
   $self->{MAKEFILE}->setup_environment;
 
   $Mpp::Recursive::socket_name and	# Pass info about recursive make.
@@ -1069,7 +1069,7 @@ sub execute_command {
 #
 # Parse the @ and - in front of the command.
 #
-    my $silent_flag = $Mpp::silent_execution || $flags =~ /\@|noecho/;
+    my $silent_flag = $Mpp::quiet_flag || $flags =~ /\@|noecho/;
     my $error_abort = $flags !~ /-|ignore_error/;
 
     if( defined $perl or defined $command ) {
@@ -1129,7 +1129,7 @@ sub execute_command {
       $action = $self->{DISPATCH} . " sh -c '$action'";
     }
     Mpp::print_profile( $action ) unless $silent_flag;
-    if( Mpp::is_windows ) {	# Can't fork / exec on windows.
+    if( Mpp::is_windows > 0 ) {	# Can't fork / exec on native windows.
       {
 	# NOTE: In Cygwin, TERM and HUP are automatically unblocked in the
 	# system process, but INT and QUIT are not -- they are just ignored
@@ -1216,9 +1216,11 @@ our $last_build_cwd = 0;	# Comparable to a ref.
 sub print_build_cwd {
   my $build_cwd = $_[0];
   if( $last_build_cwd != $build_cwd ) { # Different from previous or no previous?
-    print "$Mpp::progname: Leaving directory `$last_build_cwd->{FULLNAME}'\n"
-      if $last_build_cwd;	# Don't let the directory stack fill up.
-    print "$Mpp::progname: Entering directory `" . &absolute_filename . "'\n";
+    if( $Mpp::print_directory ) {
+      print "$Mpp::progname: Leaving directory `$last_build_cwd->{FULLNAME}'\n"
+	if $last_build_cwd;	# Don't let the directory stack fill up.
+      print "$Mpp::progname: Entering directory `" . &absolute_filename . "'\n";
+    }
     $last_build_cwd = $build_cwd;
   }
 }
@@ -1294,36 +1296,21 @@ sub set_signature_method_default {
   $_[0]{SIGNATURE_METHOD} ||= $_[1];
 }
 
-=head2 $rule->scan_action
+=head2 $rule->lexer
 
-  $rule->scan_action($action_string);
+  $rule->lexer()
 
-Scans the given actions, looking for additional dependencies (such as include
-files) or targets (such as .libs/xyz.lo) that weren't explicitly listed.  Make
-variables in the action string have already been expanded.
-
-Calls $rule->add_dependency for new dependencies, and $rule->add_target for
-new targets.
+Returns the rule lexer object, creating it if it doesn't already exist.
 
 =cut
 
-sub scan_action { $_[0]->parser->parse_rule($_[1], $_[0]) }
-
-=head2 $rule->parser
-
-  $rule->parser()
-
-Returns the rule scanner object, creating it if it doesn't already exist.
-
-=cut
-
-sub parser {
-  $_[0]{PARSER_OBJ} ||=	# Is the scanner already cached?
+sub lexer {
+  $_[0]{LEXER_OBJ} ||=	# Is the lexer already cached?
     do {
-      my $scanner = $_[0]{ACTION_SCANNER};
-      $scanner ?		# Was one explicitly set?
-	&$scanner() :		# Yes: generate it
-	new Mpp::ActionParser;	# No: Use the default
+      my $lexer = $_[0]{LEXER};
+      $lexer ?		# Was one explicitly set?
+	&$lexer() :	# Yes: generate it
+	new Mpp::Lexer;	# No: Use the default
     };
 }
 
@@ -1348,7 +1335,7 @@ sub source { $_[0]{RULE_SOURCE} }
 #
 # This should only be called from subroutines which are called by
 # find_all_targets_dependencies.  This basically means it should only be
-# called by the command scanners.
+# called by the command parsers.
 #
 sub add_dependency {
   $_[0]{ALL_DEPENDENCIES}{int $_[1]} ||= $_[1];
@@ -1410,7 +1397,7 @@ sub expand_additional_deps {
 #
 # This should only be called from subroutines which are called by
 # find_all_targets_dependencies.  This basically means it should only be
-# called by the command scanners.
+# called by the command parsers.
 #
 sub add_target {
   my ($self, $oinfo) = @_;
@@ -1458,18 +1445,13 @@ sub build_cwd { $Mpp::File::CWD_INFO }
 *expand_additional_deps = \&Mpp::Rule::expand_additional_deps;
 
 sub find_all_targets_dependencies {
-  my $self = $_[0];
-  my $target = $self->{TARGET};	# Get the target object info.
-  if ($target->{ADDITIONAL_DEPENDENCIES}) {
+  my $target = $_[0]{TARGET};	# Get the target object info.
+  ([$target],
+   $target->{ADDITIONAL_DEPENDENCIES} ? [$_[0]->expand_additional_deps($target)] : [],
 				# Are there dependencies for this file even
 				# though there's no rule?
 				# We have to expand the dependency list now.
-
-    my @addl_deps = $self->expand_additional_deps($target);
-    return ([$target], \@addl_deps, '');
-  }
-
-  ([ $target ], [], '', {});
+   '', {});
 }
 
 #
@@ -1496,6 +1478,8 @@ sub execute {
 				# This is to handle things like
 				# FORCE:
 				# which are really just dummy phony targets.
+    } elsif( exists $target->{IS_PHONY} ) {
+      0;
     } else {
       Mpp::print_error( 'No rule to make ', $target );
       -1;			# Return nonzero to indicate error.
@@ -1538,7 +1522,7 @@ sub source { 'default rule' }
 
 # If there is no action, then there is nothing to scan, so presumably nothing
 # was affected by scanning.  Reuse any nop function.
-*cache_scaninfo = \&Mpp::Text::CONST0;
+*cache_scaninfo = $Mpp::Text::N[0];
 
 
 

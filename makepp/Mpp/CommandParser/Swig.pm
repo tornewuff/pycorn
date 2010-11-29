@@ -1,4 +1,4 @@
-# $Id: Swig.pm,v 1.13 2009/02/11 23:22:37 pfeiffer Exp $
+# $Id: Swig.pm,v 1.14 2010/11/17 21:35:52 pfeiffer Exp $
 
 =head1 NAME
 
@@ -6,7 +6,7 @@ Mpp::CommandParser::Swig - makepp command parser for swig
 
 =head1 DESCRIPTION
 
-Scans a SWIG (Simplified Wrapper and Interface Generator, http://www.swig.org)
+Parses a SWIG (Simplified Wrapper and Interface Generator, http://www.swig.org)
 command line for dependencies.
 
 =cut
@@ -18,6 +18,8 @@ use Mpp::CommandParser;
 our @ISA = qw/Mpp::CommandParser/;
 
 use Mpp::File;
+
+*factory = \&Mpp::Subs::p_swig;
 
 #
 # Swig has a convenient option to get where its library directories are, so
@@ -122,7 +124,7 @@ sub xparse_command {
   $includeall and $scanner->{INCLUDEALL} = 1;
 
   my $rule = $self->rule;
-  $rule->set_signature_method_scanner("c_compilation_md5");
+  $rule->set_signature_class("c_compilation_md5");
 
   $scanner->set_var(SWIG => 1);
   $scanner->set_var("SWIG" . uc($swig_language), 1);

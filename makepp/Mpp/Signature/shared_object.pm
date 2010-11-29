@@ -1,4 +1,4 @@
-# $Id: shared_object.pm,v 1.11 2009/02/09 22:07:39 pfeiffer Exp $
+# $Id: shared_object.pm,v 1.12 2010/11/17 21:35:52 pfeiffer Exp $
 use strict;
 package Mpp::Signature::shared_object;
 
@@ -60,7 +60,7 @@ sub signature_shared_lib {
   my ($self, $finfo) = @_;
 
   my $cksum = Mpp::File::build_info_string( $finfo, build_info_key );
-  return $cksum if $cksum;	# Don't bother rescanning if the
+  return $cksum if $cksum;	# Don't bother redigesting if the
 				# file hasn't changed.	(The build info is
 				# discarded if the file date changes, so this
 				# flushes our cached signature.)

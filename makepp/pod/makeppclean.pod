@@ -2,15 +2,38 @@
 
 makeppclean -- Stand-alone cleanup script for makepp
 
-=for cvs $Id: makeppclean.pod,v 1.7 2009/02/21 11:25:31 pfeiffer Exp $
+=for cvs $Id: makeppclean.pod,v 1.9 2010/09/03 21:26:28 pfeiffer Exp $
 
-=head1 SYNOPSIS
+=head1 DESCRIPTION
+
+=for genindex '[-$][-?\w]+' makeppclean.pod
+
+B<?:>E<nbsp>L<-?|/_>,E<nbsp>
+B<A:>E<nbsp>L<-A|/a_filename>,
+  L<--args-file|/a_filename>,
+  L<--arguments-file|/a_filename>,E<nbsp>
+B<B:>E<nbsp>L<-b|/b>,
+  L<--build-cache-links|/b>,E<nbsp>
+B<H:>E<nbsp>L<-h|/_>,
+  L<--help|/_>,E<nbsp>
+B<L:>E<nbsp>L<-l|/l>,
+  L<--leave-src-info|/l>,E<nbsp>
+B<M:>E<nbsp>L<$MAKEPPCLEANFLAGS|/_makeppcleanflags>,E<nbsp>
+B<O:>E<nbsp>L<--only-build-cache-links|/b>,
+  L<--only-repository-links|/r>,E<nbsp>
+B<R:>E<nbsp>L<-R|/r>,
+  L<-r|/r>,
+  L<--recurse|/r>,
+  L<--recursive|/r>,
+  L<--repository-links|/r>,E<nbsp>
+B<V:>E<nbsp>L<-V|/v>,
+  L<-v|/v>,
+  L<--verbose|/v>,
+  L<--version|/v>
 
 B<makeppclean> S<[ -b ]> S<[ -l ]> S<[ -R ]> S<[ -r ]> S<[ -v ]> S<[ I<path> ... ]>
 
 B<mppc> S<[ -b ]> S<[ -l ]> S<[ -R ]> S<[ -r ]> S<[ -v ]> S<[ I<path> ... ]>
-
-=head1 DESCRIPTION
 
 Makeppclean efficiently removes files that were knowingly generated through
 makepp.  For each I<path>, if I<path> is not a directory and was known to be
@@ -49,19 +72,13 @@ limitations are avoided by using makeppclean.
 
 =over 4
 
-=item -A filename
+=item -A I<filename>
 
-=item --args-file=filename
+=item --args-file=I<filename>
 
-=item --arguments-file=filename
+=item --arguments-file=I<filename>
 
 Read the file and parse it as possibly quoted whitespace- and/or newline-separated options.
-
-=item -l
-
-=item --leave-src-info
-
-Leave the build info directory below each named directory.
 
 =item -b
 
@@ -70,6 +87,20 @@ Leave the build info directory below each named directory.
 =item --only-build-cache-links
 
 Remove only links or files from a build cache.
+
+=item -?
+
+=item -h
+
+=item --help
+
+Print out a brief summary of the options.
+
+=item -l
+
+=item --leave-src-info
+
+Leave the build info directory below each named directory.
 
 =item -R
 
@@ -93,6 +124,8 @@ Descend each named directory recursively.  Symbolic links are not followed.
 
 Enable verbose output to STDERR.
 
+=item -V
+
 =item --version
 
 Print out the version number.
@@ -105,7 +138,7 @@ Makeppclean looks at the following environment variable:
 
 =over 4
 
-=item MAKEPPCLEANFLAGS
+=item $MAKEPPCLEANFLAGS
 
 Any flags in this environment variable are interpreted as command line options
 before any explicit options.  Quotes are interpreted like in makefiles.

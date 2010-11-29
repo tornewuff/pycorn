@@ -1,4 +1,4 @@
-# $Id: Legacy.pm,v 1.9 2009/02/10 22:55:49 pfeiffer Exp $
+# $Id: Legacy.pm,v 1.10 2010/10/18 21:34:13 pfeiffer Exp $
 
 =head1 NAME
 
@@ -11,16 +11,15 @@ Mpp::ActionParser::Legacy - Makepp scanner class for legacy interface
 
 =head1 DESCRIPTION
 
-C<Mpp::ActionParser::Legacy> is an adapter class of type C<Mpp::ActionParser> that can
-talk to the legacy scanner interface.
-Its use is deprecated.
+C<Mpp::ActionParser::Legacy> is an adapter class of type C<Mpp::Lexer> that can
+talk to the legacy scanner interface.  Its use is deprecated.
 
 =cut
 
 use strict;
 package Mpp::ActionParser::Legacy;
-use Mpp::ActionParser;
-our @ISA = qw/Mpp::ActionParser/;
+use Mpp::Lexer;
+our @ISA = qw/Mpp::Lexer/;
 
 
 =head1 METHODS
@@ -29,12 +28,13 @@ our @ISA = qw/Mpp::ActionParser/;
 
 	my $rp = Mpp::ActionParser::Legacy->new($coderef);
 
-Returns a new Mpp::ActionParser object that always uses $coderef as its command
+Returns a new Mpp::Lexer object that always uses $coderef as its command
 parser.
 
 =cut
 
 sub new {
+  warn "Use of Mpp::ActionParser::Legacy is deprecated\n";
   my ($self, $coderef)=@_;
   my $class=ref($self)||$self;
   bless { COMMAND_SCANNER => $coderef }, $class;

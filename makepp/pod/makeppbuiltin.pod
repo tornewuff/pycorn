@@ -2,9 +2,26 @@
 
 makeppbuiltin -- Stand-alone access to builtin commands in makepp
 
-=for vc $Id: makeppbuiltin.pod,v 1.8 2009/02/21 11:25:29 pfeiffer Exp $
+=for vc $Id: makeppbuiltin.pod,v 1.12 2010/09/13 21:17:25 pfeiffer Exp $
 
-=head1 SYNOPSIS
+=head1 DESCRIPTION
+
+=for genindex '[-$][-?\w]+' makeppbuiltin.pod
+
+B<?:>E<nbsp>L<-?|/_>,E<nbsp>
+B<A:>E<nbsp>L<-A|/a_filename>,
+  L<--args-file|/a_filename>,
+  L<--arguments-file|/a_filename>,E<nbsp>
+B<H:>E<nbsp>L<-h|/_>,
+  L<--help|/_>,E<nbsp>
+B<I:>E<nbsp>L<-I|/i_directory>,
+  L<--include|/i_directory>,
+  L<--include-dir|/i_directory>,E<nbsp>
+B<M:>E<nbsp>L<-M|/m_module_arg>,
+  L<$MAKEPPBUILTINFLAGS|/_makeppbuiltinflags>,
+  L<--module|/m_module_arg>,E<nbsp>
+B<V:>E<nbsp>L<-V|/v>,
+  L<--version|/v>
 
 B<makeppbuiltin> S<[ I<metaoption> ... ]> I<command> -?|--help
 
@@ -22,8 +39,6 @@ I<command> -?|--help
 
 I<command> S<[ I<option> ... ]> S<[ I<argument> ... ]>
 
-=head1 DESCRIPTION
-
 This command allows you to call the L<builtin commands|makepp_builtins> makepp
 provides, from outside makepp as well.  This could be necessary if you've
 installed things with Makeppfile targets that use C<&install>, but there is no
@@ -35,31 +50,41 @@ counterparts lack.  This works by parsing the command's option declaration.
 It cannot however find out, what other arguments the command expects.
 
 The metaoptions allow loading your own command or helper functions, but only
-if it comes from a module:
+if it comes from a module.  Valid options are:
 
 =over
 
-=item -A filename
+=item -A I<filename>
 
-=item --args-file=filename
+=item --args-file=I<filename>
 
-=item --arguments-file=filename
+=item --arguments-file=I<filename>
 
 Read the file and parse it as possibly quoted whitespace- and/or newline-separated options.
 
-=item -I dir
+=item -?
 
-=item --include=dir
+=item -h
 
-=item --include-dir=dir
+=item --help
 
-Add I<dir> to Perl load path C<@INC>.
+Print out a brief summary of the options.
 
-=item -M module[=arg,...]
+=item -I I<directory>
 
-=item --module=module[=arg,...]
+=item --include=I<directory>
+
+=item --include-dir=I<directory>
+
+Add I<directory> to Perl load path C<@INC>.
+
+=item -M I<module[=arg,...]>
+
+=item --module=I<module[=arg,...]>
 
 Load module and import any functions it exports.
+
+=item -V
 
 =item --version
 
@@ -134,12 +159,12 @@ Makeppbuiltin looks at the following environment variables:
 
 =over 4
 
-=item MAKEPPBUILTINFLAGS
+=item $MAKEPPBUILTINFLAGS
 
 Any flags in this environment variable are interpreted as command line options
 before any explicit options.  Quotes are interpreted like in makefiles.
 
-=item I<DIRECTNAME>FLAGS
+=item $I<DIRECTNAME>FLAGS
 
 This variable is used instead of C<$MAKEPPBUILTINFLAGS> when makeppbuiltin is
 linked to I<directname> as explained under L<DIRECT CALL>.

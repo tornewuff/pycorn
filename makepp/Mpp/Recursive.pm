@@ -1,4 +1,4 @@
-# $Id: Recursive.pm,v 1.5 2009/07/15 21:16:40 pfeiffer Exp $
+# $Id: Recursive.pm,v 1.9 2010/11/17 21:35:52 pfeiffer Exp $
 
 =head1 NAME
 
@@ -22,10 +22,58 @@ our $traditional;		# 1 if we invoke makepp recursively, undef if
 				# we call the recursive_makepp stub and do
 				# the build in the parent process.
 
+our $_MAKEPPFLAGS = $traditional ?
+  join_with_protection( defined $traditional ? '--traditionalrecursivemake' : (),
+			$Mpp::last_chance_rules ? '--lastchancerules' : (),
+			$Mpp::final_rule_only ? '--finalruleonly' : (),
+			$Mpp::gullible ? '--gullible' : (),
+			$Mpp::sigmethod_name ? "-m$Mpp::sigmethod_name" : (),
+			$Mpp::build_check_method_name ne 'exact_match' ? "--buildcheck=$Mpp::build_check_method_name" : (),
+			$Mpp::no_path_executable_dependencies ? '--nopathexedep' : (),
+			$Mpp::rm_stale_files ? '--rmstalefiles' : (),
+
+
+			map { /^makepp_/ ? "$_=$Mpp::Makefile::global_command_line_vars->{$_}" : () }
+			keys %$Mpp::Makefile::global_command_line_vars ) :
+  '';
+
+
+# Do this here on behalf of makepp, because it should only be necessary for downloaded recursive open source.
+if( $ENV{MAKEPP_IGNORE_OPTS} ) {
+  my( @lx, @l, @sx, @s );
+  for my $opt( split ' ', $ENV{MAKEPP_IGNORE_OPTS} ) {
+    if( $opt =~ /^--(.+)=/ ) {
+      push @lx, $1;
+    } elsif( $opt =~ /^--(.+)/ ) {
+      push @l, $1;
+    } elsif( $opt =~ /^-(.)./ ) {
+      push @sx, $1;
+    } elsif( $opt =~ /^-(.)/ ) {
+      push @s, $1;
+    } else {
+      die "\$MAKEPP_IGNORE_OPTS: '$opt' not understood\n";
+    }
+  }
+  my $nop;
+  local $" = '';
+  if( @lx || @sx ) {
+    my $lx = @lx ? join '|', @lx : 'DUMMY';
+    $lx = qr/$lx/;
+    my $sx = @sx > 1 ? qr/[@sx]/ : $sx[0];
+    push @Mpp::ignore_opts, [$sx, $lx, \$nop, 1];
+  }
+  if( @l || @s ) {
+    my $l = @l ? join '|', @l : 'DUMMY';
+    $l = qr/$l/;
+    my $s = @s > 1 ? qr/[@s]/ : $s[0];
+    push @Mpp::ignore_opts, [$s, $l, \$nop];
+  }
+}
+
 END {
   local $?;
-  defined $traditional and $Mpp::Rule::last_build_cwd and
-    print "$progname: Leaving directory `" . absolute_filename( $Mpp::Rule::last_build_cwd ). "'\n";
+  defined $traditional and $Mpp::Rule::last_build_cwd and $Mpp::print_directory and
+    print "$Mpp::progname: Leaving directory `" . absolute_filename( $Mpp::Rule::last_build_cwd ). "'\n";
 }
 
 #
@@ -54,7 +102,6 @@ sub setup_socket {
 				# Don't let other people access it.
   read_wait $socket, \&connection;
 }
-
 
 #
 # This subroutine is called whenever a connection is made to the recursive
@@ -90,7 +137,7 @@ sub connection {
       my @lines = split(/\n/, $1); # Access each of the pieces.
       my @words = unquote_split_on_whitespace shift @lines;
 				# First one is the set of arguments to
-				# parse_command.
+				# parse_command_line.
       my %this_ENV;		# Remaining lines are environment variables.
       foreach (@lines) {
 	if( s/^([^=]+)=// ) {	# Correct format?
@@ -106,23 +153,19 @@ sub connection {
       chdir shift @words;	# Move to the appropriate directory.
       Mpp::Event::Process::adjust_max_processes(1); # Allow one more process to
 				# run simultaneously.
-      my $status;
-      eval {
+      my $status = eval {
 	local @ARGV = @words;
-        $status = wait_for Mpp::parse_command_line %this_ENV;
-				# Build all the targets.
+        wait_for Mpp::parse_command_line %this_ENV; # Build all the targets.
       };
-      Mpp::Event::Process::adjust_max_processes(-1); # Undo our increment above.
-      my $msg = $@;
-      if ($msg) {               # Some error occured that caused a die?
-        $status ||= 1;          # Force an error code.
+      if( $@ ) {		# Have an error code?
+	$status = 1;
+      } elsif( 'Mpp::File' eq ref $status ) {
+	$status = '2 Dependency of `' . absolute_filename($status) . "' failed";
       }
-      print $fh ($status || '0') . " $msg";
-				# Send the result to the recursive make
-				# process.
+      Mpp::Event::Process::adjust_max_processes(-1); # Undo our increment above.
+      print $fh "$status $@";	# Send the result to the recursive make process.
       close $fh;                # Force a close immediately.
-    }
-    else {
+    } else {
       read_wait $fh, $read_sub;	# Prepare to read another line.
     }
   };
@@ -143,6 +186,7 @@ no warnings 'redefine';
 our $command;			# Once this is set, we know we can potentially have recursion.
 sub Mpp::Subs::f_MAKE {
   if( defined $traditional ) {	# Do it the bozo way?
+    $_[1]{EXPORTS}{_MAKEPPFLAGS} = $_MAKEPPFLAGS;
     unless( defined $command ) { # Haven't figured it out yet?
       $command = $0;		# Get the name of the program.
       unless( $command =~ m@^/@ ) { # Not absolute?

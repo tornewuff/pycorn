@@ -1,3 +1,125 @@
+2010-11-17  Daniel Pfeiffer  <occitan@esperanto.org>
+
+Snapshot makepp-1.50.101117.tgz, version 1.50-101117:18-1018:5-0929:8 on CPAN.
+
+	* *: Cleanly distinguish between lexing, parsing and scanning.
+	Fix skip-word without recursion and provide new variant for
+	(sub)shell.
+
+	* pod/makepp_compatibility.pod: Add 5.12.2 and more CPAN-tester
+	results.
+
+2010-10-18  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* *: Rename ActionParser to Lexer and only refer to it by that
+	name, to get rid of previous chaos.
+
+	* Mpp/ActionParser/Specific.pm:
+	* Mpp/ActionParser/Legacy.pm: Deprecate useless subclasses that
+	make it hard to get skip-word right.
+
+	* Mpp/Rule.pm (scan_action): Remove unused func.
+	(find_all_targets_dependencies): Fix missing return value (thx to
+	thebamaman).
+
+2010-09-29  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* *: @Mpp::Text::N replaces individual numeric constants.
+
+	* Mpp/FileOpt.pm (load_build_info_file):
+	* makeppinfo: With -f, --force show outdated info.
+
+2010-09-18  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* Mpp/File.pm (path_file_info): On Win translate \\ownhost\c$ to
+	c: to find same file under different names and reduce $ problems.
+
+	* Mpp/Cmds.pm (c_cp): Respect $MAKEPP_LN_CP.
+	(c_mkdir): Handle --mode like Unix variant.
+
+2010-09-13  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* Mpp/Text.pm (@common_opts): Also handle --help, getting it from
+	__DATA__ everywhere.
+
+	* Mpp.pm (perform): Don't duplicate error message at end.
+
+	* Mpp/Makefile.pm (skip_makefile_until_else_or_endif): Statements
+	like sub must end with space -- don't be fooled by a rule for
+	sub-target.
+
+	* makepp: Don't silently ignore gmake opts.  Instead
+	$MAKEPP_IGNORE_OPTS allows controlling that, even -R is possible.
+
+2010-09-03  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* makepp (build_dependencies_done): Don't remove a file that
+	wasn't there when we last checked, warn if it appeared.
+
+	* Mpp/Recursive.pm:
+	* recursive_makepp: Fix protocol error on -j failure.
+
+	* Mpp/Subs.pm (f_origin): Same order as expansion and 'global'.
+
+	* Mpp/Makefile.pm (MAKEPP_VERSION): New variable.
+	($if_re): Refactor repeated regexp.
+
+	*: Move version (and beta counting, now same for all progs and
+	like snapshot names) to Mpp::Text.  Short opt -V.
+
+2010-08-22  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* Mpp/ActionParser.pm (parse_rule): Handle Shell keywords
+	directly, so we catch variable assignment before the command.
+
+	* Mpp/Scanner/C.pm (xscan_file): Have an informative warning about
+	ignoring #include MACRO.
+
+	* Many small compatibility changes:
+	Provide functions abspath, realpath, and, or.
+	Function suffix returns the dot too.
+	Always set MAKEFLAGS.
+	Allow special variables to be empty outside of rules.
+	Allow depending on a phony that has no rule.
+	Allow action prefix +.
+
+	Implement --no-print-directory.
+	New option --last-chance-rules.
+	Option --no-warn centrally swallows every warn().
+	Keep option handlers after 1st getopts, any might come recursively.
+	Accept all unimplemented POSIX/gmake options silently.
+
+2010-07-16  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* Mpp/File.pm (STAT_UID, is_executable): Remove unused functions.
+	(lstat_array): Skip STAT_UID.
+	(read_directory): Keep the stats of files that were there
+	before. (Reported by Clint O.)
+
+	* install.pl: Start move to new pod2html ids and some fixes.
+
+	* pod/*.pod: Complete documentation of all options.  Generate more
+	readable index using new pod2html ids for all pods where it makes
+	sence.
+
+	* makepp: Complete --help generated from pod/makepp_command.pod.
+
+2010-06-01  Daniel Pfeiffer  <occitan@esperanto.org>
+
+	* Mpp/Signature/c_compilation_md5.pm (md5sum_c_tokens): Find
+	terminating ' to avoid missed rebuilds.
+
+	* Mpp/Rule.pm (execute_command): fork/exec on Cygwin and MinGW
+	like on Unix.
+
+	* Mpp/CommandParser/Gcc.pm (xparse_command):
+	* Mpp/Scanner.pm: Eliminate useless add_dependency.
+
+	* Mpp/Text.pm (pattern_substitution): Optimize.
+
+	* pod/makepp_compatibility.pod: Add 5.12.1 and more CPAN-tester
+	results.
+
 2010-04-22  Daniel Pfeiffer  <occitan@esperanto.org>
 
 Snapshot makepp-1.50.100422.tgz, version 1.50-04221-02242-02094 on CPAN.

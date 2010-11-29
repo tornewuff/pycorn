@@ -2,7 +2,7 @@
 
 makepp_extending -- How to extend makepp using perl
 
-=for vc $Id: makepp_extending.pod,v 1.15 2009/02/11 23:22:37 pfeiffer Exp $
+=for vc $Id: makepp_extending.pod,v 1.17 2010/09/29 22:06:41 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -23,12 +23,12 @@ like CC are actually implemented as functions with no arguments.  Target
 specific vars, command line vars and environment vars are not seen this way.)
 Thus any perl code you write has access to all makefile variables.  Global
 variables are stored in the C<Mpp::global> package.  See L<Makefile
-variables|makepp_statements/"Variables and perl"> for the deails.
+variables|makepp_variables/"Variables and perl"> for the deails.
 
-Each of the statements (L<ifperl / ifmakeperl|makepp_statements/ifperl>,
-L<perl / makeperl|makepp_statements/perl>, L<sub /
+Each of the statements (L<ifperl / ifmakeperl|makepp_statements/ifperl_perlcode>,
+L<perl / makeperl|makepp_statements/perl_perlcode>, L<sub /
 makesub|makepp_statements/sub>), the functions (L<perl /
-makeperl|makepp_functions/perl>, L<map / makemap|makepp_functions/map>) and
+makeperl|makepp_functions/perl_perlcode>, L<map / makemap|makepp_functions/map_words_perlcode>) and
 the rule action (L<perl / makeperl|makepp_rules/perl>) for writing Perl code
 directly in the makefile come in two flavours.  The first is absolutely normal
 Perl, meaning you have to use the C<f_> prefix as explained in the next
@@ -125,12 +125,12 @@ there's a more efficient way:
 
 =over
 
-=item &command arguments...
+=item &I<command arguments...>
 
 This can be a rule action.  It will call a function I<command> with a C<c_>
 prefix, and pass it the remaining (optionally quoted makepp style -- not
 exactly the same as Shell) arguments.  If such a function cannot be found,
-this passes all strings to C<run>.
+this passes all strings to L<C<run>|/run_script_arguments>.
 
     sub c_mycmd { my @args = @_; ... }
  
@@ -195,12 +195,12 @@ This will output message with C<--verbose> (which every command accepts) iff
 the command is successfully run.  But if the block evaluates as false, it dies
 with negated message.
 
-=item run script arguments...
+=item run I<script arguments...>
 
 This is a normal Perl function you can use in any Perl context within your
 makefile.  It is similar to the multi-argument form of system, but it runs the
 Perl script within the current process.  For makepp statements, the
-L<perl|makepp_functions/perl> function or your own functions that is the
+L<perl|makepp_functions/perl_perlcode> function or your own functions that is the
 process running makepp.  But for a rule that is the subprocess performing it.
 The script gets parsed as many times as it gets called, but you can put the
 real work into a lib, as pod2html does.  This lib can then get used in the top
@@ -214,7 +214,7 @@ level, so that it's already present:
 If the script calls C<exit>, closes standard file descriptors or relies on the
 system to clean up after it (open files, memory...), this can be a problem
 with C<run>.  If you call C<run> within statements or the
-L<perl|makepp_functions/perl> function, makepp can get disturbed or the
+L<perl|makepp_functions/perl_perlcode> function, makepp can get disturbed or the
 cleanup only happens at the end of makepp.
 
 If you have one the aforementioned problems, run the script externally,

@@ -2,13 +2,16 @@
 
 makepp_signatures -- How makepp knows when files have changed
 
-=for vc $Id: makepp_signatures.pod,v 1.13 2009/02/09 22:07:39 pfeiffer Exp $
+=for vc $Id: makepp_signatures.pod,v 1.16 2010/11/17 21:35:52 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
-L<B<c>_compilation_md5|/c_compilation_md5>,E<nbsp>
-L<B<m>d5|/md5>,E<nbsp>
-L<B<s>hared_object|/shared_object>
+=for genindex '\w+' makepp_signatures.pod
+
+B<C:>E<nbsp>L</c_compilation_md5>,E<nbsp>
+B<M:>E<nbsp>L</md5>,E<nbsp>
+B<P:>E<nbsp>L</plain>,E<nbsp>
+B<S:>E<nbsp>L</shared_object>
 
 Each file is associated with a I<signature>, which is a string that changes if
 the file has changed.  Makepp compares signatures to see whether it needs to
@@ -31,12 +34,12 @@ rebuild.
 
 There are several signature methods included in makepp.  Makepp usually picks
 the most appropriate standard one automatically.  However, you can change the
-signature method for an individual rule by using C<:signature> modifier on the
-rule which depends on the files you want to check (see
-L<makepp_rules/signature>), or for all rules in a makefile by using the
-C<signature> statement (see L<makepp_statements/signature>), or for all
-makefiles at once using the C<-m> or C<--signature-method> command line option
-(see L<makepp_command/-m>).
+signature method for an individual rule by using
+L<C<:signature>|makepp_rules/signature_signature_method> modifier on the rule
+which depends on the files you want to check, or for all rules in a makefile
+by using the L<C<signature>|makepp_statements/signature> statement, or for all
+makefiles at once using the L<C<-m> or
+C<--signature-method>|makepp_command/m_method> command line option.
 
 =head2 Mpp::Signature methods included in the distribution
 
@@ -185,10 +188,10 @@ and types of symbols in dynamically loaded libraries become part of their
 signature.  The result is that you can change the coding of functions without
 having to relink the programs that use them.
 
-In the following command the command scanner will detect an implicit
-dependency on F<$(LIBDIR)/libmylib.so>, and build it if necessary.  However
-the link command will only be reperformed whenever the library exports a
-different set of symbols:
+In the following command the parser will detect an implicit dependency on
+F<$(LIBDIR)/libmylib.so>, and build it if necessary.  However the link command
+will only be reperformed whenever the library exports a different set of
+symbols:
 
     myprog: $(OBJECTS) :signature shared_object
  	$(LD) -L$(LIBDIR) -lmylib $(inputs) -o $(output)

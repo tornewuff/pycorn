@@ -1,11 +1,10 @@
 #!/usr/bin/perl -w
-# $Id: makeppinfo,v 1.7 2009/02/11 23:22:37 pfeiffer Exp $
+# $Id: makeppinfo,v 1.10 2010/09/29 22:12:24 pfeiffer Exp $
 
 package Mpp;
 
 use strict;
 
-our $VERSION = '@VERSION@';
 use Config;
 use POSIX ();
 
@@ -25,6 +24,7 @@ END {
 
 our $datadir;
 BEGIN {
+  our $VERSION = '@VERSION@';
 #@@setdatadir
 #
 # Find the location of our data directory that contains the auxiliary files.
@@ -57,13 +57,17 @@ use Mpp::Utils;
 use Mpp::File;
 use Mpp::FileOpt;
 
-my( $keylist, $quiet, $traverse, @keys_not, @keys );
+my( $force, $keylist, $quiet, $traverse, @keys_not, @keys );
 Mpp::Text::getopts
+  [qw'f force', \$force],
+
   ['k', qr/key(?:s|list)/, \$keylist, 1],
+
   [qw'q quiet', \$quiet],
+
   [qw't traverse', \$traverse],
-  [undef, 'version', undef, undef, \&Mpp::File::version],
-  [qr/[h?]/, 'help', undef, undef, \&usage];
+
+  splice @Mpp::Text::common_opts;
 
 $SIG{__WARN__} = sub {} if $quiet && $quiet > 1;
 
@@ -89,11 +93,19 @@ while( @ARGV ) {
   }
   next if exists $seen{int $finfo};
   undef $seen{int $finfo};
-  warn 'makeppinfo: file `' . relative_filename( $finfo ) . "' not found\n"
-    unless file_exists $finfo;
+  my $exists = file_exists $finfo;
+  unless( $exists ) {
+    warn 'makeppinfo: file `' . relative_filename( $finfo ) . "' not found\n";
+    next unless $force;
+  }
 
   my $build_info = Mpp::File::load_build_info_file $finfo
     or next;
+  unless( $build_info->{SIGNATURE} ) {
+    warn 'makeppinfo: file `' . relative_filename( $finfo ) . "' modified outside of mpp\n"
+      if $exists;
+    next unless $force;
+  }
 
   $cwd = file_info $build_info->{CWD}, exists $finfo->{DIRCONTENTS} ? $finfo : $finfo->{'..'}
     if $traverse && exists $build_info->{CWD};
@@ -145,21 +157,29 @@ while( @ARGV ) {
   }
 }
 
-sub usage {
-  print << 'END_OF_USAGE';
+__DATA__
 Usage: makeppinfo [file ...]
 
 For each file print a human readable version of makepp's build info.  DEP_SIGS
 and SORTED_DEPS get merged.  Tagged lists have the tag prepended.
 
--k LIST, --keys=LIST or --keylist=LIST
-	Show only messages with, !without or ^without keys, {bash,patterns}.
+Valid options are:
+
+-A filename, --args-file=filename, --arguments-file=filename
+    Read the file and parse it as possibly quoted whitespace- and/or
+    newline-separated options.
+-f, --force
+    Display info even when it is invalid because of inexistent or modified
+    file.
+-?, -h, --help
+    Print out a brief summary of the options.
+-k list, --keys=list, --keylist=list
+    The list specifies one or more space separated Shell style patterns
+    (with [xyz], ?, , {a,bc,def}).
 -q, --quiet
-	Don't list file and key names.  Repeat to also omit warnings.
+    Don't list file and key names.
 -t, --traverse
-	Also output SORTED_DEPS (recursively if repeated).
---version
-	Print out the current version.
-END_OF_USAGE
-  exit 0;
-}
+    Also output the same information for each file in SORTED_DEPS
+    (recursively if repeated).
+-V, --version
+    Print out the version number.

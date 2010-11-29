@@ -1,0 +1,517 @@
+MAKEPPBUILDCACHECONTROL makeppbuildcachecontrol	makepp_build_cache	L<C<makepp_build_cache_control>|makepp_build_cache/makepp_build_cache_control_command>
+MPPBCC mppbcc	makepp_build_cache	L<C<mppbcc>|makepp_build_cache/makepp_build_cache_control_command>
+CREATE create	makepp_build_cache	L<C<create>|makepp_build_cache/create_option_path_to_cache>
+CLEAN clean	makepp_build_cache	L<C<clean>|makepp_build_cache/clean_option_path_to_cache>
+SHOW show	makepp_build_cache	L<C<show>|makepp_build_cache/show_option_path_to_cache>
+STATS stats	makepp_build_cache	L<C<stats>|makepp_build_cache/stats_option_path_to_cache>
+EXACTMATCH exactmatch	makepp_build_check	L<C<exact_match>|makepp_build_check/exact_match>
+ARCHITECTUREINDEPENDENT architectureindependent	makepp_build_check	L<C<architecture_independent>|makepp_build_check/architecture_independent>
+IGNOREACTION ignoreaction	makepp_build_check	L<C<ignore_action>|makepp_build_check/ignore_action>
+TARGETNEWER targetnewer	makepp_build_check	L<C<target_newer>|makepp_build_check/target_newer>
+ONLYACTION onlyaction	makepp_build_check	L<C<only_action>|makepp_build_check/only_action>
+A A	makeppbuiltin	L<C<-A>|makeppbuiltin/a_filename>
+ARGSFILE argsfile	makeppbuiltin	L<C<--args-file>|makeppbuiltin/a_filename>
+ARGUMENTSFILE argumentsfile	makeppbuiltin	L<C<--arguments-file>|makeppbuiltin/a_filename>
+? ?	makeppbuiltin	L<C<-?>|makeppbuiltin/_>
+H h	makeppbuiltin	L<C<-h>|makeppbuiltin/_>
+HELP help	makeppbuiltin	L<C<--help>|makeppbuiltin/_>
+I I	makeppbuiltin	L<C<-I>|makeppbuiltin/i_directory>
+INCLUDE include	makeppbuiltin	L<C<--include>|makeppbuiltin/i_directory>
+INCLUDEDIR includedir	makeppbuiltin	L<C<--include-dir>|makeppbuiltin/i_directory>
+M M	makeppbuiltin	L<C<-M>|makeppbuiltin/m_module_arg>
+MODULE module	makeppbuiltin	L<C<--module>|makeppbuiltin/m_module_arg>
+V V	makeppbuiltin	L<C<-V>|makeppbuiltin/v>
+VERSION version	makeppbuiltin	L<C<--version>|makeppbuiltin/v>
+MAKEPPBUILTINFLAGS MAKEPPBUILTINFLAGS	makeppbuiltin	L<C<$MAKEPPBUILTINFLAGS>|makeppbuiltin/_makeppbuiltinflags>
+I I	makeppbuiltin	L<C<$I>|makeppbuiltin/_directnameflags>
+AWK awk	makepp_builtins	L<C<I<awk>>|makepp_builtins/awk>
+CAT cat	makepp_builtins	L<C<&cat>|makepp_builtins/cat_option_filename>
+CHGRP chgrp	makepp_builtins	L<C<I<chgrp>>|makepp_builtins/chgrp>
+CHOWN chown	makepp_builtins	L<C<I<chown>>|makepp_builtins/chgrp>
+CHMOD chmod	makepp_builtins	L<C<&chmod>|makepp_builtins/chmod_option_mode_filename>
+CP cp	makepp_builtins	L<C<&cp>|makepp_builtins/cp_option_sourcefile_destfile>
+CP cp	makepp_builtins	L<C<&cp>|makepp_builtins/cp_option_sourcefile_destfile>
+CP cp	makepp_builtins	L<C<&cp>|makepp_builtins/cp_option_sourcefile_destfile>
+CUT cut	makepp_builtins	L<C<&cut>|makepp_builtins/cut_option_filename>
+DATE date	makepp_builtins	L<C<I<date>>|makepp_builtins/date>
+ECHO echo	makepp_builtins	L<C<&echo>|makepp_builtins/echo_option_string>
+PRINTF printf	makepp_builtins	L<C<&printf>|makepp_builtins/echo_option_string>
+YES yes	makepp_builtins	L<C<&yes>|makepp_builtins/echo_option_string>
+EXPR expr	makepp_builtins	L<C<&expr>|makepp_builtins/expr_option_perlcode>
+FALSE false	makepp_builtins	L<C<I<false>>|makepp_builtins/false>
+GREP grep	makepp_builtins	L<C<&grep>|makepp_builtins/grep_option_perlcode_filename>
+PERL perl	makepp_builtins	L<C<&perl>|makepp_builtins/grep_option_perlcode_filename>
+SED sed	makepp_builtins	L<C<&sed>|makepp_builtins/grep_option_perlcode_filename>
+HEAD head	makepp_builtins	L<C<I<head>>|makepp_builtins/head>
+TAIL tail	makepp_builtins	L<C<I<tail>>|makepp_builtins/head>
+INSTALL install	makepp_builtins	L<C<&install>|makepp_builtins/install_option_sourcefile_destfile>
+INSTALL install	makepp_builtins	L<C<&install>|makepp_builtins/install_option_sourcefile_destfile>
+INSTALL install	makepp_builtins	L<C<&install>|makepp_builtins/install_option_sourcefile_destfile>
+LN ln	makepp_builtins	L<C<&ln>|makepp_builtins/ln_option_sourcefile_destfile>
+LN ln	makepp_builtins	L<C<&ln>|makepp_builtins/ln_option_sourcefile_destfile>
+LN ln	makepp_builtins	L<C<&ln>|makepp_builtins/ln_option_sourcefile_destfile>
+MKDIR mkdir	makepp_builtins	L<C<&mkdir>|makepp_builtins/mkdir_option_directory>
+MV mv	makepp_builtins	L<C<&mv>|makepp_builtins/mv_option_sourcefile_destfile>
+MV mv	makepp_builtins	L<C<&mv>|makepp_builtins/mv_option_sourcefile_destfile>
+MV mv	makepp_builtins	L<C<&mv>|makepp_builtins/mv_option_sourcefile_destfile>
+M4 m4	makepp_builtins	L<C<I<m4>>|makepp_builtins/m4>
+PREPROCESS preprocess	makepp_builtins	L<C<&preprocess>|makepp_builtins/preprocess_option_variable_definition_filename>
+RM rm	makepp_builtins	L<C<&rm>|makepp_builtins/rm_option_filename>
+RMDIR rmdir	makepp_builtins	L<C<I<rmdir>>|makepp_builtins/rmdir>
+SORT sort	makepp_builtins	L<C<&sort>|makepp_builtins/sort_option_filename>
+TEMPLATE template	makepp_builtins	L<C<&template>|makepp_builtins/template_option_macro_definition_filename>
+TOUCH touch	makepp_builtins	L<C<&touch>|makepp_builtins/touch_option_filename>
+UNINSTALL uninstall	makepp_builtins	L<C<&uninstall>|makepp_builtins/uninstall_option_filename>
+UNIQ uniq	makepp_builtins	L<C<&uniq>|makepp_builtins/uniq_option_filename>
+TR tr	makepp_builtins	L<C<I<tr>>|makepp_builtins/tr>
+A A	makeppclean	L<C<-A>|makeppclean/a_filename>
+ARGSFILE argsfile	makeppclean	L<C<--args-file>|makeppclean/a_filename>
+ARGUMENTSFILE argumentsfile	makeppclean	L<C<--arguments-file>|makeppclean/a_filename>
+B b	makeppclean	L<C<-b>|makeppclean/b>
+BUILDCACHELINKS buildcachelinks	makeppclean	L<C<--build-cache-links>|makeppclean/b>
+ONLYBUILDCACHELINKS onlybuildcachelinks	makeppclean	L<C<--only-build-cache-links>|makeppclean/b>
+? ?	makeppclean	L<C<-?>|makeppclean/_>
+H h	makeppclean	L<C<-h>|makeppclean/_>
+HELP help	makeppclean	L<C<--help>|makeppclean/_>
+L l	makeppclean	L<C<-l>|makeppclean/l>
+LEAVESRCINFO leavesrcinfo	makeppclean	L<C<--leave-src-info>|makeppclean/l>
+R R	makeppclean	L<C<-R>|makeppclean/r>
+REPOSITORYLINKS repositorylinks	makeppclean	L<C<--repository-links>|makeppclean/r>
+ONLYREPOSITORYLINKS onlyrepositorylinks	makeppclean	L<C<--only-repository-links>|makeppclean/r>
+R r	makeppclean	L<C<-r>|makeppclean/r>
+RECURSE recurse	makeppclean	L<C<--recurse>|makeppclean/r>
+RECURSIVE recursive	makeppclean	L<C<--recursive>|makeppclean/r>
+V v	makeppclean	L<C<-v>|makeppclean/v>
+VERBOSE verbose	makeppclean	L<C<--verbose>|makeppclean/v>
+V V	makeppclean	L<C<-V>|makeppclean/v>
+VERSION version	makeppclean	L<C<--version>|makeppclean/v>
+MAKEPPCLEANFLAGS MAKEPPCLEANFLAGS	makeppclean	L<C<$MAKEPPCLEANFLAGS>|makeppclean/_makeppcleanflags>
+A A	makepp_command	L<C<-A>|makepp_command/a_filename>
+ARGSFILE argsfile	makepp_command	L<C<--args-file>|makepp_command/a_filename>
+ARGUMENTSFILE argumentsfile	makepp_command	L<C<--arguments-file>|makepp_command/a_filename>
+B b	makepp_command	L<C<-b>|makepp_command/b_directory>
+BUILDCACHE buildcache	makepp_command	L<C<--build-cache>|makepp_command/b_directory>
+BUILDCHECK buildcheck	makepp_command	L<C<--build-check>|makepp_command/build_check_method>
+BUILDCHECKMETHOD buildcheckmethod	makepp_command	L<C<--build-check-method>|makepp_command/build_check_method>
+C C	makepp_command	L<C<-C>|makepp_command/c_directory>
+DIRECTORY directory	makepp_command	L<C<--directory>|makepp_command/c_directory>
+C c	makepp_command	L<C<-c>|makepp_command/c>
+ROOTDIR rootdir	makepp_command	L<C<--root-dir>|makepp_command/c>
+ROOTDIRECTORY rootdirectory	makepp_command	L<C<--root-directory>|makepp_command/c>
+DONTBUILD dontbuild	makepp_command	L<C<--dont-build>|makepp_command/dont_build_filename>
+DOBUILD dobuild	makepp_command	L<C<--do-build>|makepp_command/dont_build_filename>
+DONTREAD dontread	makepp_command	L<C<--dont-read>|makepp_command/dont_read_filename>
+DOREAD doread	makepp_command	L<C<--do-read>|makepp_command/dont_read_filename>
+DUMPMAKEFILE dumpmakefile	makepp_command	L<C<--dump-makefile>|makepp_command/dump_makefile_filename>
+DUMPMAKEPPFILE dumpmakeppfile	makepp_command	L<C<--dump-makeppfile>|makepp_command/dump_makefile_filename>
+E e	makepp_command	L<C<-e>|makepp_command/e>
+ENVOVERIDES envoverides	makepp_command	L<C<--env-overides>|makepp_command/e>
+ENVIRONMENTOVERIDES environmentoverides	makepp_command	L<C<--environment-overides>|makepp_command/e>
+F F	makepp_command	L<C<-F>|makepp_command/f_makeppfile>
+MAKEPPFILE makeppfile	makepp_command	L<C<--makeppfile>|makepp_command/f_makeppfile>
+F f	makepp_command	L<C<-f>|makepp_command/f_makefile>
+FILE file	makepp_command	L<C<--file>|makepp_command/f_makefile>
+MAKEFILE makefile	makepp_command	L<C<--makefile>|makepp_command/f_makefile>
+FINALRULESONLY finalrulesonly	makepp_command	L<C<--final-rules-only>|makepp_command/final_rules_only>
+FORCECOPYFROMBC forcecopyfrombc	makepp_command	L<C<--force-copy-from-bc>|makepp_command/force_copy_from_bc>
+FORCERESCAN forcerescan	makepp_command	L<C<--force-rescan>|makepp_command/force_rescan>
+GULLIBLE gullible	makepp_command	L<C<--gullible>|makepp_command/gullible>
+? ?	makepp_command	L<C<-?>|makepp_command/_>
+H h	makepp_command	L<C<-h>|makepp_command/_>
+HELP help	makepp_command	L<C<--help>|makepp_command/_>
+I I	makepp_command	L<C<-I>|makepp_command/i_directory>
+INCLUDE include	makepp_command	L<C<--include>|makepp_command/i_directory>
+INCLUDEDIR includedir	makepp_command	L<C<--include-dir>|makepp_command/i_directory>
+IMPLICITLOADMAKEPPFILEONLY implicitloadmakeppfileonly	makepp_command	L<C<--implicit-load-makeppfile-only>|makepp_command/implicit_load_makeppfile_only>
+J j	makepp_command	L<C<-j>|makepp_command/j_n>
+JOBS jobs	makepp_command	L<C<--jobs>|makepp_command/j_n>
+K k	makepp_command	L<C<-k>|makepp_command/k>
+KEEPGOING keepgoing	makepp_command	L<C<--keep-going>|makepp_command/k>
+LASTCHANCERULES lastchancerules	makepp_command	L<C<--last-chance-rules>|makepp_command/last_chance_rules>
+LOADMAKEFILE loadmakefile	makepp_command	L<C<--load-makefile>|makepp_command/load_makefile_makefile>
+LOADMAKEPPFILE loadmakeppfile	makepp_command	L<C<--load-makeppfile>|makepp_command/load_makefile_makefile>
+LOG log	makepp_command	L<C<--log>|makepp_command/log_logfilename>
+LOGFILE logfile	makepp_command	L<C<--log-file>|makepp_command/log_logfilename>
+M m	makepp_command	L<C<-m>|makepp_command/m_method>
+SIGNATURE signature	makepp_command	L<C<--signature>|makepp_command/m_method>
+SIGNATUREMETHOD signaturemethod	makepp_command	L<C<--signature-method>|makepp_command/m_method>
+MD5BC md5bc	makepp_command	L<C<--md5-bc>|makepp_command/md5_bc>
+MD5CHECKBC md5checkbc	makepp_command	L<C<--md5-check-bc>|makepp_command/md5_bc>
+N n	makepp_command	L<C<-n>|makepp_command/n>
+DRYRUN dryrun	makepp_command	L<C<--dry-run>|makepp_command/n>
+JUSTPRINT justprint	makepp_command	L<C<--just-print>|makepp_command/n>
+RECON recon	makepp_command	L<C<--recon>|makepp_command/n>
+NOCACHESCANINFOS nocachescaninfos	makepp_command	L<C<--no-cache-scaninfos>|makepp_command/no_cache_scaninfos>
+NOIMPLICITLOAD noimplicitload	makepp_command	L<C<--no-implicit-load>|makepp_command/no_implicit_load>
+NOLOG nolog	makepp_command	L<C<--no-log>|makepp_command/no_log>
+NOPATHEXEDEP nopathexedep	makepp_command	L<C<--no-path-exe-dep>|makepp_command/no_path_exe_dep>
+NOPATHEXECUTABLEDEPENDENCIES nopathexecutabledependencies	makepp_command	L<C<--no-path-executable-dependencies>|makepp_command/no_path_exe_dep>
+NOPOPULATEBC nopopulatebc	makepp_command	L<C<--no-populate-bc>|makepp_command/no_populate_bc>
+NOPRINTDIRECTORY noprintdirectory	makepp_command	L<C<--no-print-directory>|makepp_command/no_print_directory>
+NOREMAKEMAKEFILES noremakemakefiles	makepp_command	L<C<--no-remake-makefiles>|makepp_command/no_remake_makefiles>
+NOWARN nowarn	makepp_command	L<C<--no-warn>|makepp_command/no_warn>
+O o	makepp_command	L<C<-o>|makepp_command/o_filename>
+ASSUMEOLD assumeold	makepp_command	L<C<--assume-old>|makepp_command/o_filename>
+OLDFILE oldfile	makepp_command	L<C<--old-file>|makepp_command/o_filename>
+OUTOFSANDBOX outofsandbox	makepp_command	L<C<--out-of-sandbox>|makepp_command/out_of_sandbox_filename>
+POPULATEBCONLY populatebconly	makepp_command	L<C<--populate-bc-only>|makepp_command/populate_bc_only>
+PROFILE profile	makepp_command	L<C<--profile>|makepp_command/profile>
+R R	makepp_command	L<C<-R>|makepp_command/r_directory>
+REPOSITORY repository	makepp_command	L<C<--repository>|makepp_command/r_directory>
+R r	makepp_command	L<C<-r>|makepp_command/r>
+NOBUILTINRULES nobuiltinrules	makepp_command	L<C<--no-builtin-rules>|makepp_command/r>
+RMSTALE rmstale	makepp_command	L<C<--rm-stale>|makepp_command/rm_stale>
+REMOVESTALE removestale	makepp_command	L<C<--remove-stale>|makepp_command/rm_stale>
+REMOVESTALEFILES removestalefiles	makepp_command	L<C<--remove-stale-files>|makepp_command/rm_stale>
+S s	makepp_command	L<C<-s>|makepp_command/s>
+QUIET quiet	makepp_command	L<C<--quiet>|makepp_command/s>
+SILENT silent	makepp_command	L<C<--silent>|makepp_command/s>
+SANDBOX sandbox	makepp_command	L<C<--sandbox>|makepp_command/sandbox_directory>
+INSANDBOX insandbox	makepp_command	L<C<--in-sandbox>|makepp_command/sandbox_directory>
+INSIDESANDBOX insidesandbox	makepp_command	L<C<--inside-sandbox>|makepp_command/sandbox_directory>
+SANDBOXWARN sandboxwarn	makepp_command	L<C<--sandbox-warn>|makepp_command/sandbox_warn>
+SANDBOXWARNING sandboxwarning	makepp_command	L<C<--sandbox-warning>|makepp_command/sandbox_warn>
+STOP stop	makepp_command	L<C<--stop>|makepp_command/stop>
+STOPAFTERLOADING stopafterloading	makepp_command	L<C<--stop-after-loading>|makepp_command/stop>
+STOPRACE stoprace	makepp_command	L<C<--stop-race>|makepp_command/stop_race>
+STOPONRACE stoponrace	makepp_command	L<C<--stop-on-race>|makepp_command/stop_race>
+SYMLINKINREPASFILE symlinkinrepasfile	makepp_command	L<C<--symlink-in-rep-as-file>|makepp_command/symlink_in_rep_as_file>
+SYMLINKINREPOSITORYASFILE symlinkinrepositoryasfile	makepp_command	L<C<--symlink-in-repository-as-file>|makepp_command/symlink_in_rep_as_file>
+TRADITIONALRECURSIVEMAKE traditionalrecursivemake	makepp_command	L<C<--traditional-recursive-make>|makepp_command/traditional_recursive_make>
+V v	makepp_command	L<C<-v>|makepp_command/v>
+VERBOSE verbose	makepp_command	L<C<--verbose>|makepp_command/v>
+V V	makepp_command	L<C<-V>|makepp_command/v>
+VERSION version	makepp_command	L<C<--version>|makepp_command/v>
+VIRTUALSANDBOX virtualsandbox	makepp_command	L<C<--virtual-sandbox>|makepp_command/virtual_sandbox>
+W W	makepp_command	L<C<-W>|makepp_command/w_filename>
+ASSUMENEW assumenew	makepp_command	L<C<--assume-new>|makepp_command/w_filename>
+NEWFILE newfile	makepp_command	L<C<--new-file>|makepp_command/w_filename>
+WHATIF whatif	makepp_command	L<C<--what-if>|makepp_command/w_filename>
+MAKEFLAGS MAKEFLAGS	makepp_command	L<C<$MAKEFLAGS>|makepp_command/_makeflags>
+MAKEPPFLAGS MAKEPPFLAGS	makepp_command	L<C<$MAKEPPFLAGS>|makepp_command/_makeppflags>
+MAKEPPCASESENSITIVEFILENAMES MAKEPPCASESENSITIVEFILENAMES	makepp_command	L<C<$MAKEPP_CASE_SENSITIVE_FILENAMES>|makepp_command/_makepp_case_sensitive_filenames>
+AND and	makepp_functions	L<C<and>|makepp_functions/and_condition1_condition2_condition3>
+IF if	makepp_functions	L<C<if>|makepp_functions/if_string_result_if_string_not_blank_result_if_string_blank>
+IFTRUE iftrue	makepp_functions	L<C<iftrue>|makepp_functions/if_string_result_if_string_not_blank_result_if_string_blank>
+OR or	makepp_functions	L<C<or>|makepp_functions/or_condition1_condition2_condition3>
+ABSOLUTEFILENAME absolutefilename	makepp_functions	L<C<absolute_filename>|makepp_functions/absolute_filename_files>
+ABSPATH abspath	makepp_functions	L<C<abspath>|makepp_functions/absolute_filename_files>
+ABSOLUTEFILENAMENOLINK absolutefilenamenolink	makepp_functions	L<C<absolute_filename_nolink>|makepp_functions/absolute_filename_nolink_files>
+REALPATH realpath	makepp_functions	L<C<realpath>|makepp_functions/absolute_filename_nolink_files>
+BASENAME basename	makepp_functions	L<C<basename>|makepp_functions/basename_filenames>
+DIR dir	makepp_functions	L<C<dir>|makepp_functions/dir_filenames>
+DIRNOSLASH dirnoslash	makepp_functions	L<C<dir_noslash>|makepp_functions/dir_noslash_filename>
+FILTEROUTDIRS filteroutdirs	makepp_functions	L<C<filter_out_dirs>|makepp_functions/filter_out_dirs_filenames>
+FINDFILE findfile	makepp_functions	L<C<findfile>|makepp_functions/findfile_filename_path>
+FINDPROGRAM findprogram	makepp_functions	L<C<find_program>|makepp_functions/find_program_name>
+FINDUPWARDS findupwards	makepp_functions	L<C<find_upwards>|makepp_functions/find_upwards_filename>
+FINDFIRSTUPWARDS findfirstupwards	makepp_functions	L<C<find_first_upwards>|makepp_functions/find_first_upwards_file1_file2>
+FIRSTAVAILABLE firstavailable	makepp_functions	L<C<first_available>|makepp_functions/first_available_file1_file2>
+INFEROBJECTS inferobjects	makepp_functions	L<C<infer_objects>|makepp_functions/infer_objects_file1_file2_pattern>
+MKTEMP mktemp	makepp_functions	L<C<mktemp>|makepp_functions/mktemp>
+MKTEMP mktemp	makepp_functions	L<C<mktemp>|makepp_functions/mktemp>
+MKTEMP mktemp	makepp_functions	L<C<mktemp>|makepp_functions/mktemp>
+MKTEMP mktemp	makepp_functions	L<C<mktemp>|makepp_functions/mktemp>
+NOTDIR notdir	makepp_functions	L<C<notdir>|makepp_functions/notdir_filenames>
+ONLYGENERATED onlygenerated	makepp_functions	L<C<only_generated>|makepp_functions/only_generated_filenames>
+ONLYNONTARGETS onlynontargets	makepp_functions	L<C<only_nontargets>|makepp_functions/only_nontargets_filenames>
+ONLYSTALE onlystale	makepp_functions	L<C<only_stale>|makepp_functions/only_stale_filenames>
+ONLYTARGETS onlytargets	makepp_functions	L<C<only_targets>|makepp_functions/only_targets_filenames>
+RELATIVEFILENAME relativefilename	makepp_functions	L<C<relative_filename>|makepp_functions/relative_filename_file1_file2_file3>
+RELATIVETO relativeto	makepp_functions	L<C<relative_to>|makepp_functions/relative_to_file1_file2_file3_directory>
+SUFFIX suffix	makepp_functions	L<C<suffix>|makepp_functions/suffix_names>
+TEMPORARY temporary	makepp_functions	L<C<temporary>|makepp_functions/temporary_words>
+WILDCARD wildcard	makepp_functions	L<C<wildcard>|makepp_functions/wildcard_pattern>
+ADDPREFIX addprefix	makepp_functions	L<C<addprefix>|makepp_functions/addprefix_prefix_words>
+ADDSUFFIX addsuffix	makepp_functions	L<C<addsuffix>|makepp_functions/addsuffix_suffix_words>
+CALL call	makepp_functions	L<C<call>|makepp_functions/call_variable_words>
+FILTER filter	makepp_functions	L<C<filter>|makepp_functions/filter_patterns_words>
+FILTEROUT filterout	makepp_functions	L<C<filter_out>|makepp_functions/filter_out_patterns_words>
+FINDSTRING findstring	makepp_functions	L<C<findstring>|makepp_functions/findstring_find_in>
+FIRSTWORD firstword	makepp_functions	L<C<firstword>|makepp_functions/firstword_words>
+MAP map	makepp_functions	L<C<map>|makepp_functions/map_words_perlcode>
+MAKEMAP makemap	makepp_functions	L<C<makemap>|makepp_functions/map_words_perlcode>
+JOIN join	makepp_functions	L<C<join>|makepp_functions/join_words1_words2>
+PATSUBST patsubst	makepp_functions	L<C<patsubst>|makepp_functions/patsubst_pattern_substitute_words>
+SORT sort	makepp_functions	L<C<sort>|makepp_functions/sort_word1_word2_word3>
+STRIP strip	makepp_functions	L<C<strip>|makepp_functions/strip_string>
+SUBST subst	makepp_functions	L<C<subst>|makepp_functions/subst_from_to_text>
+WORD word	makepp_functions	L<C<word>|makepp_functions/word_n_text>
+WORDLIST wordlist	makepp_functions	L<C<wordlist>|makepp_functions/wordlist_indexlist_words>
+WORDLIST wordlist	makepp_functions	L<C<wordlist>|makepp_functions/wordlist_indexlist_words>
+WORDS words	makepp_functions	L<C<words>|makepp_functions/words_text>
+FOREACH foreach	makepp_functions	L<C<foreach>|makepp_functions/foreach_var_list_text>
+INFO info	makepp_functions	L<C<info>|makepp_functions/info_text>
+WARNING warning	makepp_functions	L<C<warning>|makepp_functions/info_text>
+ERROR error	makepp_functions	L<C<error>|makepp_functions/info_text>
+PREBUILD prebuild	makepp_functions	L<C<prebuild>|makepp_functions/prebuild_targets>
+MAKE make	makepp_functions	L<C<make>|makepp_functions/prebuild_targets>
+ONLYPHONYTARGETS onlyphonytargets	makepp_functions	L<C<only_phony_targets>|makepp_functions/only_phony_targets_names>
+ORIGIN origin	makepp_functions	L<C<origin>|makepp_functions/origin_variable>
+PERL perl	makepp_functions	L<C<perl>|makepp_functions/perl_perlcode>
+MAKEPERL makeperl	makepp_functions	L<C<makeperl>|makepp_functions/perl_perlcode>
+PHONY phony	makepp_functions	L<C<phony>|makepp_functions/phony_words>
+PRINT print	makepp_functions	L<C<print>|makepp_functions/print_text>
+SHELL shell	makepp_functions	L<C<shell>|makepp_functions/shell_shell_command>
+XARGS xargs	makepp_functions	L<C<xargs>|makepp_functions/xargs_command_arguments_suffix>
+A A	makeppgraph	L<C<-A>|makeppgraph/a_filename>
+ARGSFILE argsfile	makeppgraph	L<C<--args-file>|makeppgraph/a_filename>
+ARGUMENTSFILE argumentsfile	makeppgraph	L<C<--arguments-file>|makeppgraph/a_filename>
+B b	makeppgraph	L<C<-b>|makeppgraph/b>
+BECAUSE because	makeppgraph	L<C<--because>|makeppgraph/b>
+BUILDREASONS buildreasons	makeppgraph	L<C<--build-reasons>|makeppgraph/b>
+D D	makeppgraph	L<C<-D>|makeppgraph/d>
+DEPENDENCIES dependencies	makeppgraph	L<C<--dependencies>|makeppgraph/d>
+D d	makeppgraph	L<C<-d>|makeppgraph/d>
+DOWN down	makeppgraph	L<C<--down>|makeppgraph/d>
+DOWNWARDS downwards	makeppgraph	L<C<--downwards>|makeppgraph/d>
+G g	makeppgraph	L<C<-g>|makeppgraph/g>
+GRAPHVIZ graphviz	makeppgraph	L<C<--graphviz>|makeppgraph/g>
+DOT dot	makeppgraph	L<C<--dot>|makeppgraph/g>
+H h	makeppgraph	L<C<-h>|makeppgraph/h>
+HTML html	makeppgraph	L<C<--html>|makeppgraph/h>
+? ?	makeppgraph	L<C<-?>|makeppgraph/_>
+HELP help	makeppgraph	L<C<--help>|makeppgraph/_>
+I I	makeppgraph	L<C<-I>|makeppgraph/i_directory>
+INCLUDE include	makeppgraph	L<C<--include>|makeppgraph/i_directory>
+INCLUDEDIR includedir	makeppgraph	L<C<--include-dir>|makeppgraph/i_directory>
+I i	makeppgraph	L<C<-i>|makeppgraph/i>
+INCLUDES includes	makeppgraph	L<C<--includes>|makeppgraph/i>
+L l	makeppgraph	L<C<-l>|makeppgraph/l_filename>
+LOG log	makeppgraph	L<C<--log>|makeppgraph/l_filename>
+LOGFILE logfile	makeppgraph	L<C<--log-file>|makeppgraph/l_filename>
+M M	makeppgraph	L<C<-M>|makeppgraph/m_module_arg>
+MODULE module	makeppgraph	L<C<--module>|makeppgraph/m_module_arg>
+M m	makeppgraph	L<C<-m>|makeppgraph/m_perlcode>
+MERGE merge	makeppgraph	L<C<--merge>|makeppgraph/m_perlcode>
+O o	makeppgraph	L<C<-o>|makeppgraph/o_filename>
+OUTPUT output	makeppgraph	L<C<--output>|makeppgraph/o_filename>
+P p	makeppgraph	L<C<-p>|makeppgraph/p>
+PLAIN plain	makeppgraph	L<C<--plain>|makeppgraph/p>
+R r	makeppgraph	L<C<-r>|makeppgraph/r_perlcode>
+RENAME rename	makeppgraph	L<C<--rename>|makeppgraph/r_perlcode>
+S s	makeppgraph	L<C<-s>|makeppgraph/s>
+SEPARATEDIRECTIONS separatedirections	makeppgraph	L<C<--separate-directions>|makeppgraph/s>
+T t	makeppgraph	L<C<-t>|makeppgraph/t>
+TEXT text	makeppgraph	L<C<--text>|makeppgraph/t>
+U u	makeppgraph	L<C<-u>|makeppgraph/u>
+UP up	makeppgraph	L<C<--up>|makeppgraph/u>
+UPWARDS upwards	makeppgraph	L<C<--upwards>|makeppgraph/u>
+V V	makeppgraph	L<C<-V>|makeppgraph/v>
+VERSION version	makeppgraph	L<C<--version>|makeppgraph/v>
+CWD cwd	makeppgraph	L<C<&cwd>|makeppgraph/cwd>
+DIR dir	makeppgraph	L<C<&dir>|makeppgraph/dir>
+HOME home	makeppgraph	L<C<&home>|makeppgraph/home>
+MAKEPP makepp	makeppgraph	L<C<&makepp>|makeppgraph/makepp>
+SUF suf	makeppgraph	L<C<&suf>|makeppgraph/suf>
+USR usr	makeppgraph	L<C<&usr>|makeppgraph/usr>
+MAKEPPGRAPHFLAGS MAKEPPGRAPHFLAGS	makeppgraph	L<C<$MAKEPPGRAPHFLAGS>|makeppgraph/_makeppgraphflags>
+A A	makeppinfo	L<C<-A>|makeppinfo/a_filename>
+ARGSFILE argsfile	makeppinfo	L<C<--args-file>|makeppinfo/a_filename>
+ARGUMENTSFILE argumentsfile	makeppinfo	L<C<--arguments-file>|makeppinfo/a_filename>
+F f	makeppinfo	L<C<-f>|makeppinfo/f>
+FORCE force	makeppinfo	L<C<--force>|makeppinfo/f>
+? ?	makeppinfo	L<C<-?>|makeppinfo/_>
+H h	makeppinfo	L<C<-h>|makeppinfo/_>
+HELP help	makeppinfo	L<C<--help>|makeppinfo/_>
+K k	makeppinfo	L<C<-k>|makeppinfo/k_list>
+KEYS keys	makeppinfo	L<C<--keys>|makeppinfo/k_list>
+KEYLIST keylist	makeppinfo	L<C<--keylist>|makeppinfo/k_list>
+Q q	makeppinfo	L<C<-q>|makeppinfo/q>
+QUIET quiet	makeppinfo	L<C<--quiet>|makeppinfo/q>
+T t	makeppinfo	L<C<-t>|makeppinfo/t>
+TRAVERSE traverse	makeppinfo	L<C<--traverse>|makeppinfo/t>
+V V	makeppinfo	L<C<-V>|makeppinfo/v>
+VERSION version	makeppinfo	L<C<--version>|makeppinfo/v>
+MAKEPPINFOFLAGS MAKEPPINFOFLAGS	makeppinfo	L<C<$MAKEPPINFOFLAGS>|makeppinfo/_makeppinfoflags>
+A A	makepplog	L<C<-A>|makepplog/a_filename>
+ARGSFILE argsfile	makepplog	L<C<--args-file>|makepplog/a_filename>
+ARGUMENTSFILE argumentsfile	makepplog	L<C<--arguments-file>|makepplog/a_filename>
+C c	makepplog	L<C<-c>|makepplog/c>
+CURRENTWORKINGDIRECTORY currentworkingdirectory	makepplog	L<C<--current-working-directory>|makepplog/c>
+C C	makepplog	L<C<-C>|makepplog/c>
+CURRENTWORKINGDIRECTORYANDUP currentworkingdirectoryandup	makepplog	L<C<--current-working-directory-and-up>|makepplog/c>
+F f	makepplog	L<C<-f>|makepplog/f>
+FOLLOW follow	makepplog	L<C<--follow>|makepplog/f>
+? ?	makepplog	L<C<-?>|makepplog/_>
+H h	makepplog	L<C<-h>|makepplog/_>
+HELP help	makepplog	L<C<--help>|makepplog/_>
+I i	makepplog	L<C<-i>|makepplog/i>
+INSTALLDIRS installdirs	makepplog	L<C<--install-dirs>|makepplog/i>
+INSTALLATIONDIRECTORIES installationdirectories	makepplog	L<C<--installation-directories>|makepplog/i>
+K k	makepplog	L<C<-k>|makepplog/k_list>
+KEYS keys	makepplog	L<C<--keys>|makepplog/k_list>
+KEYLIST keylist	makepplog	L<C<--keylist>|makepplog/k_list>
+K K	makepplog	L<C<-K>|makepplog/k>
+SHOWKEY showkey	makepplog	L<C<--showkey>|makepplog/k>
+L l	makepplog	L<C<-l>|makepplog/l_filename>
+LOG log	makepplog	L<C<--log>|makepplog/l_filename>
+LOGFILE logfile	makepplog	L<C<--log-file>|makepplog/l_filename>
+N n	makepplog	L<C<-n>|makepplog/n>
+NOINDENT noindent	makepplog	L<C<--no-indent>|makepplog/n>
+O o	makepplog	L<C<-o>|makepplog/o_filename>
+OUTPUT output	makepplog	L<C<--output>|makepplog/o_filename>
+P p	makepplog	L<C<-p>|makepplog/p>
+PREFIX prefix	makepplog	L<C<--prefix>|makepplog/p>
+T t	makepplog	L<C<-t>|makepplog/t>
+TABULATE tabulate	makepplog	L<C<--tabulate>|makepplog/t>
+U u	makepplog	L<C<-u>|makepplog/u>
+UNIQ uniq	makepplog	L<C<--uniq>|makepplog/u>
+UNIQUE unique	makepplog	L<C<--unique>|makepplog/u>
+V V	makepplog	L<C<-V>|makepplog/v>
+VERSION version	makepplog	L<C<--version>|makepplog/v>
+MAKEPPLOGFLAGS MAKEPPLOGFLAGS	makepplog	L<C<$MAKEPPLOGFLAGS>|makepplog/_makepplogflags>
+A A	makeppreplay	L<C<-A>|makeppreplay/a_filename>
+ARGSFILE argsfile	makeppreplay	L<C<--args-file>|makeppreplay/a_filename>
+ARGUMENTSFILE argumentsfile	makeppreplay	L<C<--arguments-file>|makeppreplay/a_filename>
+C C	makeppreplay	L<C<-C>|makeppreplay/c_directory>
+DIRECTORY directory	makeppreplay	L<C<--directory>|makeppreplay/c_directory>
+C c	makeppreplay	L<C<-c>|makeppreplay/c>
+ROOTDIR rootdir	makeppreplay	L<C<--root-dir>|makeppreplay/c>
+ROOTDIRECTORY rootdirectory	makeppreplay	L<C<--root-directory>|makeppreplay/c>
+I I	makeppreplay	L<C<-I>|makeppreplay/i_directory>
+INCLUDE include	makeppreplay	L<C<--include>|makeppreplay/i_directory>
+INCLUDEDIR includedir	makeppreplay	L<C<--include-dir>|makeppreplay/i_directory>
+? ?	makeppreplay	L<C<-?>|makeppreplay/_>
+H h	makeppreplay	L<C<-h>|makeppreplay/_>
+HELP help	makeppreplay	L<C<--help>|makeppreplay/_>
+K k	makeppreplay	L<C<-k>|makeppreplay/k>
+KEEPGOING keepgoing	makeppreplay	L<C<--keep-going>|makeppreplay/k>
+M M	makeppreplay	L<C<-M>|makeppreplay/m_module_arg>
+MODULE module	makeppreplay	L<C<--module>|makeppreplay/m_module_arg>
+N n	makeppreplay	L<C<-n>|makeppreplay/n>
+DRYRUN dryrun	makeppreplay	L<C<--dry-run>|makeppreplay/n>
+JUSTPRINT justprint	makeppreplay	L<C<--just-print>|makeppreplay/n>
+RECON recon	makeppreplay	L<C<--recon>|makeppreplay/n>
+NOPRINTDIRECTORY noprintdirectory	makeppreplay	L<C<--no-print-directory>|makeppreplay/no_print_directory>
+T t	makeppreplay	L<C<-t>|makeppreplay/t>
+TEMPORARY temporary	makeppreplay	L<C<--temporary>|makeppreplay/t>
+V V	makeppreplay	L<C<-V>|makeppreplay/v>
+VERSION version	makeppreplay	L<C<--version>|makeppreplay/v>
+NOWARN nowarn	makeppreplay	L<C<--no-warn>|makeppreplay/no_warn>
+MAKEPPREPLAYFLAGS MAKEPPREPLAYFLAGS	makeppreplay	L<C<$MAKEPPREPLAYFLAGS>|makeppreplay/_makeppreplayflags>
+&&	makepp_rules	L<C<&>|makepp_rules/_>
+NOECHO	makepp_rules	L<C<noecho>|makepp_rules/noecho>
+&@	makepp_rules	L<C<@>|makepp_rules/noecho>
+IGNORE_ERROR	makepp_rules	L<C<ignore_error>|makepp_rules/ignore_error>
+&-	makepp_rules	L<C<->|makepp_rules/ignore_error>
+PERL	makepp_rules	L<C<perl>|makepp_rules/perl>
+MAKEPERL	makepp_rules	L<C<makeperl>|makepp_rules/perl>
+BUILD_CACHE	makepp_rules	L<C<:build_cache>|makepp_rules/build_cache_path_to_build_cache>
+BUILD_CHECK	makepp_rules	L<C<:build_check>|makepp_rules/build_check_build_check_method>
+ENV	makepp_rules	L<C<:env>|makepp_rules/env_variable>
+DISPATCH	makepp_rules	L<C<:dispatch>|makepp_rules/dispatch_command>
+INCLUDE	makepp_rules	L<C<:include>|makepp_rules/include_file_or_pattern>
+LAST_CHANCE	makepp_rules	L<C<:last_chance>|makepp_rules/last_chance>
+PARSER	makepp_rules	L<C<:parser>|makepp_rules/parser_parser>
+SIGNATURE	makepp_rules	L<C<:signature>|makepp_rules/signature_signature_method>
+DONTBUILD dontbuild	makepp_sandboxes	L<C<--dont-build>|makepp_sandboxes/dont_build_path>
+DOBUILD dobuild	makepp_sandboxes	L<C<--do-build>|makepp_sandboxes/dont_build_path>
+SANDBOX sandbox	makepp_sandboxes	L<C<--sandbox>|makepp_sandboxes/sandbox_path>
+INSANDBOX insandbox	makepp_sandboxes	L<C<--in-sandbox>|makepp_sandboxes/sandbox_path>
+INSIDESANDBOX insidesandbox	makepp_sandboxes	L<C<--inside-sandbox>|makepp_sandboxes/sandbox_path>
+OUTOFSANDBOX outofsandbox	makepp_sandboxes	L<C<--out-of-sandbox>|makepp_sandboxes/sandbox_path>
+SANDBOXWARN sandboxwarn	makepp_sandboxes	L<C<--sandbox-warn>|makepp_sandboxes/sandbox_warn>
+SANDBOXWARNING sandboxwarning	makepp_sandboxes	L<C<--sandbox-warning>|makepp_sandboxes/sandbox_warn>
+DONTREAD dontread	makepp_sandboxes	L<C<--dont-read>|makepp_sandboxes/dont_read_path>
+DOREAD doread	makepp_sandboxes	L<C<--do-read>|makepp_sandboxes/dont_read_path>
+VIRTUALSANDBOX virtualsandbox	makepp_sandboxes	L<C<--virtual-sandbox>|makepp_sandboxes/virtual_sandbox>
+PLAIN plain	makepp_signatures	L<C<plain>|makepp_signatures/plain>
+MD5 md5	makepp_signatures	L<C<md5>|makepp_signatures/md5>
+CCOMPILATIONMD5 ccompilationmd5	makepp_signatures	L<C<c_compilation_md5>|makepp_signatures/c_compilation_md5>
+SHAREDOBJECT sharedobject	makepp_signatures	L<C<shared_object>|makepp_signatures/shared_object>
+IFEQ ifeq	makepp_statements	L<C<ifeq>|makepp_statements/ifeq_string1_string2>
+IFNEQ ifneq	makepp_statements	L<C<ifneq>|makepp_statements/ifeq_string1_string2>
+IFDEF ifdef	makepp_statements	L<C<ifdef>|makepp_statements/ifdef_variable>
+IFNDEF ifndef	makepp_statements	L<C<ifndef>|makepp_statements/ifdef_variable>
+IFPERL ifperl	makepp_statements	L<C<ifperl>|makepp_statements/ifperl_perlcode>
+IFMAKEPERL ifmakeperl	makepp_statements	L<C<ifmakeperl>|makepp_statements/ifperl_perlcode>
+IFSYS ifsys	makepp_statements	L<C<ifsys>|makepp_statements/ifsys_wildcard>
+IFNSYS ifnsys	makepp_statements	L<C<ifnsys>|makepp_statements/ifsys_wildcard>
+IFTRUE iftrue	makepp_statements	L<C<iftrue>|makepp_statements/iftrue_expression>
+IFNTRUE ifntrue	makepp_statements	L<C<ifntrue>|makepp_statements/iftrue_expression>
+DEFINE define	makepp_statements	L<C<define>|makepp_statements/define>
+PERLBEGIN perlbegin	makepp_statements	L<C<perl_begin>|makepp_statements/perl_begin>
+PERL perl	makepp_statements	L<C<perl>|makepp_statements/perl_perlcode>
+MAKEPERL makeperl	makepp_statements	L<C<makeperl>|makepp_statements/perl_perlcode>
+SUB sub	makepp_statements	L<C<sub>|makepp_statements/sub>
+MAKESUB makesub	makepp_statements	L<C<makesub>|makepp_statements/sub>
+AUTOLOAD autoload	makepp_statements	L<C<autoload>|makepp_statements/autoload_filename>
+BUILDCACHE buildcache	makepp_statements	L<C<build_cache>|makepp_statements/build_cache_path_to_build_cache>
+BUILDCHECK buildcheck	makepp_statements	L<C<build_check>|makepp_statements/build_check_build_check_method>
+EXPORT export	makepp_statements	L<C<export>|makepp_statements/export_var>
+EXPORT export	makepp_statements	L<C<export>|makepp_statements/export_var>
+GLOBAL global	makepp_statements	L<C<global>|makepp_statements/global_var>
+GLOBAL global	makepp_statements	L<C<global>|makepp_statements/global_var>
+INCLUDE include	makepp_statements	L<C<include>|makepp_statements/include_makefile>
+INCLUDE include	makepp_statements	L<C<_include>|makepp_statements/include_makefile2>
+LOADMAKEFILE loadmakefile	makepp_statements	L<C<load_makefile>|makepp_statements/load_makefile_some_directory_somewhere_makefile>
+LOADMAKEFILE loadmakefile	makepp_statements	L<C<load_makefile>|makepp_statements/load_makefile_some_directory_somewhere_makefile>
+LOADMAKEFILE loadmakefile	makepp_statements	L<C<load_makefile>|makepp_statements/load_makefile_some_directory_somewhere_makefile>
+NOIMPLICITLOAD noimplicitload	makepp_statements	L<C<no_implicit_load>|makepp_statements/no_implicit_load>
+PREBUILD prebuild	makepp_statements	L<C<prebuild>|makepp_statements/prebuild_target>
+MAKE make	makepp_statements	L<C<make>|makepp_statements/prebuild_target>
+REGISTERCOMMANDPARSER registercommandparser	makepp_statements	L<C<register_command_parser>|makepp_statements/register_command_parser_command_word_parser>
+REGISTERPARSER registerparser	makepp_statements	L<C<register_parser>|makepp_statements/register_command_parser_command_word_parser>
+REGISTERINPUTSUFFIX registerinputsuffix	makepp_statements	L<C<register_input_suffix>|makepp_statements/register_input_suffix_command_word_suffix>
+REPOSITORY repository	makepp_statements	L<C<repository>|makepp_statements/repository_directory>
+REPOSITORY repository	makepp_statements	L<C<repository>|makepp_statements/repository_directory>
+RUNTIME runtime	makepp_statements	L<C<runtime>|makepp_statements/runtime_program_library>
+SIGNATURE signature	makepp_statements	L<C<signature>|makepp_statements/signature>
+=	makepp_variables	L<C<=>|makepp_variables/_>
+=:=	makepp_variables	L<C<:=>|makepp_variables/__>
+=;=	makepp_variables	L<C<;=>|makepp_variables/__>
+=+=	makepp_variables	L<C<+=>|makepp_variables/__>
+=&=	makepp_variables	L<C<&=>|makepp_variables/__>
+=?=	makepp_variables	L<C<?=>|makepp_variables/_>
+=!=	makepp_variables	L<C<!=>|makepp_variables/__>
+OUTPUT	makepp_variables	L<C<output>|makepp_variables/output>
+TARGET	makepp_variables	L<C<target>|makepp_variables/output>
+$@	makepp_variables	L<C<$@>|makepp_variables/output>
+OUTPUTS	makepp_variables	L<C<outputs>|makepp_variables/outputs>
+TARGETS	makepp_variables	L<C<targets>|makepp_variables/outputs>
+DEPENDENCY	makepp_variables	L<C<dependency>|makepp_variables/dependency>
+INPUT	makepp_variables	L<C<input>|makepp_variables/dependency>
+$E<LT>	makepp_variables	L<C<$E<lt>>|makepp_variables/dependency>
+DEPENDENCIES	makepp_variables	L<C<dependencies>|makepp_variables/dependencies>
+INPUTS	makepp_variables	L<C<inputs>|makepp_variables/dependencies>
+$^	makepp_variables	L<C<$^>|makepp_variables/dependencies>
+SORTED_DEPENDENCIES	makepp_variables	L<C<sorted_dependencies>|makepp_variables/sorted_dependencies>
+SORTED_INPUTS	makepp_variables	L<C<sorted_inputs>|makepp_variables/sorted_dependencies>
+$+	makepp_variables	L<C<$+>|makepp_variables/sorted_dependencies>
+CHANGED_DEPENDENCIES	makepp_variables	L<C<changed_dependencies>|makepp_variables/changed_dependencies>
+CHANGED_INPUTS	makepp_variables	L<C<changed_inputs>|makepp_variables/changed_dependencies>
+$?	makepp_variables	L<C<$?>|makepp_variables/changed_dependencies>
+STEM	makepp_variables	L<C<stem>|makepp_variables/stem>
+$*	makepp_variables	L<C<$*>|makepp_variables/stem>
+FOREACH	makepp_variables	L<C<foreach>|makepp_variables/foreach>
+$/	makepp_variables	L<C<$/>|makepp_variables/__>
+AR	makepp_variables	L<C<AR>|makepp_variables/ar>
+ARFLAGS	makepp_variables	L<C<ARFLAGS>|makepp_variables/arflags>
+AS	makepp_variables	L<C<AS>|makepp_variables/as>
+CC	makepp_variables	L<C<CC>|makepp_variables/cc>
+CFLAGS	makepp_variables	L<C<CFLAGS>|makepp_variables/cflags>
+CURDIR	makepp_variables	L<C<CURDIR>|makepp_variables/curdir>
+CXX	makepp_variables	L<C<CXX>|makepp_variables/cxx>
+CXXFLAGS	makepp_variables	L<C<CXXFLAGS>|makepp_variables/cxxflags>
+F77	makepp_variables	L<C<F77>|makepp_variables/f77>
+FC	makepp_variables	L<C<FC>|makepp_variables/fc>
+LD	makepp_variables	L<C<LD>|makepp_variables/ld>
+LEX	makepp_variables	L<C<LEX>|makepp_variables/lex>
+LIBTOOL	makepp_variables	L<C<LIBTOOL>|makepp_variables/libtool>
+MAKE	makepp_variables	L<C<MAKE>|makepp_variables/make>
+MAKECMDGOALS	makepp_variables	L<C<MAKECMDGOALS>|makepp_variables/makecmdgoals>
+MAKEFLAGS	makepp_variables	L<C<MAKEFLAGS>|makepp_variables/makeflags>
+MAKEINFO	makepp_variables	L<C<MAKEINFO>|makepp_variables/makeinfo>
+MAKEPPFLAGS	makepp_variables	L<C<MAKEPPFLAGS>|makepp_variables/makeppflags>
+MAKEPPFLAGSz	makepp_variables	L<C<_MAKEPPFLAGS>|makepp_variables/_makeppflags>
+MAKEPP_LN_CP	makepp_variables	L<C<MAKEPP_LN_CP>|makepp_variables/makepp_ln_cp>
+MAKEPP_PERCENT_SUBDIRS	makepp_variables	L<C<makepp_percent_subdirs>|makepp_variables/makepp_percent_subdirs>
+MAKEPP_REQUIRE_PHONY	makepp_variables	L<C<makepp_require_phony>|makepp_variables/makepp_require_phony>
+MAKEPP_SIMPLE_CONCATENATION	makepp_variables	L<C<makepp_simple_concatenation>|makepp_variables/makepp_simple_concatenation>
+MAKEPP_VERSION	makepp_variables	L<C<MAKEPP_VERSION>|makepp_variables/makepp_version>
+PWD	makepp_variables	L<C<PWD>|makepp_variables/pwd>
+RM	makepp_variables	L<C<RM>|makepp_variables/rm>
+ROOT	makepp_variables	L<C<ROOT>|makepp_variables/root>
+SHELL	makepp_variables	L<C<SHELL>|makepp_variables/shell>
+YACC	makepp_variables	L<C<YACC>|makepp_variables/yacc>

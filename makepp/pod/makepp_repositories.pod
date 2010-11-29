@@ -3,7 +3,7 @@
 makepp_repositories -- How to use repositories for variant builds, for
 maintaining a central set of sources, and other things
 
-=for vc $Id: makepp_repositories.pod,v 1.20 2010/02/24 23:30:30 pfeiffer Exp $
+=for vc $Id: makepp_repositories.pod,v 1.21 2010/07/16 21:15:23 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -15,13 +15,18 @@ functionality to the C<VPATH> variable in some versions of make, but (unlike
 C<VPATH>) you do not have to do anything special to your makefile to get them
 to work.
 
-Repositories are specified with the C<-R> or C<--repository> command line
-option (see L<makepp_command/-R>) or with the C<repository> statement (see
-L<makepp_statements/repository>) in the makefile.  Note that if you have a
-habit of calling makepp in different subdirectories of your build tree, it is
-easy to accidentally reimport a repository somewhere else.  As a safeguard
-against this, if you use F<RootMakeppfile>, makepp will refuse to start if it
-finds one above or below where it would be imported.
+Repositories are specified with the L<C<-R> or
+C<--repository>|makepp_command/r_directory> command line option or with the
+L<C<repository>|makepp_statements/repository_directory> statement in the
+makefile.  Note that if you have a habit of calling makepp in different
+subdirectories of your build tree, it is easy to accidentally reimport a
+repository somewhere else.  As a safeguard against this, if you use
+F<RootMakeppfile>, makepp will refuse to start if it finds one above or below
+where it would be imported.
+
+This is somewhat comparable to operating system union filesystems (unionfs...)
+The current directory is like the highest level writable layer.  All
+repositories are like lower read-only layers.
 
 Repositories are useful in several different situations:
 
@@ -248,10 +253,10 @@ You can do it all with one command, like this:
 
        makepp -R alternate-build=. -F alternate-build
 
-(C<-F> changes to that directory before loading the makefile.  See
-L<makepp_command/-F> for details.  You must specify C<-R> before C<-F>.)  Note
-that this example puts the new build tree inside the repository.  That will
-not work if you use a F<RootMakeppfile> because makepp safeguards against
+L<C<-F> or C<-makeppfile>|makepp_command/f_makeppfile> changes to that
+directory before loading the makefile.  You must specify C<-R> before C<-F>.
+Note that this example puts the new build tree inside the repository.  That
+will not work if you use a F<RootMakeppfile> because makepp safeguards against
 nested trees.  It's also not a good idea if you use F<**>, because if you ever
 build in the repository it will also find edited and generated files in this
 subtree.
@@ -302,7 +307,7 @@ Or, presuming that it has a fixed path, you could write into your makefile:
 
     repository /path/to/production/repository
 
-and, because options are seen before makefiles are read, you can call just
+and, because options are seen before makefiles are read, you can then call just
 
     $ makepp -R/path/to/group/repository
 

@@ -1,6 +1,6 @@
 # use strict qw(vars subs);
 
-# $Id: Event.pm,v 1.25 2009/02/10 22:55:49 pfeiffer Exp $
+# $Id: Event.pm,v 1.27 2010/09/29 22:19:53 pfeiffer Exp $
 
 package Mpp::Event;
 
@@ -219,7 +219,7 @@ sub process_finished {
 				# dependency.
 	  } else {
 	    $waiter->{STATUS} = delete $waiter->{ERROR_HANDLER};
-	    $waiter->{CODE} = \&Mpp::Text::CONST0;
+	    $waiter->{CODE} = $Mpp::Text::N[0];
 	    Mpp::Event::WaitingSubroutine::start( $waiter, 1 );
 	  }
 	} else {		# Just pass the error to this routine's caller,
@@ -492,12 +492,11 @@ sub start {
     return;
   }
 
-  my $pid;
   $SIG{CHLD} = sub { $child_exited = 1 }; # Call the reaper subroutine in the
 				# mainline code.
 
   &Mpp::flush_log if Mpp::is_perl_5_6;
-  if( $pid = fork ) {		# In the parent process?
+  if( my $pid = fork ) {	# In the parent process?
     $running_processes{$pid} = $self; # Store this for later.
     ++$Mpp::Event::n_external_processes; # Keep track of how many things are running.
     return;
@@ -646,7 +645,7 @@ sub start {
 #
   my $status;
 
-  if( $this_subr->{CODE} != \&Mpp::Text::CONST0 ) {
+  if( $this_subr->{CODE} != $Mpp::Text::N[0] ) {
     local $Mpp::indent_level = $this_subr->{INDENT};
 				# Set the indentation level properly.
     for( $this_subr->{CODE}( @{$this_subr->{ARGS}} )) {
@@ -655,7 +654,7 @@ sub start {
 	  if( exists $_->{STATUS} ) { # Did that thing already finish?
 	    $status ||= $_->{STATUS}; # Pick up its status.
 	  } else {		# Hasn't finished yet, we need to wait for it.
-	    $this_subr->{CODE} = \&Mpp::Text::CONST0;
+	    $this_subr->{CODE} = $Mpp::Text::N[0];
 				# Convert this subroutine into a dummy which
 				# isn't harmful to call again.
 	    push @{$_->{WAITING_FOR}}, $this_subr;

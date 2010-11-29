@@ -2,15 +2,68 @@
 
 makeppgraph -- Graphical analysis of the dependency graph
 
-=for vc $Id: makeppgraph.pod,v 1.13 2009/02/21 11:25:31 pfeiffer Exp $
+=for vc $Id: makeppgraph.pod,v 1.15 2010/09/03 21:26:28 pfeiffer Exp $
 
-=head1 SYNOPSIS
+=head1 DESCRIPTION
+
+=for genindex '[-$&][-?\w]+' makeppgraph.pod
+
+B<?:>E<nbsp>L<-?|/_>,E<nbsp>
+B<A:>E<nbsp>L<-A|/a_filename>,
+  L<--args-file|/a_filename>,
+  L<--arguments-file|/a_filename>,E<nbsp>
+B<B:>E<nbsp>L<-b|/b>,
+  L<--because|/b>,
+  L<--build-reasons|/b>,E<nbsp>
+B<C:>E<nbsp>L<&cwd|/cwd>,E<nbsp>
+B<D:>E<nbsp>L<-D|/d>,
+  L<-d|/d>,
+  L<--dependencies|/d>,
+  L<&dir|/dir>,
+  L<--dot|/g>,
+  L<--down|/d>,
+  L<--downwards|/d>,E<nbsp>
+B<G:>E<nbsp>L<-g|/g>,
+  L<--graphviz|/g>,E<nbsp>
+B<H:>E<nbsp>L<-h|/h>,
+  L<--help|/_>,
+  L<&home|/home>,
+  L<--html|/h>,E<nbsp>
+B<I:>E<nbsp>L<-I|/i_directory>,
+  L<-i|/i>,
+  L<--include|/i_directory>,
+  L<--include-dir|/i_directory>,
+  L<--includes|/i>,E<nbsp>
+B<L:>E<nbsp>L<-l|/l_filename>,
+  L<--log|/l_filename>,
+  L<--log-file|/l_filename>,E<nbsp>
+B<M:>E<nbsp>L<-M|/m_module_arg>,
+  L<-m|/m_perlcode>,
+  L<&makepp|/makepp>,
+  L<$MAKEPPGRAPHFLAGS|/_makeppgraphflags>,
+  L<--merge|/m_perlcode>,
+  L<--module|/m_module_arg>,E<nbsp>
+B<O:>E<nbsp>L<-o|/o_filename>,
+  L<--output|/o_filename>,E<nbsp>
+B<P:>E<nbsp>L<-p|/p>,
+  L<--plain|/p>,E<nbsp>
+B<R:>E<nbsp>L<-r|/r_perlcode>,
+  L<--rename|/r_perlcode>,E<nbsp>
+B<S:>E<nbsp>L<-s|/s>,
+  L<--separate-directions|/s>,
+  L<&suf|/suf>,E<nbsp>
+B<T:>E<nbsp>L<-t|/t>,
+  L<--text|/t>,E<nbsp>
+B<U:>E<nbsp>L<-u|/u>,
+  L<--up|/u>,
+  L<--upwards|/u>,
+  L<&usr|/usr>,E<nbsp>
+B<V:>E<nbsp>L<-V|/v>,
+  L<--version|/v>
 
 B<makeppgraph> S<[ I<option> ... ]> S<[ I<pattern> ... ]>
 
 B<mppg> S<[ I<option> ... ]> S<[ I<pattern> ... ]>
-
-=head1 DESCRIPTION
 
 They say "A picture is worth a thousand words".  So let's draw your dependency
 or include graph from various viewpoints.  Check out the gallery
@@ -234,11 +287,11 @@ displayed from left "top" to right "bottom" due to the width of the nodes.)
 
 =over
 
-=item -A filename
+=item -A I<filename>
 
-=item --args-file=filename
+=item --args-file=I<filename>
 
-=item --arguments-file=filename
+=item --arguments-file=fI<ilename>
 
 Read the file and parse it as possibly quoted whitespace- and/or newline-separated options.
 
@@ -288,13 +341,19 @@ file.
 Produce a browser F<.html> file, instead of the default uDrawZ<>(Graph)
 F<.udg> file.
 
-=item -I dir
+=item -?
 
-=item --include=dir
+=item --help
 
-=item --include-dir=dir
+Print out a brief summary of the options.
 
-Add I<dir> to Perl load path C<@INC>.
+=item -I I<directory>
+
+=item --include=I<directory>
+
+=item --include-dir=I<directory>
+
+Add I<directory> to Perl load path C<@INC>.
 
 =item -i
 
@@ -305,11 +364,11 @@ draw a graph of include relationships.  This will only have been logged as far
 as it needed to be analyzed.  To get the full picture you need a fresh full
 build.
 
-=item -l filename
+=item -l I<filename>
 
-=item --log=filename
+=item --log=I<filename>
 
-=item --log-file=filename
+=item --log-file=I<filename>
 
 The I<filename> is to where makepp wrote its log.  It may also be a directory,
 in which a file called F<.makepp/log> or F<log> will be searched.  To read
@@ -320,22 +379,22 @@ This option can be given multiple times, e.g. for merging all the logs from
 C<--traditional-recursive-make>.  But the dependencies you hid from makepp
 through the evil recursion paradigm can't of course show up here.
 
-=item -M module[=arg,...]
+=item -M I<module[=arg,...]>
 
-=item --module=module[=arg,...]
+=item --module=I<module[=arg,...]>
 
 Load module and import any functions it exports.
 
-=item -m perlcode
+=item -m I<perlcode>
 
-=item --merge=perlcode
+=item --merge=I<perlcode>
 
 Perform I<perlcode> for every target and its dependencies.  See
 L<merging|/Merging> for details about this option.
 
-=item -o filename
+=item -o I<filename>
 
-=item --output=filename
+=item --output=I<filename>
 
 Write the output to this file.
 
@@ -347,9 +406,9 @@ Don't use attributes like colors or dotted lines.  This is especially useful
 for uncluttering C<-t, --text> output.  In that format bidrectional edges will
 be lost unless you combine this with C<-s, --separate-directions>.
 
-=item -r perlcode
+=item -r I<perlcode>
 
-=item --rename=perlcode
+=item --rename=I<perlcode>
 
 Perform I<perlcode> for every target and its dependencies.  See
 L<renaming|/Renaming> for details about this option.
@@ -376,6 +435,8 @@ F<.udg> file.
 
 This option is only meaningful if you provide one or more patterns.  It will
 then only select the targets which depend on and/or include the matched files.
+
+=item -V
 
 =item --version
 
@@ -417,9 +478,9 @@ did something so you can combine them as in:
 
 =item &cwd
 
-=item cwd number
+=item cwd I<number>
 
-=item cwd number, name[, separator]
+=item cwd I<number, name[, separator]>
 
 Removes the current working directory from the beginning of path.  With a
 number, also replaces parent directories that many levels up with the right
@@ -460,7 +521,7 @@ Replaces the makepp installation directory with F<|m|>.
 
 =item &suf
 
-=item suf number
+=item suf I<number>
 
 This one is also a great reducer of graph complexity.  It reduces every file
 that has a suffix to an asterisk and that suffix.  So you can see which kinds
@@ -536,7 +597,7 @@ Makeppgraph looks at the following environment variable:
 
 =over 4
 
-=item MAKEPPGRAPHFLAGS
+=item $MAKEPPGRAPHFLAGS
 
 Any flags in this environment variable are interpreted as command line options
 before any explicit options.  Quotes are interpreted like in makefiles.

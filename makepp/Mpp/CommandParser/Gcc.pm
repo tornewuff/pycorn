@@ -1,12 +1,12 @@
-# $Id: Gcc.pm,v 1.31 2009/02/11 23:22:37 pfeiffer Exp $
+# $Id: Gcc.pm,v 1.34 2010/11/17 21:35:52 pfeiffer Exp $
 
 =head1 NAME
 
-Mpp::CommandParser::Gcc - makepp command parser for Gcc
+Mpp::CommandParser::Gcc - makepp command parser for gcc or cc
 
 =head1 DESCRIPTION
 
-Scans a gcc compile command for implicit dependencies.
+Parses a gcc compile command for implicit dependencies.
 
 This class is readily subclassed for similar things, such as the
 Embedded SQL preprocessor/compiler.
@@ -21,6 +21,8 @@ our @ISA = 'Mpp::CommandParser';
 
 use Mpp::Text;
 use Mpp::File;
+
+*factory = \&Mpp::Subs::p_gcc_compilation;
 
 sub new {
   my $self = &Mpp::CommandParser::new;
@@ -40,12 +42,12 @@ sub set_default_signature_method {
 
   # Use the MD5 signature checking when we can.
   $Mpp::has_md5_signatures and
-    $self->rule->set_signature_method_scanner( $leave_comments ? 'md5' : 'c_compilation_md5' );
+    $self->rule->set_signature_class( $leave_comments ? 'md5' : 'c_compilation_md5' );
 }
 
 # The subclass can override these. Don't start doing any actual scanning here,
 # because the signature method isn't necessarily set yet.
-*parse_opt = \&Mpp::Text::CONST0; # Ignore unknown option.
+*parse_opt = $Mpp::Text::N[0]; # Ignore unknown option.
 sub parse_arg {
   #my( undef, $arg, undef, $files ) = @_;
 
@@ -142,7 +144,7 @@ sub xparse_command {
       $scanner->add_include_dir( lib => $_ );
     } elsif( s/^l// ) {
       $_ ||= shift @words;
-      push @libs, $_;
+      push @libs, "lib$_";
     } elsif( s/^D// ) {
       $_ ||= shift @words;
       if( /^(\w+)=(.*)/ ) {
@@ -200,10 +202,12 @@ sub xparse_command {
   unless( $stop_at_obj ) {
     $scanner->add_include_dir( lib => $_ )
       for @Mpp::Subs::system_lib_dirs;
-    $scanner->add_dependency( $self, lib => "lib$_" )
-      for @libs;
     $self->add_simple_dependency( $_ )
       for @obj_files;
+    return 1 unless @libs;
+    my $tag = $scanner->get_tagname( 'lib' );
+    $self->add_simple_dependency( $scanner->find( undef, 'lib', $_ ), $tag, undef, $_ )
+      for @libs;
   }
   return 1;
 }

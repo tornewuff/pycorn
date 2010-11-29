@@ -2,26 +2,44 @@
 
 makepp_builtins -- Builtin commands in makepp
 
-=for vc $Id: makepp_builtins.pod,v 1.42 2009/02/21 11:25:31 pfeiffer Exp $
+=for vc $Id: makepp_builtins.pod,v 1.46 2010/09/18 09:58:17 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
-I<L<B<a>wk|/awk>>,E<nbsp>
-L<&B<c>at|/&cat>, I<L</chgrp>>, L</&chmod>, I<L<chown|/chgrp>>, L</&cp>, L</&cut>,E<nbsp>
-I<L<B<d>ate|/date>>,E<nbsp>
-L<&B<e>cho|/&echo>, L</&expr>,E<nbsp>
-I<L<B<f>alse|/false>>,E<nbsp>
-L<&B<g>rep|/&grep>,E<nbsp>
-I<L<B<h>ead|/head>>,E<nbsp>
-L<&B<i>nstall|/&install>,E<nbsp>
-L<&B<l>n|/&ln>,E<nbsp>
-L<&B<m>kdir|/&mkdir>, L</&mv>, I<L</m4>>,E<nbsp>
-L<&B<p>erl|/&grep>, L</&preprocess>, L<&printf|/&echo>,E<nbsp>
-L<&B<r>m|/&rm>, I<L</rmdir>>,E<nbsp>
-L<&B<s>ed|/&grep>, L</&sort>,E<nbsp>
-I<L<B<t>ail|/head>>, L</&template>, L</&touch>, I<L</tr>>,E<nbsp>
-L<&B<u>ninstall|/&uninstall>, L</&uniq>,E<nbsp>
-L<&B<y>es|/&echo>
+=for genindex '&?(?!export|I<)\w+' makepp_builtins.pod
+
+B<A:>E<nbsp>L<I<awk>|/awk>,E<nbsp>
+B<C:>E<nbsp>L<&cat|/cat_option_filename>,
+  L<I<chgrp>|/chgrp>,
+  L<&chmod|/chmod_option_mode_filename>,
+  L<I<chown>|/chgrp>,
+  L<&cp|/cp_option_sourcefile_destfile>,
+  L<&cut|/cut_option_filename>,E<nbsp>
+B<D:>E<nbsp>L<I<date>|/date>,E<nbsp>
+B<E:>E<nbsp>L<&echo|/echo_option_string>,
+  L<&expr|/expr_option_perlcode>,E<nbsp>
+B<F:>E<nbsp>L<I<false>|/false>,E<nbsp>
+B<G:>E<nbsp>L<&grep|/grep_option_perlcode_filename>,E<nbsp>
+B<H:>E<nbsp>L<I<head>|/head>,E<nbsp>
+B<I:>E<nbsp>L<&install|/install_option_sourcefile_destfile>,E<nbsp>
+B<L:>E<nbsp>L<&ln|/ln_option_sourcefile_destfile>,E<nbsp>
+B<M:>E<nbsp>L<I<m4>|/m4>,
+  L<&mkdir|/mkdir_option_directory>,
+  L<&mv|/mv_option_sourcefile_destfile>,E<nbsp>
+B<P:>E<nbsp>L<&perl|/grep_option_perlcode_filename>,
+  L<&preprocess|/preprocess_option_variable_definition_filename>,
+  L<&printf|/echo_option_string>,E<nbsp>
+B<R:>E<nbsp>L<&rm|/rm_option_filename>,
+  L<I<rmdir>|/rmdir>,E<nbsp>
+B<S:>E<nbsp>L<&sed|/grep_option_perlcode_filename>,
+  L<&sort|/sort_option_filename>,E<nbsp>
+B<T:>E<nbsp>L<I<tail>|/head>,
+  L<&template|/template_option_macro_definition_filename>,
+  L<&touch|/touch_option_filename>,
+  L<I<tr>|/tr>,E<nbsp>
+B<U:>E<nbsp>L<&uninstall|/uninstall_option_filename>,
+  L<&uniq|/uniq_option_filename>,E<nbsp>
+B<Y:>E<nbsp>L<&yes|/echo_option_string>
 
 There is a special Shell-like possibility to call built-in commands in a rule.
 The only metacharacters recognized are comment signs, backslashes, single and
@@ -31,7 +49,7 @@ not available (see C<-i> and C<-o> below instead).
 These commands start with C<&>, which is the function character in Perl and
 not a valid first character in Shell.  If no builtin command of that name can
 be found, this is also the syntax for calling an external script within the
-Perl instance performing the rule.  See L<run|makepp_extending/run>.
+Perl instance performing the rule.  See L<C<run>|makepp_extending/run_script_arguments>.
 
 These commands, as well as your self defined ones and perl scripts can also be
 called as a make function, returning the standard output.  The newlines are
@@ -55,19 +73,19 @@ much more power here.
 
 Lists of filenames may be empty, making it safe to call these commands with an
 unchecked list.  Options in their short form may be glued together as in
-C<-ab> instead of C<-a -b>.  Arguments to options are only shown for the long
-form, but they also apply to the short form.  In the long form they may be
-given either glued on with an C<=> sign or separately.  In the short form they
-may be given either glued on directly or separately.  A few options are common
-to several builtins, though the short form is sometimes not available:
+C<-ab> instead of C<-a -b>.  In the long form arguments may be given either
+glued on with an C<=> sign or separately.  In the short form they may be given
+either glued on directly or separately.  A few options are common to several
+builtins, though the short form is sometimes hidden by a command's own option
+(as in C<&cut -f>):
 
 =over
 
-=item -A filename
+=item -A I<filename>
 
-=item --args-file=filename
+=item --args-file=I<filename>
 
-=item --arguments-file=filename
+=item --arguments-file=I<filename>
 
 Read the file and parse it as possibly quoted whitespace- and/or newline-separated options.
 
@@ -80,9 +98,9 @@ different kind of file or empty directory of that name already exists.  This
 must precede the C<-o, --output=filename> option if it is to have any effect
 on that.
 
-=item -i shellcommand
+=item -i I<shellcommand>
 
-=item --inpipe=shellcommand
+=item --inpipe=I<shellcommand>
 
 Start the Shell command(s) and pipe the output into the builtin.  There may
 optionally be a trailing C<|> character, to indicate this is a pipe.  With
@@ -98,25 +116,25 @@ syntax.
 If an C<--inpipe> Shell command fails, that also causes the current builtin to
 fail.
 
-=item -o filename
+=item -o I<filename>
 
-=item --output=filename
+=item --output=I<filename>
 
 Write the output to this file, rather than stdout.  Filename may have any of these forms:
 
 =over
 
-=item filename
+=item I<filename>
 
-=item >filename
+=item >I<filename>
 
 Simply write to file.
 
-=item >>filename
+=item >>I<filename>
 
 Append to (not necessarily) existing file.
 
-=item +<filename
+=item +<I<filename>
 
 Also open the file for input, allowing inplace editing.  With this option
 variant no input filenames need to be given.  But if you want to perform the
@@ -124,7 +142,7 @@ builtin on more files, you must use C<-> as an input filename for this one.
 In fact the ouptut gets written to a temporary file which gets moved to
 filename at the end.
 
-=item |shellcommand
+=item |I<shellcommand>
 
 Pipe the builtin's output to the Shell command(s).
 
@@ -139,17 +157,17 @@ This option is necessary because there is no redirection syntax.
 If an C<--output> Shell command fails, that also causes the current builtin to
 fail.
 
-=item -r number
+=item -r I<number>
 
-=item --record-size=number
+=item --record-size=I<number>
 
 Locally sets C<$/> for the current builtin.  This splits input into records of
 length I<number> rather than line by line.  If I<number> is zero, each input
 file as a whole is one record.
 
-=item -s string
+=item -s I<string>
 
-=item --separator=string
+=item --separator=I<string>
 
 Locally sets C<$/> for the current builtin.  This splits input on I<string>
 rather than line by line.
@@ -173,10 +191,12 @@ is as if you had given it for every single builtin command.
 
 There are two motivations for having builtin commands in makepp.  The first is
 to offer a set of utilities, which, unlike Shell commands, are guaranteed to
-work the same everywhere, like C<&echo -n> or C<&mkdir -p>, and saving you the
-hassle of finding the path to C<&install> and figuring out its wildly varying
-options.  In a compilation environment, it's useful to have the C<--synclines>
-option, which normally only C<m4> provides, on all filters.
+work the same everywhere, like L<C<&echo -n>|/echo_option_string> or
+L<C<&mkdir -p>|/mkdir_option_directory>, and saving you the hassle of finding
+the path to L<C<&install>|/install_option_sourcefile_destfile> and figuring
+out its wildly varying options.  In a compilation environment, it's useful to
+have the C<--synclines> option, which normally only C<m4> provides, on all
+filters.
 
 The other is a question of efficiency.  In general costly fork/execs should be
 avoided where reasonably possible.  On Unix emulations like Cygwin or
@@ -220,10 +240,10 @@ configuration, but not let makepp notice.
 
 =item awk
 
-Not built in, but L<C<&sed>|/_26grep> is comparable.
+Not built in, but L<C<&sed>|/grep_option_perlcode_filename> is comparable.
 
 
-=item &cat [option ...] filename ...
+=item &cat I<[option ...] filename ...>
 
 Concatenates all the files into a single one.
 
@@ -233,16 +253,18 @@ Standard options: C<-A, --args-file, --arguments-file=filename, -f, --force,
 
 
 
-=item chgrp, chown
+=item chgrp
+
+=item chown
 
 These commands are mostly not portable!  They will either quietly do nothing
 or fail, depending on the system.  Generally only root may perform these
-operations, which is why they are only available through the L<C<&install>|/_26install>
-command.
+operations, which is why they are only available through the
+L<C<&install>|/install_option_sourcefile_destfile> command.
 
 
 
-=item &chmod [option ...] mode filename ...
+=item &chmod I<[option ...] mode filename ...>
 
 Sets I<mode> for all given files.  Mode must be an octal string.
 
@@ -250,11 +272,11 @@ Standard options: C<-A, --args-file, --arguments-file=filename, -v, --verbose>
 
 
 
-=item &cp [option ...] sourcefile destfile
+=item &cp I<[option ...] sourcefile destfile>
 
-=item &cp [option ...] sourcefile
+=item &cp I<[option ...] sourcefile>
 
-=item &cp [option ...] sourcefile ... destdir
+=item &cp I<[option ...] sourcefile ... destdir>
 
 Copy I<sourcefile> to I<destfile>, one I<sourcefile> to current directory or
 multiple I<sourcefile>s to I<destdir> with the same name.
@@ -283,9 +305,10 @@ Try to symbolically link the files.  If that fails, copy.
 
 =back
 
+See the note under L<&ln|/ln_option_sourcefile_destfile>.
 
 
-=item &cut [option ...] filename ...
+=item &cut I<[option ...] filename ...>
 
 Print selected parts of lines from each file or selected lines, counting
 across all files.  The output is separated by the delimiter which defaults to
@@ -297,9 +320,9 @@ Standard options: C<-A, --args-file, --arguments-file=filename, --force, -i,
 
 =over
 
-=item -c list
+=item -c I<list>
 
-=item --characters=list
+=item --characters=I<list>
 
 Print all the characters specified by I<list>.  I<List> may be any Perl
 expression returning a list of integers.  The integers can be either positive,
@@ -316,9 +339,9 @@ be ignored, however, because when this expression is evaluated the line has
 already been split to Perl's autosplit variable C<@::F>.  The numbers you
 return are in fact indices to that list.
 
-=item -d string
+=item -d I<string>
 
-=item --delimiter=string
+=item --delimiter=I<string>
 
 Set a new delimiter for input fields and output.  Unlike Unix C<cut>, this may
 have any length.
@@ -329,17 +352,17 @@ have any length.
 
 Treat C<\> as normal literals for C<-p, --printf=format>.
 
-=item -f list
+=item -f I<list>
 
-=item --fields=list
+=item --fields=I<list>
 
 Print all the groups specified by I<list>.  I<List> is as described under
 C<-c, --characters=list>.  Note that this hides the standard option C<-f>
 which must be given as C<--force>.
 
-=item -l list
+=item -l I<list>
 
-=item --lines=list
+=item --lines=I<list>
 
 Print all the lines specified by I<list>.  I<List> is as described under C<-c,
 --characters=list> with one major difference: The first line has number 1,
@@ -355,9 +378,9 @@ Print only matching lines, i.e. ones which have enough characters or fields.
 This implies C<--only-delimited>, which is why you will miss single-field
 lines with C<--fields=0>.
 
-=item -p format
+=item -p I<format>
 
-=item --printf=format
+=item --printf=I<format>
 
 Apply format (with \escapes) to all fields or characters.
 
@@ -382,11 +405,11 @@ Not built in, but either of these partially does the same thing:
     &expr gmtime
 
 
-=item &echo [option ...] string ...
+=item &echo I<[option ...] string ...>
 
-=item &printf [option ...] format argument ...
+=item &printf I<[option ...] format argument ...>
 
-=item &yes [option ...] string ...
+=item &yes I<[option ...] string ...>
 
 Writes all strings to stdout or the given outfile.  Both C<&echo> and C<&yes>
 add a newline at the end.  The strings, or for C<&printf> the format, may
@@ -410,7 +433,7 @@ Upcases the following letter.
 
 Upcases the rest, or upto the next C<\L> if found.
 
-=item \xHH, \x{HHHH}
+=item \xI<HH>, \x{I<HHHH>}
 
 Is the character value of the given Hex code.  Note that numeric codes are not
 portable to EBCDIC platforms!
@@ -442,13 +465,13 @@ Do not add a newline after the last string.  (Not understood by C<&printf>.)
 
 
 
-=item &expr [option ...] perlcode ...
+=item &expr I<[option ...] perlcode ...>
 
 Print the scalar value of perlcode, which may be written as one or several
 arguments.  Note that builtin commands are not parsed by the Shell, so C<*>,
 C<(> or C<< > >> are not special.  But string quotes are parsed by makepp, so
 Perl strings must be quoted twice, unless you want to use barewords.  If the
-value is false, this fails.  Note that, unlike in Unix C<expr> Perl's index
+value is false, this fails.  Note that -- unlike in Unix C<expr> -- Perl's index
 function starts at 0 (false) and returns -1 (true) for failure.
 
 Standard options: C<-A, --args-file, --arguments-file=filename, -f, --force, -o,
@@ -472,16 +495,16 @@ Do not add a newline after the output.
 
 =item false
 
-Not very constructive and thus not built in, but L<C<&expr>|/_26expr> with no
-argument or C<0> is comparable.
+Not very constructive and thus not built in, but
+L<C<&expr>|/expr_option_perlcode> with no argument or C<0> is comparable.
 
 
 
-=item &grep [option ...] perlcode filename ...
+=item &grep I<[option ...] perlcode filename ...>
 
-=item &perl [option ...] perlcode filename ...
+=item &perl I<[option ...] perlcode filename ...>
 
-=item &sed [option ...] perlcode filename ...
+=item &sed I<[option ...] perlcode filename ...>
 
 All the files get read line by line (unless you gave a C<--separator> option),
 and I<perlcode> gets evaluated for each line, before it gets printed.  C<&sed>
@@ -531,9 +554,9 @@ doubled C<-vv>, output the name of files with no matches.
 Invert the sense of matching, to select non-matching lines.  Note that this
 hides the standard option C<-v> which must be given as C<--verbose>.
 
-=item -w filename
+=item -w I<filename>
 
-=item --waste-file=filename
+=item --waste-file=I<filename>
 
 An optional waste basket for collecting the rejected lines.  This is not only
 for debugging your selection code, but also for splitting your input in two.
@@ -574,8 +597,8 @@ into the next found public or protected section:
 
 =item tail
 
-These are not provided, but you can achieve the same result with L<C<&grep>|/_26grep> or
-L<C<&cut --lines>|/_26cut>:
+These are not provided, but you can achieve the same result with
+L<C<&grep>|/grep_option_perlcode_filename> or L<C<&cut --lines>|/cut_option_filename>:
 
     &grep 1..10 file		# first ten lines
     &grep 10..eof file		# all lines from tenth onwards
@@ -587,11 +610,11 @@ true.
 
 
 
-=item &install [option ...] sourcefile destfile
+=item &install I<[option ...] sourcefile destfile>
 
-=item &install [option ...] sourcefile ... destdir
+=item &install I<[option ...] sourcefile ... destdir>
 
-=item &install --directory [option ...] directory ...
+=item &install --directory I<[option ...] directory ...>
 
 Move or rename I<sourcefile> to I<destfile>, or multiple I<sourcefile>s to
 I<destdir> with the same name.  This is the preferred way of transferring
@@ -623,9 +646,9 @@ compatibility with other install programs.
 In the third form form of this command create all the given directories and
 any necessary parent directories.
 
-=item -g group
+=item -g I<group>
 
-=item --group=group
+=item --group=I<group>
 
 Change the group ownership of the destination files.  The group may be given
 by name or numerically.
@@ -636,22 +659,22 @@ by name or numerically.
 
 Try to link the files.  If that fails, copy.
 
-=item --log=filename
+=item --log=I<filename>
 
-=item --logfile=filename
+=item --logfile=I<filename>
 
 Use I<filename> instead of normal logfile.
 
-=item -m mode
+=item -m I<mode>
 
-=item --mode=mode
+=item --mode=I<mode>
 
 Sets I<mode> for all destination files or directories.  Mode must be an octal
 string.
 
-=item -o owner
+=item -o I<owner>
 
-=item --owner=owner
+=item --owner=I<owner>
 
 Change the ownership of the destination files.  The owner may be given by name
 or numerically.
@@ -675,7 +698,7 @@ or numerically.
 =item --symlink
 
 Creates symbolic links instead of moving.  These options are passed to
-L<C<&ln>|/_26ln> and are described there.
+L<C<&ln>|/ln_option_sourcefile_destfile> and are described there.
 
 =item -s
 
@@ -688,11 +711,11 @@ files.
 
 
 
-=item &ln [option ...] sourcefile destfile
+=item &ln I<[option ...] sourcefile destfile>
 
-=item &ln [option ...] sourcefile
+=item &ln I<[option ...] sourcefile>
 
-=item &ln [option ...] sourcefile ... destdir
+=item &ln I<[option ...] sourcefile ... destdir>
 
 Link I<sourcefile> to I<destfile>, one I<sourcefile> to current directory or
 multiple I<sourcefile>s to I<destdir> with the same name.
@@ -727,10 +750,12 @@ Create symbolic rather than hard links.
 
 =back
 
-Note that on various file or operating systems, this operation is not
-supported.  To get at least some sort of result, C<&ln> can copy the files for
-you instead (not directories though).  To achieve this, you need to export the
-following variable before calling C<makepp>:
+B<Note:> On various file or operating systems, this operation is not
+supported.  Or it is, e.g. by Cygwin, but not understood by native Windows
+compilers, if you use one.  For a makefile you can't change, to get at least
+some sort of result, C<&ln> and C<&cp -l -s> can copy the files for you
+instead (not directories though).  To achieve this, you need to export the
+following variable before calling makepp:
 
 =over
 
@@ -752,7 +777,7 @@ of link.
 
 
 
-=item &mkdir [option ...] directory ...
+=item &mkdir I<[option ...] directory ...>
 
 Create the directories.
 
@@ -761,12 +786,12 @@ Standard options: C<-A, --args-file, --arguments-file=filename, -f, --force, -v,
 
 =over
 
-=item -m mode
+=item -m I<mode>
 
-=item --mode=mode
+=item --mode=I<mode>
 
 Sets I<mode> for all created directories, irrespective of the umask.  Mode
-must be an octal string.  If this is not given, the mode defaults to 755.
+must be an octal string.
 
 =item -p
 
@@ -780,11 +805,11 @@ concurrently by another process).
 
 
 
-=item &mv [option ...] sourcefile destfile
+=item &mv I<[option ...] sourcefile destfile>
 
-=item &mv [option ...] sourcefile
+=item &mv I<[option ...] sourcefile>
 
-=item &mv [option ...] sourcefile ... destdir
+=item &mv I<[option ...] sourcefile ... destdir>
 
 Move or rename I<sourcefile> to I<destfile>, one I<sourcefile> to current
 directory or multiple I<sourcefile>s to I<destdir> with the same name.
@@ -796,16 +821,18 @@ Standard options: C<-A, --args-file, --arguments-file=filename, -f, --force, -v,
 
 =item m4
 
-Not built in, but L<C<&preprocess>|/_26preprocess> is, and
-L<C<&template>|/_26template> is almost as powerful.
+Not built in, but
+L<C<&preprocess>|/preprocess_option_variable_definition_filename> is, and
+L<C<&template>|/template_option_macro_definition_filename> is almost as powerful.
 
 
 
-=item &preprocess [option ...] variable=definition ... filename ...
+=item &preprocess I<[option ...] variable=definition ... filename ...>
 
 This preprocesses the files exactly the same way makepp does for makefiles.
-This is more powerful than L<C<&template>|/_26template> but syntactically not
-suited to files with lots of C<$>-signs, like Makefiles or scripts.
+This is more powerful than
+L<C<&template>|/template_option_macro_definition_filename> but syntactically
+not suited to files with lots of C<$>-signs, like Makefiles or scripts.
 
 L<Conditional statements|makepp_statements/Conditionals>, as well as the
 statements C<include>/C<_include> (which here neither build the file nor
@@ -861,9 +888,9 @@ variable names with expressions.  This additionally recognizes the statements
 C<define>, C<export>/C<unexport> and C<override> (these can be masked with
 C<$()>).
 
-=item -h \\%hash
+=item -h \\%I<hash>
 
-=item --hashref=\\%hash
+=item --hashref=\\%I<hash>
 
 This allows preallocation of the variable values, including long ones not easily
 passed in a command.  The passed expression may be any Perl code that returns
@@ -874,7 +901,7 @@ including from another C<--hashref> option.
 
 
 
-=item &rm [option ...] filename ...
+=item &rm I<[option ...] filename ...>
 
 Delete files if you have directory write permission.  This is what Unix
 C<rm -f> would delete, since it has a special protection for interactive use
@@ -921,11 +948,11 @@ L<C<makeppclean>|makeppclean> utility that can do this more efficiently.
 
 =item rmdir
 
-Not built in, but L<C<&rm>|/_26rm> can handle this.
+Not built in, but L<C<&rm>|/rm_option_filename> can handle this.
 
 
 
-=item &sort [option ...] filename ...
+=item &sort I<[option ...] filename ...>
 
 Sorts all files together in lexicographic order.  This is inefficient for
 rather big files, because it happens completely in memory.  It will fail if
@@ -937,9 +964,9 @@ Standard options: C<-A, --args-file, --arguments-file=filename, -f, --force, -i,
 
 =over
 
-=item -c perlcode
+=item -c I<perlcode>
 
-=item --compare=perlcode
+=item --compare=I<perlcode>
 
 I<perlcode> represents a Perl sort block, with the two sorting candidates in
 C<$a> and C<$b>.
@@ -961,13 +988,13 @@ are not at the beginning.
 Output the results in the reverse order.  Note that this hides the standard
 option C<-r> which must be given as C<--record-size>.
 
-=item -t perlcode
+=item -t I<perlcode>
 
-=item --transform=perlcode
+=item --transform=I<perlcode>
 
-=item -d perlcode
+=item -d I<perlcode>
 
-=item --detransform=perlcode
+=item --detransform=I<perlcode>
 
 If you have a complex code, sorting gets more and more expensive in proportion
 to the number of records I<n>, because the code gets called O(I<n> log(I<n>))
@@ -1011,10 +1038,10 @@ equivalent.
 
 
 
-=item &template [option ...] macro=definition ... filename ...
+=item &template I<[option ...] macro=definition ... filename ...>
 
 This is a macro preprocessor, not quite as powerful as C<m4>, but covers more
-than is found in many makefiles.  See L<C<&preprocess>|/_26preprocess> for a
+than is found in many makefiles.  See L<C<&preprocess>|/preprocess_option_variable_definition_filename> for a
 more powerful alternative.  Any normal text goes through unchanged.  It
 replaces all occurences of C<@macro@>, C<@macro(arg1,arg2...)@> or everything
 between C<@@macro@@>, C<@@macro(arg1,arg2...)@@> and C<@@> with I<definition>.
@@ -1058,9 +1085,9 @@ Standard options: C<-A, --args-file, --arguments-file=filename, -f, --force,
 
 =over
 
-=item -h \\%hash
+=item -h \\%I<hash>
 
-=item --hashref=\\%hash
+=item --hashref=\\%I<hash>
 
 This allows preallocation of the macro values, including long ones not easily
 passed in a command.  The passed expression may be any Perl code that returns
@@ -1069,16 +1096,16 @@ including from another C<--hashref> option.  A hash value may also be a code
 reference, in that case the function gets called, as with C<@macro {
 I<Perlcode> }@> definitions.
 
-=item -s /prefix/suffix/
+=item -s I</prefix/suffix/>
 
-=item --simple=/prefix/suffix/
+=item --simple=I</prefix/suffix/>
 
 This replaces C<@> before and after I<var> with I<prefix> and I<suffix>
 respectively.  The first character is the separator and need not be a slash.
 
-=item -m /prefix/suffix/afterprefix/[aftersuffix/]
+=item -m I</prefix/suffix/afterprefix/[aftersuffix/]>
 
-=item --multiline=/prefix/suffix/afterprefix/[aftersuffix/]
+=item --multiline=I</prefix/suffix/afterprefix/[aftersuffix/]>
 
 This replaces C<@@> before and after I<var> and at the end of the block with
 I<prefix>, I<suffix> and I<afterprefix> respectively.  If I<aftersuffix> is
@@ -1097,7 +1124,7 @@ Replace only instances of macros which are actually defined.
 
 
 
-=item &touch [option ...] filename ...
+=item &touch I<[option ...] filename ...>
 
 Updates the modification and access timestamps of each file to now.  If the
 file doesn't exist, it gets created.
@@ -1106,9 +1133,9 @@ Standard options: C<-A, --args-file, --arguments-file=filename, -v, --verbose>
 
 
 
-=item &uninstall [option ...] [filename ...]
+=item &uninstall I<[option ...] [filename ...]>
 
-Uninstall files previously installed by L<C<&install>|/_26install>.  The
+Uninstall files previously installed by L<C<&install>|/install_option_sourcefile_destfile>.  The
 I<filename>s are logfiles written by C<&install>.  If none are given, nor an
 C<--inpipe> option, reads the default logfile of C<&install>.
 
@@ -1117,7 +1144,7 @@ Standard options: C<-A, --args-file, --arguments-file=filename, -i,
 
 
 
-=item &uniq [option ...] filename ...
+=item &uniq I<[option ...] filename ...>
 
 Discard all but one of successive equal lines.
 
@@ -1127,9 +1154,9 @@ Standard options: C<-A, --args-file, --arguments-file=filename, -f, --force, -i,
 
 =over
 
-=item -c perlcode
+=item -c I<perlcode>
 
-=item --compare=perlcode
+=item --compare=I<perlcode>
 
 This I<Perlcode> gets the previous and current lines in C<$a> and C<$b> and
 shall return true if it considers the two lines equal.
@@ -1142,7 +1169,7 @@ shall return true if it considers the two lines equal.
 
 =item tr
 
-Not built in, but L<C<&sed>|/_26grep> can handle this.
+Not built in, but L<C<&sed>|/grep_option_perlcode_filename> can handle this.
 
 
 =back

@@ -2,8 +2,8 @@ use 5.006;
 
 use ExtUtils::MakeMaker;
 
-WriteMakefile( NAME => 'makepp' );
+WriteMakefile( NAME => 'makepp', PM => {} );
 
 print "*** This is only intended to give CPAN testers an entry point.
-*** It does not install makepp properly.
-*** Use 'configure && make install' or 'install.pl' for that.\n";
+*** It does not install makepp.
+*** Use './configure && make install' or 'install.pl' for that.\n";

@@ -2,7 +2,7 @@
 require 5.006;
 use strict;
 
-# $Id: Utils.pm,v 1.14 2010/04/22 20:34:19 pfeiffer Exp $
+# $Id: Utils.pm,v 1.15 2010/09/29 22:19:53 pfeiffer Exp $
 
 # This is syntactically needed by many modules but not called in utils, except mppr.
 sub log($@);
@@ -19,7 +19,7 @@ my %progname =
 $Mpp::progname =~ s/^mpp([bcgilr]|bcc)$/makepp$progname{$1}/;
 
 use Mpp::Text ();
-BEGIN { *MAKEPP = \&Mpp::Text::CONST0 } # Differentiate from makepp
+BEGIN { *MAKEPP = $Mpp::Text::N[0] } # Differentiate from makepp
 
 use Mpp::File;
 

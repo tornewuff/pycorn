@@ -2,24 +2,41 @@
 
 makeppreplay -- Fast repeater of selected makepp actions
 
-=for vc $Id: makeppreplay.pod,v 1.4 2009/02/21 11:25:31 pfeiffer Exp $
+=for vc $Id: makeppreplay.pod,v 1.7 2010/09/03 21:26:28 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
-L<-B<A>|/_2da_filename>,
-  L<--argsfile|/_2da_filename>,E<nbsp>
-L<-B<c>|/_2dc>,
-  L<-C|/_2dc_dirname>,E<nbsp>
-L<--B<d>irectory|/_2dc_dirname>,E<nbsp>
-L<-B<I>|/_2di_dir>,
-  L<--include|/_2di_dir>,E<nbsp>
-L<-B<k>|/_2Dk>,
-  L<--keep-going|/_2Dk>,E<nbsp>
-L<-B<M>|/_2Dm_module>,
-  L<--module|/_2dm_module>,E<nbsp>
-L<--B<r>oot-directory|/_2dc>,E<nbsp>
-L<-B<t>|/_2dt>,
-  L<--temporary|/_2dt>
+=for genindex '[-$][-?\w]+' makeppreplay.pod
+
+B<?:>E<nbsp>L<-?|/_>,E<nbsp>
+B<A:>E<nbsp>L<-A|/a_filename>,
+  L<--args-file|/a_filename>,
+  L<--arguments-file|/a_filename>,E<nbsp>
+B<C:>E<nbsp>L<-C|/c_directory>,
+  L<-c|/c>,E<nbsp>
+B<D:>E<nbsp>L<--directory|/c_directory>,
+  L<--dry-run|/n>,E<nbsp>
+B<H:>E<nbsp>L<-h|/_>,
+  L<--help|/_>,E<nbsp>
+B<I:>E<nbsp>L<-I|/i_directory>,
+  L<--include|/i_directory>,
+  L<--include-dir|/i_directory>,E<nbsp>
+B<J:>E<nbsp>L<--just-print|/n>,E<nbsp>
+B<K:>E<nbsp>L<-k|/k>,
+  L<--keep-going|/k>,E<nbsp>
+B<M:>E<nbsp>L<-M|/m_module_arg>,
+  L<$MAKEPPREPLAYFLAGS|/_makeppreplayflags>,
+  L<--module|/m_module_arg>,E<nbsp>
+B<N:>E<nbsp>L<-n|/n>,
+  L<--no-print-directory|/no_print_directory>,
+  L<--no-warn|/no_warn>,E<nbsp>
+B<R:>E<nbsp>L<--recon|/n>,
+  L<--root-dir|/c>,
+  L<--root-directory|/c>,E<nbsp>
+B<T:>E<nbsp>L<-t|/t>,
+  L<--temporary|/t>,E<nbsp>
+B<V:>E<nbsp>L<-V|/v>,
+  L<--version|/v>
 
 B<makeppreplay> S<[ I<option> ... ]> S<[ I<VAR=value> ]> S<[ I<target> ... ]>
 
@@ -92,36 +109,46 @@ modules that would normally be loaded from a makefile.
 
 =over 4
 
-=item -A filename
+=item -A I<filename>
 
-=item --args-file=filename
+=item --args-file=I<filename>
 
-=item --arguments-file=filename
+=item --arguments-file=I<filename>
 
 Read the file and parse it as possibly quoted whitespace- and/or newline-separated options.
 
-=item -c
+=item -C I<directory>
 
-=item --root-directory
-
-Cd up to the directory containing a RootMakeppfile.
-
-=item -C dirname X<-C> X<--directory>
-
-=item --directory=dirname
+=item --directory=I<directory>
 
 Cd to the given directory before loading the makefile and trying to build the
 targets.  This is more or less equivalent to specifying a directory with
 C<-F>, except that subsequent C<-C>, C<-f>, C<-F>, C<-I> and C<-R> options are
 interpreted relative to the new directory, rather than the old one.
 
-=item -I dir
+=item -c
 
-=item --include=dir
+=item --root-dir
 
-=item --include-dir=dir
+=item --root-directory
 
-Add I<dir> to Perl load path C<@INC>.
+Cd up to the directory containing a RootMakeppfile.
+
+=item -I I<directory>
+
+=item --include=I<directory>
+
+=item --include-dir=I<directory>
+
+Add I<directory> to Perl load path C<@INC>.
+
+=item -?
+
+=item -h
+
+=item --help
+
+Print out a brief summary of the options.
 
 =item -k
 
@@ -132,11 +159,25 @@ default, makepp stops when it encounters the first error, even if there
 are other files that need to be built that don't depend on the erroneous
 file.
 
-=item -M module[=arg,...]
+=item -M I<module[=arg,...]>
 
-=item --module=module[=arg,...]
+=item --module=I<module[=arg,...]>
 
 Load module and import any functions it exports.
+
+=item -n
+
+=item --dry-run
+
+=item --just-print
+
+=item --recon
+
+Print out commands without actually executing them.
+
+=item --no-print-directory
+
+Turn off the entering or leaving directory messages.
 
 =item -t
 
@@ -148,9 +189,15 @@ nevertheless knows that it needs to rescan these files.  But with this option
 you can prevent these modifications, so that makepp will simply condsider all
 files makeppreplay created as incorrect.
 
+=item -V
+
 =item --version
 
 Print out the version number.
+
+=item --no-warn
+
+Don't print any warning messages.
 
 =back
 
@@ -168,7 +215,7 @@ Makeppreplay looks at the following environment variable:
 
 =over
 
-=item MAKEPPREPLAYFLAGS
+=item $MAKEPPREPLAYFLAGS
 
 Any options you may want to always pass.
 

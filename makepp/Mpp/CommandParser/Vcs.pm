@@ -1,4 +1,4 @@
-# $Id: Vcs.pm,v 1.27 2009/02/11 23:22:37 pfeiffer Exp $
+# $Id: Vcs.pm,v 1.28 2010/11/17 21:35:52 pfeiffer Exp $
 
 =head1 NAME
 
@@ -6,7 +6,7 @@ Mpp::CommandParser::Vcs - makepp command parser for Synopsys VCS
 
 =head1 DESCRIPTION
 
-Scans a vcs command for implicit dependencies.
+Parses a vcs command for implicit dependencies.
 
 =cut
 
@@ -18,6 +18,8 @@ our @ISA = qw/Mpp::CommandParser/;
 
 use Mpp::File;
 use Mpp::Text;
+
+*factory = \&Mpp::Subs::p_vcs_compilation;
 
 sub new {
   my $self = &Mpp::CommandParser::new;
@@ -44,7 +46,7 @@ sub xparse_command {
   my( $self, $command, $setenv ) = @_;
 
   # Use the MD5 signature checking when we can.
-  $self->rule->set_signature_method_scanner( 'verilog_simulation_md5' )
+  $self->rule->set_signature_class( 'verilog_simulation_md5' )
     if $Mpp::has_md5_signatures;
 
   my @words=@$command;

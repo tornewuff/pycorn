@@ -2,7 +2,7 @@
 
 makepp_build_algorithm -- How makepp executes a makefile
 
-=for vc $Id: makepp_build_algorithm.pod,v 1.5 2006/03/27 21:56:53 pfeiffer Exp $
+=for vc $Id: makepp_build_algorithm.pod,v 1.6 2010/07/16 21:15:23 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -68,8 +68,9 @@ S<C<$(only_targets )>> function.
 
 =item *
 
-Makepp's S<C<$(infer_objects )>> function is greatly simplified by
-knowing what objects are available.
+Makepp's
+L<C<$(infer_objects)>|makepp_functions/infer_objects_file1_file2_pattern>
+function is greatly simplified by knowing what objects are available.
 
 =back
 

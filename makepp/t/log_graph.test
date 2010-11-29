@@ -24,9 +24,9 @@ makepp '--dont-build=/', '--do-build=.'; # Can't have a RootMakeppfile because t
   }
 }
 
-makepp \'log', '-ciKnuokey.txt', '-k!PARSE !NOT_FOUND'; # $(CC) varies and thus the parsed cmd
+makepp \'log', '-ciKnuokey.txt', '-k!PARSE !NOT_FOUND !VERSION'; # $(CC) varies and thus the parsed cmd
 				# and $(FC) may not be found on Windows.
-makepp \'log', '-cipuolog.txt', '-k!PARSE !SCAN* !NOT_FOUND';
+makepp \'log', '-cipuolog.txt', '-k!LEX_RULE !PARSE !SCAN* !NOT_FOUND !VERSION';
 
 makepp \'graph';
 
@@ -996,7 +996,7 @@ e("",[a("EDGEPATTERN","dotted"),a("_DIR","first")],r("l")),
 e("",[a("EDGEPATTERN","dotted"),a("_DIR","first")],r("d")),
 ]))
 ,]
-###	136	644	1187268248	1208287083	answers/key.txt
+###	132	644	1187268248	1283076141	answers/key.txt
 .../makepp --dont-build=/ --do-build=.
 LOAD Loading makefile `makefile' with default directory `.'
 TRY Trying to build `makefile'
@@ -1031,7 +1031,7 @@ PREBUILD Pre-building `a.o' from `makefile:25'
 TRY Trying to build `a.o'
 USE  Using rule `.../makepp_builtin_rules.mk:90(.)'
 SCAN_INFO  Trying to retrieve scan info for `a.o'
-SCAN_RULE Scanning rule for `a.o' because `info not cached'
+LEX_RULE Lexically analyzing rule for `a.o' because `info not cached'
 TRY Trying to build `a.c'
 USE  Using rule `default rule'
 DEPEND  Targets `a.c' depend on 
@@ -1057,7 +1057,7 @@ LOAD_INCL Including `.../makepp_builtin_rules.mk' from `.../makepp_default_makef
 LOAD_END Finished loading `.../makepp_default_makefile.mk'
 USE  Using rule `makefile:15'
 SCAN_INFO  Trying to retrieve scan info for `c/c.h'
-SCAN_RULE Scanning rule for `c/c.h' because `info not cached'
+LEX_RULE Lexically analyzing rule for `c/c.h' because `info not cached'
 DEPEND  Targets `c/c.h' depend on `c/c.h.in'
 TRY Trying to build `c/c.h.in'
 USE  Using rule `default rule'
@@ -1085,13 +1085,12 @@ SCAN Scanning `b/b1.h'
 INCL `b/b1.h' includes `b/b.h'
 DEPEND  Targets `a.o' depend on `a.c', `a.h', `a1.h', `b/b.h', `b/b1.h', `c/c.h'
 BUILD_NONE Build `a.o' because it doesn't exist
-REMOVE Removing target `a.o' before running its rule
 SUCCESS `.../makepp_builtin_rules.mk:90(.)' successfully executed for `a.o'
 PREBUILD Pre-building `b/b.o' from `makefile:25'
 TRY Trying to build `b/b.o'
 USE  Using rule `.../makepp_builtin_rules.mk:90(b)'
 SCAN_INFO  Trying to retrieve scan info for `b/b.o'
-SCAN_RULE Scanning rule for `b/b.o' because `info not cached'
+LEX_RULE Lexically analyzing rule for `b/b.o' because `info not cached'
 TRY Trying to build `b/b.c'
 USE  Using rule `default rule'
 DEPEND  Targets `b/b.c' depend on 
@@ -1100,13 +1099,12 @@ SCAN Scanning `b/b.c'
 INCL `b/b.c' includes `b/b.h', `b/b1.h', `a.h'
 DEPEND  Targets `b/b.o' depend on `a.h', `a1.h', `b/b.c', `b/b.h', `b/b1.h'
 BUILD_NONE Build `b/b.o' because it doesn't exist
-REMOVE Removing target `b/b.o' before running its rule
 SUCCESS `.../makepp_builtin_rules.mk:90(b)' successfully executed for `b/b.o'
 PREBUILD Pre-building `c/c.o' from `makefile:25'
 TRY Trying to build `c/c.o'
 USE  Using rule `.../makepp_builtin_rules.mk:90(c)'
 SCAN_INFO  Trying to retrieve scan info for `c/c.o'
-SCAN_RULE Scanning rule for `c/c.o' because `info not cached'
+LEX_RULE Lexically analyzing rule for `c/c.o' because `info not cached'
 TRY Trying to build `c/c.c'
 USE  Using rule `default rule'
 DEPEND  Targets `c/c.c' depend on 
@@ -1122,18 +1120,16 @@ SCAN Scanning `c/c1.h'
 INCL `c/c1.h' includes `c/c.h'
 DEPEND  Targets `c/c.o' depend on `a.h', `a1.h', `b/b.h', `b/b1.h', `c/c.c', `c/c.h', `c/c1.h'
 BUILD_NONE Build `c/c.o' because it doesn't exist
-REMOVE Removing target `c/c.o' before running its rule
 SUCCESS `.../makepp_builtin_rules.mk:90(c)' successfully executed for `c/c.o'
 SCAN_INFO  Trying to retrieve scan info for `a'
-SCAN_RULE Scanning rule for `a' because `info not cached'
+LEX_RULE Lexically analyzing rule for `a' because `info not cached'
 DEPEND  Targets `a' depend on `a.o', `b/b.o', `c/c.o'
 BUILD_NONE Build `a' because it doesn't exist
-REMOVE Removing target `a' before running its rule
 SUCCESS `makefile:25' successfully executed for `a'
 BUILD_PHONY Rebuild `all' because it is a phony target
 SUCCESS `default rule' successfully executed for `all'
 N_FILES 5 files updated, 1 phony targets built and 0 targets failed
-###	117	644	1187272402	1208287081	answers/log.txt
+###	113	644	1187272402	1283076188	answers/log.txt
 .../makepp --dont-build=/ --do-build=.
 makepplog: Loading makefile `makefile' with default directory `.'
 makepplog: Trying to build `makefile'
@@ -1212,7 +1208,6 @@ makepplog:   `a1.h' includes `a.h'
 makepplog:   `b/b1.h' includes `b/b.h'
 makepplog:    Targets `a.o' depend on `a.c', `a.h', `a1.h', `b/b.h', `b/b1.h', `c/c.h'
 makepplog:   Build `a.o' because it doesn't exist
-makepplog:   Removing target `a.o' before running its rule
 makepplog:   `.../makepp_builtin_rules.mk:90(.)' successfully executed for `a.o'
 makepplog:   Pre-building `b/b.o' from `makefile:25'
 makepplog:   Trying to build `b/b.o'
@@ -1224,7 +1219,6 @@ makepplog:   `b/b.c' is up to date
 makepplog:   `b/b.c' includes `b/b.h', `b/b1.h', `a.h'
 makepplog:    Targets `b/b.o' depend on `a.h', `a1.h', `b/b.c', `b/b.h', `b/b1.h'
 makepplog:   Build `b/b.o' because it doesn't exist
-makepplog:   Removing target `b/b.o' before running its rule
 makepplog:   `.../makepp_builtin_rules.mk:90(b)' successfully executed for `b/b.o'
 makepplog:   Pre-building `c/c.o' from `makefile:25'
 makepplog:   Trying to build `c/c.o'
@@ -1242,11 +1236,9 @@ makepplog:   `c/c.c' includes `a.h', `b/b.h'
 makepplog:   `c/c1.h' includes `c/c.h'
 makepplog:    Targets `c/c.o' depend on `a.h', `a1.h', `b/b.h', `b/b1.h', `c/c.c', `c/c.h', `c/c1.h'
 makepplog:   Build `c/c.o' because it doesn't exist
-makepplog:   Removing target `c/c.o' before running its rule
 makepplog:   `.../makepp_builtin_rules.mk:90(c)' successfully executed for `c/c.o'
 makepplog:    Targets `a' depend on `a.o', `b/b.o', `c/c.o'
 makepplog:   Build `a' because it doesn't exist
-makepplog:   Removing target `a' before running its rule
 makepplog:   `makefile:25' successfully executed for `a'
 makepplog: Rebuild `all' because it is a phony target
 makepplog: `default rule' successfully executed for `all'

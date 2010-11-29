@@ -2,15 +2,53 @@
 
 makepplog -- Textual analysis of the build log
 
-=for vc $Id: makepplog.pod,v 1.10 2009/02/21 11:25:31 pfeiffer Exp $
+=for vc $Id: makepplog.pod,v 1.13 2010/09/13 21:17:25 pfeiffer Exp $
 
-=head1 SYNOPSIS
+=head1 DESCRIPTION
+
+=for genindex '[-$][-?\w]+' makepplog.pod
+
+B<?:>E<nbsp>L<-?|/_>,E<nbsp>
+B<A:>E<nbsp>L<-A|/a_filename>,
+  L<--args-file|/a_filename>,
+  L<--arguments-file|/a_filename>,E<nbsp>
+B<C:>E<nbsp>L<-C|/c>,
+  L<-c|/c>,
+  L<--current-working-directory|/c>,
+  L<--current-working-directory-and-up|/c>,E<nbsp>
+B<F:>E<nbsp>L<-f|/f>,
+  L<--follow|/f>,E<nbsp>
+B<H:>E<nbsp>L<-h|/_>,
+  L<--help|/_>,E<nbsp>
+B<I:>E<nbsp>L<-i|/i>,
+  L<--installation-directories|/i>,
+  L<--install-dirs|/i>,E<nbsp>
+B<K:>E<nbsp>L<-K|/k>,
+  L<-k|/k_list>,
+  L<--keylist|/k_list>,
+  L<--keys|/k_list>,E<nbsp>
+B<L:>E<nbsp>L<-l|/l_filename>,
+  L<--log|/l_filename>,
+  L<--log-file|/l_filename>,E<nbsp>
+B<M:>E<nbsp>L<$MAKEPPLOGFLAGS|/_makepplogflags>,E<nbsp>
+B<N:>E<nbsp>L<-n|/n>,
+  L<--no-indent|/n>,E<nbsp>
+B<O:>E<nbsp>L<-o|/o_filename>,
+  L<--output|/o_filename>,E<nbsp>
+B<P:>E<nbsp>L<-p|/p>,
+  L<--prefix|/p>,E<nbsp>
+B<S:>E<nbsp>L<--showkey|/k>,E<nbsp>
+B<T:>E<nbsp>L<-t|/t>,
+  L<--tabulate|/t>,E<nbsp>
+B<U:>E<nbsp>L<-u|/u>,
+  L<--uniq|/u>,
+  L<--unique|/u>,E<nbsp>
+B<V:>E<nbsp>L<-V|/v>,
+  L<--version|/v>
 
 B<makepplog> I<option> ...
 
 B<mppl> I<option> ...
-
-=head1 DESCRIPTION
 
 Makepp by default writes a detailed log of its decision finding and actions.
 So as to not waste its time with pretty printing, this data is dumped in a
@@ -19,16 +57,16 @@ various formats.  For a less detailed but even prettier graphical view see
 L<makeppgraph|makeppgraph>.
 
 This is solely based on the contents of the log file, so it can be performed
-at any time, and even on a different machine.
+at any time, and even on a different machine.  Valid options are:
 
 
 =over
 
-=item -A filename
+=item -A I<filename>
 
-=item --args-file=filename
+=item --args-file=I<filename>
 
-=item --arguments-file=filename
+=item --arguments-file=I<filename>
 
 Read the file and parse it as possibly quoted whitespace- and/or newline-separated options.
 
@@ -36,9 +74,9 @@ Read the file and parse it as possibly quoted whitespace- and/or newline-separat
 
 =item --current-working-directory
 
-=item -C number
+=item -C I<number>
 
-=item --current-working-directory-and-up=number
+=item --current-working-directory-and-up=I<number>
 
 The first two options strip the current directory from the front of all
 filenames it outputs.  The second two additionally replace I<number>
@@ -53,18 +91,28 @@ directory makepp ran, or one near there.
 
 As in C<tail> command, process more lines of logfile as it grows.
 
+=item -?
+
+=item -h
+
+=item --help
+
+Print out a brief summary of the options.
+
 =item -i
+
+=item --install-dirs
 
 =item --installation-directories
 
 These options replace the invocation of makepp and the pathes to the built in
 makefiles with F<.../> so as to keep odd pathes out of your sight.
 
-=item -k list
+=item -k I<list>
 
-=item --keys=list
+=item --keys=I<list>
 
-=item --keylist=list
+=item --keylist=I<list>
 
 The I<list> specifies one or more space separated Shell style patterns (with
 [xyz], ?, *, {a,bc,def}).  Remember to protect these from your Shell by
@@ -113,11 +161,11 @@ All scanning related messages.
 This prefixes each output line with the internal name of the message key, for
 use with C<--keys>.
 
-=item -l filename
+=item -l I<filename>
 
-=item --log=filename
+=item --log=I<filename>
 
-=item --log-file=filename
+=item --log-file=I<filename>
 
 The I<filename> is to where makepp wrote its log.  It may also be a directory,
 in which a file called F<.makepp/log> or F<log> will be searched.  To read
@@ -137,9 +185,9 @@ invocation, output can get a bit messed up.
 Makepp puts indentation information into the log file to show you what
 happened because of what else.  This option turns indentation off.
 
-=item -o filename
+=item -o I<filename>
 
-=item --output=filename
+=item --output=I<filename>
 
 Write the output to this file, rather than stdout.
 
@@ -164,6 +212,8 @@ easily become longer than a screenful.
 =item --unique
 
 Report each found include statement and each scan output only once.
+
+=item -V
 
 =item --version
 
@@ -195,7 +245,7 @@ Makepplog looks at the following environment variable:
 
 =over 4
 
-=item MAKEPPLOGFLAGS
+=item $MAKEPPLOGFLAGS
 
 Any flags in this environment variable are interpreted as command line options
 before any explicit options.  Quotes are interpreted like in makefiles.

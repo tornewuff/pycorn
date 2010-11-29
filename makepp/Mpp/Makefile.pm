@@ -1,4 +1,4 @@
-# $Id: Makefile.pm,v 1.136 2010/02/24 23:26:45 pfeiffer Exp $
+# $Id: Makefile.pm,v 1.141 2010/11/17 21:35:52 pfeiffer Exp $
 package Mpp::Makefile;
 
 use Mpp::Glob qw(wildcard_action needed_wildcard_action);
@@ -71,6 +71,7 @@ C<$makefile_line>.
 =cut
 
 my $expand_bracket;
+my $self_expanding_functions = qr/^(?:and|if|foreach|map|or|perl)\b/;
 sub expand_text {
   -1 < index $_[1], '$' or return $_[1]; # No variables ==> no substitution,
 				# so exit immediately to avoid consuming CPU
@@ -136,12 +137,9 @@ sub expand_text {
 				# messes up pos($_).
 	my $expr = substr $_, $oldpos + $len, $newpos - $oldpos - 2*$len;
 				# Get the expression to expand.
-	if( $expr !~ /^(?:if|foreach|perl|map)\b/ ) { # Not one of the special
-				# expressions that cannot be expanded
-				# immediately?
-	  $expr = expand_text($self, $expr, $makefile_line);
+	$expr = expand_text($self, $expr, $makefile_line)
+	  if $expr !~ $self_expanding_functions;
 				# Expand any nested make expressions.
-	}
 
 	my $space = ord( $expr ) == ord ' ';
 	$expr = expand_expression($self, $expr, $makefile_line);
@@ -168,8 +166,7 @@ sub expand_text {
 				# for support for the define statement.
 
 	  $ret_str .= $expr;  # Just append it directly.
-	}
-	else {
+	} else {
 	  my @exp_words = split_on_whitespace($expr);
 
 	  if (@exp_words == 1) { # Optimize for the most common case.
@@ -189,8 +186,7 @@ sub expand_text {
     }
 
     $ret_str .= "@cur_words"; # Store the last word(s), if any.
-  }
-  else {
+  } else {
 #
 # Code for handling the traditional substitution style (needed for some
 # legacy makefiles, usually those that depend on leading/trailing whitespace).
@@ -221,12 +217,9 @@ sub expand_text {
 				# messes up pos($_).
 	my $expr = substr $_, $oldpos + $len, $newpos - $oldpos - 2*$len;
 				# Get the expression to expand.
-	if ($expr !~ /^(?:if|foreach|perl|map)\b/) { # Not one of the special
-				# expressions that cannot be expanded
-				# immediately?
-	  $expr = expand_text($self, $expr, $makefile_line);
+	$expr = expand_text($self, $expr, $makefile_line)
+	  if $expr !~ $self_expanding_functions;
 				# Expand any nested make expressions.
-	}
 
 	$ret_str .= expand_expression($self, $expr, $makefile_line);
 				# Do the expansion.
@@ -251,7 +244,6 @@ sub expand_text {
 #
 sub expand_expression {
   my ($self, $expr, $makefile_line) = @_; # Name the arguments.
-
   my $result;
   if( $expr =~ s/^\s+//) {	# It begins with a space.  This is just a
 				# trigger for rc-style expansion, so we should
@@ -260,8 +252,6 @@ sub expand_expression {
   } elsif( $expr =~ /^([-.\w]+)\s+(.*)/s ) {
 				# Does it begin with a leading word,
 				# so it must be a function?
-    local $Mpp::makefile = $self;	# Pass the function a reference to the
-				# makefile.
     my( $rtn, $rest_of_line ) = ($1, $2);
     my $orig = $rtn;
     my $code = $rtn =~ tr/-/_/ && *{"$self->{PACKAGE}::f_$rtn"}{CODE} ||
@@ -271,6 +261,7 @@ sub expand_expression {
     if( $code ) {
       $result = eval {		# Evaluate the function.
 	local $_;		# Prevent really strange head-scratching errors.
+	local $Mpp::makefile = $self; # Pass the function a reference to the makefile.
 	&$code( $rest_of_line, $self, $makefile_line );
 				# Call the function.
       };
@@ -278,7 +269,7 @@ sub expand_expression {
     } else {
       die "$makefile_line: unknown function $rtn\n";
     }
-  } elsif( $expr =~ s/^&// ) {
+  } elsif( $expr =~ s/^&(?=.)// ) { # & alone is a silly variable
     my( $cmd, @args ) = unquote_split_on_whitespace $expr;
     local $Mpp::Subs::rule = { MAKEFILE => $self, RULE_SOURCE => $makefile_line };
     local *OSTDOUT;		# TODO: convert to my $fh, when discontinuing 5.6.
@@ -305,7 +296,7 @@ sub expand_expression {
     $result =~ s/\r?\n/ /g # Get rid of newlines.
       unless $Mpp::Subs::s_define;
     $result =~ s/\s+$//;	# Strip out trailing whitespace.
-  } elsif( $expr =~ /^([^\s:\#=]+):([^=]+)=([^=]+)$/ ) {
+  } elsif( $expr =~ /^([^\s:#=]+):([^=]+)=([^=]+)$/ ) {
 				# Substitution reference (e.g., 'x:%.o=%.c')?
     my $from = (0 <= index $2, '%') ? $2 : "%$2"; # Use the full GNU make style
     my $to = (0 <= index $3, '%') ? $3 : "%$3";
@@ -338,7 +329,7 @@ our $private;
 
 # Like $private, but contains (permanently) the reexpand flags (i.e. a hash
 # ref with a VAR_REEXPAND field) for global variables.  The values themselves
-# are however stored as normal variables in the global:: package.
+# are however stored as normal variables in the Mpp::global:: package.
 our $global;
 
 our $rule_include; # undef unless reading an :include .d file. 1 before rule execution, 2 after.
@@ -764,8 +755,7 @@ sub load {
       $var_changed or return $mdinfo->{MAKEINFO};
 				# No need to reload the makefile--just reuse
 				# what we've got.
-    }
-    elsif( ! $autoload ) {
+    } elsif( ! $autoload ) {
 #
 # We're loading two makefiles for this directory.  This is disallowed because
 # the phony targets of the two makefiles will get confused.
@@ -795,8 +785,7 @@ sub load {
       print "$Mpp::progname: Autoloading makefile `" . absolute_filename( $minfo ) . "'\n" unless $Mpp::quiet_flag;
       Mpp::log LOAD => $minfo, $mdinfo
 	if $Mpp::log_level;
-    }
-    else {
+    } else {
       delete $Mpp::{$mpackage . '::'}; # Wipe the whole package.
 
       if( $Mpp::log_level || !$Mpp::quiet_flag ) {
@@ -805,8 +794,7 @@ sub load {
 	  if $Mpp::log_level;
       }
     }
-  }
-  else {			# Loading a new makefile:
+  } else {			# Loading a new makefile:
     if ($minfo->{NAME} eq 'makepp_default_makefile.mk') {
       Mpp::log LOAD_DEFAULT => $mdinfo
 	if $Mpp::log_level;
@@ -830,21 +818,20 @@ sub load {
 		  };
 				# Allocate our info structure.
   }
+  $mdinfo->{MAKEINFO} = $self;	# Remember for later what the makefile is.
 
 #
 # Export all subroutines from the Mpp::Subs package into the given package, so
 # the subroutines can be used directly.
 #
-  eval "package $mpackage; use Mpp::Subs";
+  eval 'package ' . $mpackage . q{;
+    use Mpp::Subs;
+    *rule = \$Mpp::Subs::rule;	# Also pass in the $rule symbol.
+    our $makefile = $self;	# Tell the makefile subroutines about it.
+    our $MAKECMDGOALS = $makecmdgoals; # Set up this special variable.
+    our $MAKEPP_VERSION = $Mpp::VERSION;
+  };
   $mpackage .= '::';
-  *{$mpackage . 'rule'} = *Mpp::Subs::rule;
-				# Also pass in the $rule symbol.
-  ${$mpackage . 'MAKECMDGOALS'} = $makecmdgoals; # Set up the special
-				# MAKECMDGOALS variable.
-
-  $mdinfo->{MAKEINFO} = $self;	# Remember for later what the makefile is.
-
-  ${$mpackage . 'makefile'} = $self; # Tell the makefile subroutines about it.
 
 #
 # We used to fork here, load the makefile once, rebuild the makefile if
@@ -870,6 +857,21 @@ sub load {
 
   if( Mpp::MAKEPP ) {
 #
+# Build up the MAKEFLAGS variable:
+#
+    my $flags = Mpp::Text::join_with_protection
+      map( '-I'.relative_filename( $_ ), @{$include_path}[1..@$include_path-1] ),
+      map { /^makepp_/ ? () : "$_=$command_line_vars->{$_}" } keys %$command_line_vars;
+    ${$mpackage . 'MAKEFLAGS'} = $Mpp::MAKEFLAGS .
+      ($Mpp::MAKEFLAGS && $flags ? ' ' : '') .
+      $flags;			# Set the variable.
+    $self->{EXPORTS}{MAKEFLAGS} = 1; # Export it to the environment.
+    if( defined $Mpp::MAKEPPFLAGS ) {
+      ${$mpackage . 'MAKEPPFLAGS'} = ${$mpackage . 'MAKEFLAGS'};
+      $self->{EXPORTS}{MAKEPPFLAGS} = 1; # Export it to the environment.
+    }
+
+#
 # Read in the makefile, except in makeppreplay:
 #
     if( $this_ENV{MAKEFILES} ) { # Supposed to pre-load some files?
@@ -890,31 +892,6 @@ sub load {
   }
 
 #
-# Build up the MAKEFLAGS variable:
-#
-  if( defined $Mpp::Recursive::traditional ) {
-    my @words =			# Pass commnd line variables down.
-      map { "$_=" . requote($command_line_vars->{$_}) } keys %$command_line_vars;
-    $Mpp::keep_going and
-      push @words, '-k';
-    $Mpp::sigmethod_name and
-      push @words, "-m $Mpp::sigmethod_name";
-    $Mpp::build_check_method_name ne 'exact_match' and
-      push @words, "--build_check $Mpp::build_check_method_name";
-    $Mpp::implicitly_load_makefiles or
-      push @words, '--noimplicit-load';
-    $Mpp::log_level < 2 and
-      push @words, $Mpp::log_level ? '-v' : '--nolog';
-    $Mpp::quiet_flag and
-      push @words, '-q';
-    defined $Mpp::Recursive::traditional and
-      push @words, '--traditional-recursive-make';
-
-    ${$mpackage . 'MAKEFLAGS'} = "@words";
-				# Set the variable.
-    $self->{EXPORTS}{MAKEFLAGS} = 1; # Export it to the environment.
-  }
-#
 # For variables which were assigned with =, we're supposed to reexpand them
 # later.  However, if they don't have any $ in them, then they might as well
 # have been assigned with :=, so pretend they were.  This should speed up
@@ -922,7 +899,7 @@ sub load {
 #
   foreach my $varname (keys %{$self->{VAR_REEXPAND}}) {
     my $val = ${$mpackage . $varname};
-    !defined($val) || $val !~ /\$/ and
+    defined $val && $val =~ /\$/ or
       delete $self->{VAR_REEXPAND}{$varname};
   }
 
@@ -1036,8 +1013,8 @@ sub assign {
                                 # This allows a user to override buggy
                                 # read-only makefiles.
 
-  $Mpp::warn_level && $name eq 'MAKE' and
-    warn "MAKE redefined at `$makefile_line', recursive make won't work as expected\n";
+  warn "MAKE redefined at `$makefile_line', recursive make won't work as expected\n"
+    if $name eq 'MAKE';
 
   if( $type == ord '?' ) {
     if( expand_variable $self, $name, $makefile_line, 2 ) {
@@ -1192,8 +1169,7 @@ sub parse_assignment {
 	local $private = $_[0];	# Prior PRIVATE_VARS for +=, and for storing new value.
 	assign $self, $var_name, $type, $var_value, $override, $makefile_line, undef, $private;
       };
-  }
-  else {
+  } else {
 #
 # Not a target-specific assignment:
 #
@@ -1205,7 +1181,7 @@ sub parse_assignment {
       die "Trailing cruft after define statement at `$makefile_line'\n" if length $var_value;
       s_define $var_name, $self, $makefile_line, $type, $override;
       return $self;
-    } elsif( $var_name =~ /[\s:\#]/ ) { # More than one word on the LHS
+    } elsif( $var_name =~ /[\s:#]/ ) { # More than one word on the LHS
 				# implies it's not an assignment.
       return undef;
     }
@@ -1226,7 +1202,6 @@ sub parse_assignment {
 # f) Any other : modifiers that were present on the line after the
 #    dependency string.
 #
-my $scanner_none;
 sub parse_rule {
   my ($self, $makefile_line, $makefile_line_dir, $is_double_colon, $target_string, @after_colon) = @_;
 				# Name the arguments.
@@ -1256,9 +1231,8 @@ sub parse_rule {
     $action = substr($after_colon[-1], $idx+1);
     substr( $after_colon[-1], $idx ) = '';
     $action =~ s/^\s+//;	# Strip out any leading space.	If the action
-				# is entirely blank (as happens in some
+  }				# is entirely blank (as happens in some
 				# makefiles), this will eliminate it.
-  }
 
 #
 # Get all the modifiers, and the actions for the rule (if any).
@@ -1332,11 +1306,13 @@ sub parse_rule {
 				# next target).
       last;			# We've found the end of this rule.
     }
-    if (/^:\s*((?:build_c(?:ache|heck)|dispatch|env(?:ironment)?|foreach|multiple_rules_ok|s(?:ignature|canner|martscan)|quickscan|last_chance)\b.*)/ ) {
+    if (/^:\s*((?:build[-_]?c(?:ache|heck)|dispatch|env(?:ironment)?|foreach|multiple[-_]?rules[-_]?ok|parser|s(?:ignature|canner|martscan)|quickscan|last[-_]?chance)\b.*)/ ) {
 				# A colon modifier?
       push @after_colon, $1;
-    }
-    else {			# Not a colon modifier?
+      if( (my $i = index_ignoring_quotes $after_colon[-1], '#') > 0 ) {
+	substr( $after_colon[-1], $i ) = ''
+      }
+    } else {			# Not a colon modifier?
       $action .= $_;		# Must be an action for the rule.
     }
 
@@ -1345,15 +1321,13 @@ sub parse_rule {
     $last_line_was_blank = 0;	# This line was not blank.
   }
 
-  unshift @hold_lines, $_ if $_; # We read too far, so put this
-				# line back.
+  unshift @hold_lines, $_ if $_; # We read too far, so put this line back.
 
 #
 # Pull off the : modifiers.
 #
-  my $foreach;
-  my ($signature, $build_check, $build_cache, $have_build_cache);
-  my $scanner;
+  my( $foreach, $signature, $build_check, $build_cache, $have_build_cache );
+  my( $lexer, $parser );
   my $conditional_scanning;
   my $multiple_rules_ok;
   my $last_chance_rule;
@@ -1362,34 +1336,30 @@ sub parse_rule {
   my $include;
 
   while (@after_colon > 1) {	# Anything left?
-    if ($after_colon[-1] =~ /^\s*foreach\s+(.*)/) {
+    if ($after_colon[-1] =~ /^\s*foreach\s+(.*?)\s*$/) {
       $foreach and die "$makefile_line: multiple :foreach clauses\n";
-      my $foreach_val = $1;	# Make a copy of $1.  $1 gets wiped out and
-				# so it isn't valid to pass it to
-				# expand_text.
-      $foreach = expand_text($self, $foreach_val, $makefile_line);
-    } elsif ($after_colon[-1] =~ /^\s*build_cache\s+(\S+)/) {
+      $foreach = expand_text $self, $1, $makefile_line;
+    } elsif ($after_colon[-1] =~ /^\s*build[-_]?cache\s+(.+)/) {
                                 # Specify a local build cache for this rule?
-      my $build_cache_fname = $1;
-      $build_cache_fname = expand_text($self, $build_cache_fname, $makefile_line);
-      if ($build_cache_fname eq 'none') {
+      $build_cache and die "$makefile_line: multiple :build_cache clauses\n";
+      $build_cache = expand_text $self, $1, $makefile_line;
+      if( $build_cache eq 'none' ) {
         $build_cache = undef;   # Turn off the build cache mechanism.
       } else {
         require Mpp::BuildCache;
-        $build_cache = new Mpp::BuildCache( absolute_filename( file_info( $build_cache_fname, $self->{CWD} )));
+        $build_cache = new Mpp::BuildCache( absolute_filename file_info $build_cache, $self->{CWD} );
       }
       $have_build_cache = 1;    # Remember that we have a build cache.
-    } elsif ($after_colon[-1] =~ /^\s*build_check\s+(\w+)/) { # Build check class?
+    } elsif ($after_colon[-1] =~ /^\s*build[-_]?check\s+(.*?)\s*$/) { # Build check class?
       $build_check and die "$makefile_line: multiple :build_check clauses\n";
-      my $method_val = $1;
-      my $name = expand_text($self, $method_val, $makefile_line);
+      my $name = expand_text $self, $1, $makefile_line;
       $build_check = eval "use Mpp::BuildCheck::$name; \$Mpp::BuildCheck::${name}::$name" || # Try to load the method.
 	eval "use BuildCheck::$name; \$BuildCheck::${name}::$name"; # TODO: provisional
       defined $build_check or
         die "$makefile_line: invalid build_check method $name\n";
-    } elsif ($after_colon[-1] =~ /^\s*signature\s+(\w+)/) { # Specify signature class?
+    } elsif ($after_colon[-1] =~ /^\s*signature\s+(.*?)\s*$/) { # Specify signature class?
       $signature and die "$makefile_line: multiple :signature clauses\n";
-      my $name = expand_text $self, "$1", $makefile_line;
+      my $name = expand_text $self, $1, $makefile_line;
       $signature = eval "use Mpp::Signature::$name; \$Mpp::Signature::${name}::$name" ||
 	eval "use Signature::$name; \$Signature::${name}::$name"; # TODO: provisional
       unless( defined $signature ) {
@@ -1404,22 +1374,32 @@ sub parse_rule {
         }
       }
     } elsif ($after_colon[-1] =~ /^\s*scanner\s+([-\w]+)/) { # Specify scanner class?
-      $scanner and die "$makefile_line: multiple :scanner clauses\n";
+      warn "$makefile_line: rule clause :scanner deprecated, please use :parser\n";
+      $lexer and die "$makefile_line: multiple :scanner clauses\n";
       my $scanner_name = expand_text $self, $1, $makefile_line;
       $scanner_name =~ tr/-/_/;
-      $scanner = *{"$self->{PACKAGE}::parser_$scanner_name"}{CODE};
-      unless(defined $scanner) {
+      $lexer = *{"$self->{PACKAGE}::parser_$scanner_name"}{CODE};
+      unless(defined $lexer) {
         my $scanref = *{"$self->{PACKAGE}::scanner_$scanner_name"}{CODE};
         defined($scanref) or
           die "$makefile_line: invalid scanner $scanner_name\n";
-        $scanner = sub {
+        $lexer = sub {
           require Mpp::ActionParser::Legacy;
           Mpp::ActionParser::Legacy->new($scanref);
         };
       }
-    } elsif ($after_colon[-1] =~ /\s*(?:smart()|quick)scan/) {
+    } elsif ($after_colon[-1] =~ /\s*(?:smart()|quick)[-_]?scan/) {
       $conditional_scanning = defined $1;
-    } elsif ($after_colon[-1] =~ /^\s*multiple_rules_ok/) {
+    } elsif ($after_colon[-1] =~ /^\s*(?:command[-_]?)?parser\s+(.*?)\s*$/) {
+      $parser and die "$makefile_line: multiple :command-parser clauses\n";
+      $parser = unquote expand_text $self, $1, $makefile_line;
+      $parser =~ tr/-/_/;
+      $parser =
+	*{"$self->{PACKAGE}::p_$parser"}{CODE} ||
+	*{"$parser\::factory"}{CODE} ||
+	*{"Mpp::CommandParser::$parser\::factory"}{CODE} ||
+	die "$makefile_line: invalid command parser $parser\n";
+    } elsif ($after_colon[-1] =~ /^\s*multiple[-_]?rules[-_]?ok/) {
       # This is an ugly hack to solve an unusual problem, and it shouldn't
       # be used by the general public.  The reason for it is that when you
       # have a directory with a makefile that needs to read lots of generated
@@ -1434,18 +1414,17 @@ sub parse_rule {
       # (so that buildable targets can be computed lazily), but that would
       # require a significant re-design of makepp.
       $multiple_rules_ok = 1;
-    } elsif ($after_colon[-1] =~ /^\s*env(?:ironment)?\s+(.*)/) {
+    } elsif ($after_colon[-1] =~ /^\s*env(?:ironment)?\s+(.*?)\s*$/) {
       if($env_dep_str) {
         $env_dep_str .= " $1";
-      }
-      else {
+      } else {
         $env_dep_str = $1;
       }
-    } elsif ($after_colon[-1] =~ /^\s*dispatch\s+(.*)/) {
+    } elsif ($after_colon[-1] =~ /^\s*dispatch\s+(.*?)\s*$/) {
       $dispatch = $1;
-    } elsif ($after_colon[-1] =~ /^\s*last_chance/) {
+    } elsif ($after_colon[-1] =~ /^\s*last[-_]?chance/) {
       $last_chance_rule = 1;
-    } elsif ($after_colon[-1] =~ /^\s*include\s+(.*)/) {
+    } elsif ($after_colon[-1] =~ /^\s*include\s+(.*?)\s*$/) {
       $include = $1;
     } else {			# Something we don't recognize?
       last;
@@ -1530,9 +1509,8 @@ sub parse_rule {
           $foreach =~ tr/%/*/;	# Convert percent to a wildcard.
         }
       }
-    }
-    else {
-      die "$makefile_line: target has % wildcard but no % dependencies. This is currently not supported, unless \":last_chance\" is specified.\n" if !$last_chance_rule;
+    } else {
+      die "$makefile_line: target has % wildcard but no % dependencies. This is currently\nnot supported, unless '--last-chance-rules' or ':last_chance' is specified.\n" unless $Mpp::last_chance_rules || $last_chance_rule;
     }
   }
 
@@ -1552,10 +1530,7 @@ sub parse_rule {
 	  $rule->{INCLUDE_MD5} = Mpp::Signature::md5::signature( undef, $include );
 				# remember it for checking if content changed
 	}
-	$rule->{ACTION_SCANNER} = $scanner_none ||= sub {
-	  require Mpp::ActionParser::Legacy;
-	  Mpp::ActionParser::Legacy->new( \&Mpp::Subs::scanner_none );
-	};
+	$rule->{PARSER} = \&Mpp::Subs::p_none;
 	Mpp::log LOAD_INCL => $include, $makefile_line
 	  if $Mpp::log_level;
 	local $rule_include = 1;
@@ -1632,7 +1607,8 @@ sub parse_rule {
                                 # Set the build check method too.
       $have_build_cache and $rule->set_build_cache($build_cache);
                                 # If we have a build cache, set it too.
-      $scanner and $rule->{ACTION_SCANNER} = $scanner;
+      $lexer and $rule->{LEXER} = $lexer;
+      $parser and $rule->{PARSER} = $parser;
       defined($conditional_scanning) and
         $rule->{CONDITIONAL_SCANNING} = $conditional_scanning;
       $rule->{FOREACH} = $finfo; # Remember what to expand $(FOREACH) as.
@@ -1717,7 +1693,8 @@ sub parse_rule {
 	$signature and $rule->set_signature_method($signature);
         $build_check and $rule->set_build_check_method($build_check);
         $have_build_cache and $rule->set_build_cache($build_cache);
-	$scanner and $rule->{ACTION_SCANNER} = $scanner;
+	$lexer and $rule->{LEXER} = $lexer;
+	$parser and $rule->{PARSER} = $parser;
         defined($conditional_scanning) and
           $rule->{CONDITIONAL_SCANNING} = $conditional_scanning;
 	for( split_on_whitespace $tstring ) {
@@ -1874,8 +1851,8 @@ sub read_makefile {
 				# which get put in sometimes on windows.
   }
 
-  if( !$c_preprocess ) {
-    if ($makefile_contents =~ /^\# Makefile\.in generated by automake/) {
+  unless( $c_preprocess ) {
+    if ($makefile_contents =~ /^# Makefile\.in generated by automake/) {
       require Mpp::AutomakeFixer;	# Load the automake fixing stuff.
       Mpp::log LOAD_AUTOMAKE => $minfo
 	if $Mpp::log_level;
@@ -1930,9 +1907,9 @@ sub read_makefile {
 # Do the actual work of the &preprocess command.
 #
       no strict 'refs';
-      if( $self->{RE_COUNT} != keys %{"$self->{PACKAGE}::"} ) {
-				# Package size changed, maybe new statement.
-	$self->{RE_COUNT} = keys %{"$self->{PACKAGE}::"};
+      my $count = grep { /::s_/ && *{$_}{CODE} } values %{"$self->{PACKAGE}::"};
+      if( $self->{RE_COUNT} != $count ) { # Statement count changed.
+	$self->{RE_COUNT} = $count;
 	$self->{RE} = join '|', grep {
 	  if( s/^s_// ) {
 	    s/_/[-_]/g;
@@ -2018,21 +1995,26 @@ sub read_makefile {
       next;
     }
 
+    if( /\$/ ) {
+	$_ = expand_text $self, $_, $makefile_line;
+	redo;
+    }
+
     chomp;
     die "$makefile_line: syntax error in line '$_'\n";
   }
 }
 
 #
-# Register a scanner.  Arguments:
+# Register a parser.  Arguments:
 # a) The makefile.
 # b) The word in the command to match.
 # c) A reference to the subroutine.
 #
-sub register_scanner {
+sub register_parser {
   #my ($self, $word, $subr) = @_;
 
-  ${"$_[0]{PACKAGE}::scanners"}{$_[1]} = $_[2];
+  ${"$_[0]{PACKAGE}::parsers"}{$_[1]} = $_[2];
 }
 
 #
@@ -2076,8 +2058,7 @@ sub _read_makefile_line_1 {
 	  for(1..($makefile_lineno - $last_lineno - 1)) {
 	    print $fh "\n";
 	  }
-        }
-	else {
+        } else {
 	  print $fh "# $makefile_lineno " .
 	    "\"$makefile_name\"\n";
 	}
@@ -2190,6 +2171,9 @@ sub _truthval($$) {
   }
   defined $not ? !$truthval : $truthval; # Check for negated condition.
 }
+
+# ifdef, ifndef, ...
+my $if_re = qr/n?(?:def|eq|sys|true)|(?:make)?perl/;
 sub _read_makefile_line_stripped_1 {
   my $line;
 
@@ -2235,7 +2219,7 @@ sub _read_makefile_line_stripped_1 {
 
  ANY_LINE:
   # TODO: complain about unexpected else or endif:
-  if ($line =~ s/^\s*if(n?(?:def|eq|sys|true)|(?:make)?perl)\b//) {
+  if( $line =~ s/^\s*if($if_re)\b//o ) {
 				# Looks like an if statement?
   IF_STATEMENT:
     my( $truthval, $totaltruthval ) = _truthval $1, $line;
@@ -2244,13 +2228,13 @@ sub _read_makefile_line_stripped_1 {
 				# Next joined line with ifdef intact.
       defined $line or
 	die "$makefile_name:$last_conditional_start: end of makefile inside conditional\n";
-      if( $line =~ s/^\s*(?:and|or())\s+if(n?(?:def|eq|sys|true)|(?:make)?perl)\b// ) {
+      if( $line =~ s/^\s*(?:and|or())\s+if($if_re)\b//o ) {
 	next if $totaltruthval ||= $truthval && defined $1;
 				# Once we had a series of "1 and 1 ...", then an or, test no more.
 	next unless $truthval || defined $1; # "0 and anything" stays 0
 	$truthval = _truthval $2, $line;
 				# Was either "0 or ..." or "1 and ..."
-      } elsif ($line =~ s/^\s*else\s+if(n?(?:def|eq|sys|true)|(?:make)?perl)\b//) {
+      } elsif ($line =~ s/^\s*else\s+if($if_re)\b//o ) {
 				# Empty then branch and straight into another if.
 	$totaltruthval = $totaltruthval ? 0 : !$truthval;
 				# ifxxx, else is like a complex ifnxxx
@@ -2281,15 +2265,13 @@ sub _read_makefile_line_stripped_1 {
     goto ANY_LINE if defined($line);
 				# We read one too much.
     goto &_read_makefile_line_stripped_1;
-  }
-  elsif ($line =~ /^\s*else\s*(?:if(?:n?(?:def|eq|sys|true)|(?:make)?perl)\b|#|$)/) { # Else clause for an if?
+  } elsif( $line =~ /^\s*else\s*(?:if$if_re\b|#|$)/o ) { # Else clause for an if?
     skip_makefile_until_else_or_endif( 1 );
 				# If we're here, the condition must have been
 				# true, so we know the else part must be false.
 				# Skip until we see the endif.
     goto &_read_makefile_line_stripped_1; # Return the next line.
-  }
-  elsif ($line =~ /^\s*endif\s*(?:\#|$)/) { # End of an if?
+  } elsif ($line =~ /^\s*endif\s*(?:#|$)/) { # End of an if?
     goto &_read_makefile_line_stripped_1; # Return the next line.
   }
 
@@ -2322,29 +2304,24 @@ sub skip_makefile_until_else_or_endif {
       $line .= $nextline;
     }
 
-    if ($line =~ /^\s*if(?:n?(?:def|eq|sys|true)|(?:make)?perl)\b/) {
+    if( $line =~ /^\s*if$if_re\b/o ) {
       ++$endif_expected;	# Need another endif.
-    }
-    elsif( !$was_true && $endif_expected == 1 && $line =~ /^\s*else\s*(?:\s*if(n?(?:def|eq|sys|true)|(?:make)?perl)\b|#|$)/ ) {
+    } elsif( $endif_expected == 1 && !$was_true && $line =~ /^\s*else\s*(?:\s*if$if_re\b()|#|$)/o ) {
 				# Found the matching else for the
 				# current conditional.
-      if( $1 ) {
+      if( defined $1 ) {
 	$line =~ s/^\s*else//;	# Turn it into a normal if, as though this were the beginning.
 	unshift @hold_lines, $line;
       }
       return;
-    }
-    elsif ($line =~ /^\s*endif\s*(?:\#|$)/) {
+    } elsif ($line =~ /^\s*endif\s*(?:#|$)/) {
       return if --$endif_expected == 0;  # Found the last expected endif.
-    }
-    # an else in one of the following is not a makepp statement
-    elsif ($line =~ /^\s*(?:make)?(?:perl\s*\{|sub\b)/) {
+    } elsif ($line =~ /^\s*(?:make)?(?:perl\s*\{|sub\s)/) {
+      # an else in one of the following is not a makepp statement
       Mpp::Subs::read_block $line;
-    }
-    elsif ($line =~ /^\s*define\b/) {
+    } elsif ($line =~ /^\s*define\b/) {
       $re = qr/^\s*endd?ef\s*$/;
-    }
-    elsif ($line =~ /^\s*perl_begin\b/) {
+    } elsif ($line =~ /^\s*perl_begin\b/) {
       $re = qr/^\s*perl_end\b/;
     }
   }

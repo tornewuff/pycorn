@@ -1,6 +1,6 @@
 ###	SPAR <http://www.cpan.org/scripts/>
 ###	18	644	1079481382	1079481376	Makeppfile
-register_scanner ./nop scanner_skip_word
+register_command_parser ./nop skip_word
 CC := .$/nop $(CC)
 
 $(phony default): main.o

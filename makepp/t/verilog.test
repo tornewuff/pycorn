@@ -1,6 +1,6 @@
 ###	SPAR <http://www.cpan.org/scripts/>
 ###	23	644	1143572799	1208276444	Makeppfile
-fake_simv: in.vc : scanner vcs_compilation
+fake_simv: in.vc : parser vcs_compilation
 	-true -f $<		# true inexistant on native Win
 	&touch $@
 

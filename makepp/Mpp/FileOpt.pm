@@ -1,4 +1,4 @@
-# $Id: FileOpt.pm,v 1.104 2010/02/09 22:41:37 pfeiffer Exp $
+# $Id: FileOpt.pm,v 1.106 2010/09/29 22:12:24 pfeiffer Exp $
 
 =head1 NAME
 
@@ -14,8 +14,7 @@ of makepp itself.
 
 package Mpp::File;
 
-use Mpp::File;			# Override some subroutines from the
-				# generic Mpp::File package.
+use Mpp::File;			# Our basis.
 
 use strict;
 
@@ -78,7 +77,8 @@ sub get_rule {
 				# for this directory.
   # If we know the rule now, then return it.  Otherwise, try to find a
   # "backwards inference" rule.
-  exists $_[0]{RULE} ? $_[0]{RULE} : ($_[1] ? undef : 1) && $n_last_chance_rules && do {
+  return $_[0]{RULE} if exists $_[0]{RULE};
+  if( $n_last_chance_rules && !$_[1] ) {
     # NOTE: Similar to Mpp::File::publish(), but we stop on the first match,
     # and there is no stale handling.
     my $finfo = $_[0];
@@ -907,8 +907,9 @@ sub load_build_info_file {
     }
 
     unless( $sig_match ) {	# Exists but has the wrong signature?
-      if( !Mpp::MAKEPP && $Mpp::progname eq 'makeppreplay' ) {
-	delete $build_info->{SIGNATURE}; # Remember to handle this later in makeppreplay.
+      if( !Mpp::MAKEPP && $Mpp::progname =~ /^makepp(?:info|replay)$/ ) {
+	$build_info->{invalidated_SIGNATURE} =
+	  delete $build_info->{SIGNATURE}; # Remember to handle this later in makeppreplay.
       } elsif( $build_info->{SYMLINK} ) {
 				# Signature is that of linked file.  The symlink
 				# is checked before possibly rebuilding it.
@@ -940,43 +941,6 @@ sub load_build_info_file {
     CORE::unlink $build_info_fname; # Get rid of bogus file.
   }
   $build_info;
-}
-
-sub version {
-#@@eliminate
-# Not installed, so grep all our sources for the checkin date.  Make a
-# composite version consisting of the three most recent dates (shown as mmdd,
-# but sorted including year) followed by the count of files checked in that
-# day.  This assumes that no two years have three same check in dates and
-# amounts.
-#
-  open my $fh, '<', "$Mpp::datadir/VERSION";
-  chomp( $Mpp::VERSION		# Hide assignment from CPAN scanner.
-	 = <$fh> );
-  if( $Mpp::VERSION		# -"-
-      =~ s/beta\r?// ) {
-    my %VERSION = qw(0/00/00 0 00/00/00 0); # Default in case all modules change on same day.
-    for( "$0", <$Mpp::datadir/Mpp{,/*,/*/*}.pm $Mpp::datadir/makepp_builtin_rules.mk> ) {
-      open my( $fh ), $_;
-      while( <$fh> ) {
-	if( /\$Id: .+,v [.0-9]+ ([\/0-9]+)/ ) {
-	  $VERSION{$1}++;
-	  last;
-	}
-      }
-    }
-    $Mpp::VERSION .= join '-', '',
-      grep { my $key = $_; s!\d+/(\d+)/(\d+)!$1$2$VERSION{$_}! } (reverse sort keys %VERSION)[0..2];
-  }
-#@@
-
-  $0 =~ s!.*/!!;
-  print "$0 version $Mpp::VERSION
-Makepp may be copied only under the terms of either the Artistic License or
-the GNU General Public License, either version 2, or (at your option) any
-later version.
-For more details, see the makepp homepage at http://makepp.sourceforge.net.\n";
-  exit 0;
 }
 
 1;

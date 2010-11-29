@@ -1,51 +1,25 @@
-# $Id: ActionParser.pm,v 1.42 2010/02/09 22:39:51 pfeiffer Exp $
+# $Id: Lexer.pm,v 1.45 2010/11/17 21:35:52 pfeiffer Exp $
 
 =head1 NAME
 
-Mpp::ActionParser - Makepp action parser base class
-
-=head1 SYNOPSIS
-
-	perl_begin
-	 { package Mpp::ActionParser::MyParser;
-		our @ISA = qw/Mpp::ActionParser/;
-	 }
-	 sub parser_myscan{
-	 	return new Mpp::ActionParser::MyParser;
-	 };
-	perl_end
-
-	target: dependency : scanner myscan
-		action
+Mpp::Lexer - Makepp lexer for finding commands and redirections in a rule
 
 =head1 DESCRIPTION
 
-C<Mpp::ActionParser> is a base class for makepp(1) action parsers.
-It is responsible for dealing with generic shell command parsing.
+C<Mpp::Lexer> is responsible for lexical analysis of shell commands.  It finds
+file redirections as prerequisites or targets.  It also splits pipelines or
+series of commands checking each one, whether there is a command parser for it.
 
 Ideally, rule options should indicate whether back-quotes should be expanded
-and/or parsed.
-Currently, they are neither.
+and/or parsed.  Currently, they are neither.
 
-=head1 THE SCANNER INTERFACE
-
-When a scanner $parser is specified for a rule, first a subroutine named
-"parser_$parser" is sought.
-If it is found, then the parser object returned by that subroutine is used
-for the rule.
-Second, a subroutine named "scanner_$parser" is sought.
-If it is found, then a action parser that always uses that routine as the
-command parser is used.
-The second subroutine search is for legacy compatibility, and it is deprecated.
-
-Note that this is implemented in the Mpp::Makefile package, but we explain it here
-because you only need to know about it when you're messing with custom
-scanners.
+This class should handle all POSIX-like shells (bash, ksh, zsh) well enough,
+but not rather different ones like csh.
 
 =cut
 
 use strict;
-package Mpp::ActionParser;
+package Mpp::Lexer;
 
 use Mpp::Text;
 use Mpp::Rule;
@@ -57,30 +31,29 @@ use Mpp::FileOpt;
 
 =head2 new
 
-	my $parser=new Mpp::ActionParser;
+	my $lexer=new Mpp::Lexer;
 
-Returns a new Mpp::ActionParser object.
+Returns a new Mpp::Lexer object.
 
 =cut
 
-my $parser;
-
+my $lexer;
 sub new {
   my $self = $_[0];
   my $class=ref($self)||$self;
 
-  # Optimize the default parser constructor, because we know it's stateless.
+  # Optimize the default lexer constructor, because we know it's stateless.
   if($class eq __PACKAGE__) {
-    $parser ||= bless \$parser;
-    return $parser;
+    $lexer ||= bless \$lexer;
+    return $lexer;
   }
 
   bless {}, $class;
 }
 
-=head2 parse_rule
+=head2 lex_rule
 
-	$parser->parse_rule($actions, $rule);
+	$lexer->lex_rule($actions, $rule);
 
 For each action in $actions, first deal with shell stuff, for example:
 
@@ -101,10 +74,11 @@ Determine which environment variables are set by each action [partially done]
 =item 4.
 
 Expand and/or parse back-quoted expressions if $rule's options so indicate [TBD]
+OTOH, you can always use "SOMEOPT ;= $(shell someconfig --opt)" instead.
 
 =item 5.
 
-For "cd" commands, determine the directory into which it changes [TBD]
+For "cd" commands, determine the directory into which it changes
 
 =back
 
@@ -117,10 +91,10 @@ Return value is TRUE on success.
 
 =cut
 
-my %scanner_warnings;
-
-sub parse_rule {
-  my( $self, undef, $rule ) = @_; # $_[1] gets used via &Mpp::Rule::split_actions
+my %parser_warnings;
+our @actions;			# private, except find_command_parser (p_shell) alters it
+sub lex_rule {
+  my $rule = $_[2];		# $_[1] gets used via &Mpp::Rule::split_actions
   my $parsers_found = 0;
 
   # TBD: There are 3 known problems with adding dependencies here:
@@ -138,8 +112,9 @@ sub parse_rule {
   #    live with that, it would be more efficient to call
   #    $rule->mark_scaninfo_uncacheable, to save it the effort of trying.
 
-  my( undef, undef, $command, $action, @actions ) = &Mpp::Rule::split_actions; # Get the commands to execute.
+  (undef, undef, my( $command, $action ), local @actions) = &Mpp::Rule::split_actions; # Get the commands to execute.
   $#actions -= 4;		# Eliminate bogus undefs.
+  my $p_shell;
   while( 1 ) {
     next unless defined $action;
 
@@ -156,10 +131,10 @@ sub parse_rule {
 	add_simple_dependency( '.', $cwd, $rule,
 			       relative_filename Mpp::is_perl_5_6 ?
 				 $rule->makefile->{MAKEFILE} :
-				 # For '.' this returns a relative name to where use was performed, but we might be somewhere else now :-(
+				 # In case of chdir since '.'-based use was performed:
 				 path_file_info( B::svref_2object( \&$makefile_cmd )->FILE, $cwd ),
 				 $cwd );
-      } elsif( defined &{"Mpp::Cmds::c_$cmd"} ) { # Builtin Function?
+      } elsif( defined &{"Mpp::Cmds::c_$cmd"} ) { # Builtin function?
 	# TODO: Should we use our knowledge of the builtins to find out exactly what files
 	# they handle?  That would mean redoing half of what they'll really do, like option
 	# processing.  E.g. -fo is a -o option, but if it's -o '|...' then there's no file.
@@ -177,7 +152,7 @@ sub parse_rule {
     # Split action into commands
     # TBD: This isn't quite right, because env and cwd settings don't propagate
     # to the next command if they are separated by '&' or '|'.
-    for my $command ( split_commands $action ) {
+    for $command ( split_commands $action ) {
       while( $command =~ /[<>]/ ) {
 	my $max = max_index_ignoring_quotes $command, '>';
 	my( $expr, $is_in );
@@ -214,6 +189,8 @@ sub parse_rule {
 	  add_target( $dir, $rule, $file );
 	}
       }
+      $command =~ s/^\s*(?:(?:[.!]|do|e(?:lif|lse|xec)|if|source|then|while|until)\s+)*//;
+				# Skip "if gcc main.o -labc -o my_program; ..." or even "then if ! . myfile"
       $rule->{MAKEFILE}->setup_environment;
       my %env = %ENV; # copy the set env to isolate command settings
       while ($command =~ s/^\s*(\w+)=//) {
@@ -234,14 +211,16 @@ sub parse_rule {
       }
 
       unless($command =~ /^\s*$/) {
-	my $result = $_[0]->parse_command( $command, $rule, $dir, \%env );
-	return undef unless defined $result;
-	$result and ++$parsers_found;
+	local $rule->{PARSER} if $p_shell; # Special recursion brake set by find_command_parser's p_shell handling.
+	my $found = $_[0]->parse_command( $command, $rule, $dir, \%env );
+	return undef unless defined $found;
+	$found == 1 and ++$parsers_found;
       }
     }
   } continue {
     last unless @actions;
-    (undef, undef, $command, $action) = splice @actions, 0, 4;
+    ($p_shell, undef, $command, $action) = splice @actions, 0, 4;
+    $p_shell = ref $p_shell;
   }
 
 #
@@ -250,28 +229,26 @@ sub parse_rule {
 # C/C++ compilation.  See if this rule looks like it's some sort of a
 # compile:
 #
-  if( $parsers_found == 0 &&	# No scanners found at all?
-      $Mpp::warn_level &&
-      !$rule->{SCANNER_NONE} ) { # From scanner none or skip_word
+  if( $parsers_found == 0 &&	# No parsers found at all?
+      !$rule->{SCANNER_NONE} ) { # From deprecated form of scanner none or skip_word
     my $tinfo = $rule->{EXPLICIT_TARGETS}[0];
     if( ref($tinfo) eq 'Mpp::File' && # Target is a file?
         $tinfo->{NAME} =~ /\.l?o$/ ) { # And it's an object file?
       my $deps = $rule->{ALL_DEPENDENCIES};
       if( grep { 'Mpp::File' eq ref && $_->{NAME} =~ /\.c(?:|xx|\+\+|c|pp)$/i } values %$deps ) {
                                 # Looks like C source code?
-        warn 'action scanner not found for rule at `',
+        warn 'command parser not found for rule at `',
 	  $rule->source,
 	  "'\nalthough it seems to be a compilation command.  This means that makepp will
-not detect any include files.  To specify a scanner for the whole rule,
-add a :scanner modifier line to the rule actions, like this:
-    : scanner gcc-compilation	# Scans for include files.
+not detect any include files.  To specify a parser for the whole rule,
+add a :parser modifier line to the rule actions, like this:
+    : parser gcc-compilation	# Scans source for include files.
 or
-    : scanner none		# Does not scan, but suppresses warning.
+    : parser none		# Does not scan, but suppresses warning.
 Or to do it on a per command basis, if you have such obscure commands:
-register-scanner my_obscure_cc_wrapper	skip-word
-register-scanner my_obscure_cc		c-compilation
-"
-	    unless $scanner_warnings{$rule->source}++;
+register-parser my_obscure_cc_wrapper	skip-word
+register-parser my_obscure_cc		c-compilation
+"	    unless $parser_warnings{$rule->source}++;
       }
     }
   }
@@ -281,7 +258,7 @@ register-scanner my_obscure_cc		c-compilation
 
 =head2 parse_command
 
-	$parser->parse_command($command, $rule, $dir, $setenv_hash);
+	$lexer->parse_command($command, $rule, $dir, $setenv_hash, \$found);
 
 Parse $command as if it is executed in directory $dir (relative to
 $rule->build_cwd), and update $rule accordingly.
@@ -303,31 +280,27 @@ failed.
 =cut
 
 sub parse_command {
-  #my ($self,$command, $rule, $dir, $setenv)=@_;
-  my $result = 0;
-  if( my $command_parser = $_[0]->find_command_parser($_[1], $_[2], $_[3] || '.', \$result) ) {
-    return undef unless defined $command_parser->parse_command($_[1], $_[4] || {});
+  my $command = $_[1];		# modified by skip-word
+  my $found = 0;
+  if( my $command_parser = $_[0]->find_command_parser($command, $_[2], $_[3] || '.', \$found) ) {
+    return unless
+      defined( ref $command_parser ?
+	       $command_parser->parse_command($command, $_[4] || {}) :
+	       $command_parser );
   }
-  $result;
+  $found;
 }
 
 =head2 find_command_parser
 
-	my $command_parser=$parser->find_command_parser(
-	  $command, $rule, $dir, \$found
-	);
+	my $command_parser=$lexer->find_command_parser($command, $rule, $dir, \$found);
 
-The first word of $command is looked up in %scanners from the
-Makeppfile's namespace.
-If it isn't found, then undef is returned (after issuing a warning if it
-looks like the rule really ought to have a scanner).
-Otherwise, the resulting coderef is called with the command, rule
-and directory.
+The first word of $command is looked up in %parsers from the Makeppfile's namespace.
+If it isn't found, then undef is returned.
+Otherwise, the resulting coderef is called with the command, rule and directory.
 If the return value is a reference to an object of type Mpp::CommandParser,
 then it is returned.
 Otherwise, 0 is returned.
-Returning 0 is for backwards compatibility, and it might turn into an error
-in the future.
 There is no way to indicate a scanning failure if 0 is returned, for
 backward compatibility.
 
@@ -335,45 +308,70 @@ backward compatibility.
 
 sub find_command_parser {
   my( undef, $command, $rule, $dir, $found ) = @_;
-  my $firstword;
-  if( ($firstword) = $command =~ /^\s*(\S+)/ ) {
-    if( Mpp::is_windows < 2 && $firstword =~ /['"\\]/ ) {	# Cheap way was not good enough.
-      ($firstword) = unquote +(split_on_whitespace $command)[0];
-    } elsif( Mpp::is_windows > 1 && $firstword =~ /"/ ) {
-      ($firstword) = split_on_whitespace $command;
-      $firstword =~ tr/"//d;	# Don't unquote \, which is Win dir separator
-    }
-  }
   my $parser;
-  if( defined $firstword ) {
-    no strict 'refs';
-    my $scanner_hash = \%{$rule->{MAKEFILE}{PACKAGE} . '::scanners'};
-    $parser = $scanner_hash->{$firstword};
+  my $from_rule = $rule->{PARSER};
+  my( $firstword, @rest ) = split_on_whitespace $command;
+  until( defined $parser ) {
+    if( $from_rule ) {
+      $parser = $from_rule;
+      $from_rule = 0;		# Only 1st word, not again after skip-word
+    } else {
+      if( Mpp::is_windows < 2 && $firstword =~ /['"\\]/ ) {
+	$firstword = unquote $firstword;
+      } elsif( Mpp::is_windows > 1 && $firstword =~ /"/ ) {
+	$firstword =~ tr/"//d;	# Don't unquote \, which is Win dir separator
+      }
+      if( defined $firstword ) {
+	no strict 'refs';
+	my $parsers = \%{$rule->{MAKEFILE}{PACKAGE} . '::parsers'};
+	$parser = $parsers->{$firstword};
 				# First try it unmodified.
-    unless( $parser ) {		# If that fails, strip out the
-				# directory path and try again.
-      $firstword =~ s@^.*/@@ || Mpp::is_windows > 1 && $firstword =~ s@^.*\\@@ and  # Is there a directory path?
-        $parser = $scanner_hash->{$firstword};
-      $parser ||= $Mpp::Subs::scanners{$firstword} ||
-	$firstword =~ /gcc|g\+\+/ && \&Mpp::Subs::scanner_gcc_compilation;
+	unless( $parser ) {	# If that fails, strip out the directory path and try again.
+	  $firstword =~ s@^.*/@@ || Mpp::is_windows > 1 && $firstword =~ s@^.*\\@@ and  # Is there a directory path?
+	    $parser = $parsers->{$firstword};
+	  $parser ||= $Mpp::Subs::parsers{$firstword} ||
+	    $firstword =~ /gcc|g\+\+/ && \&Mpp::Subs::p_gcc_compilation;
+	}
+      }
+    }
+    if( $parser ) {		# Did we get one?
+      $parser = &$parser( $command, $rule, $dir ); # Call the routine.
+      if( ref $parser ) {
+	$$found = 1;
+	$parser = 0 unless UNIVERSAL::isa $parser, 'Mpp::CommandParser';
+				# This is assumed to mean that calling the parser already did the scanning.
+      } elsif( $parser ) {	# p_skip_word or p_shell
+	shift @rest while @rest && $rest[0] =~ /^["'\\]?-/; # skip options
+	if( $parser == &Mpp::Subs::p_shell ) {
+	  unshift @actions, defined $from_rule ? \1 : undef, # special marker to not propagate parser into subcommand
+	      undef, undef, join ' ', map unquote, @rest;
+				# just 1 arg for sh -c cmd, but handle eval cmd1\; cmd2
+	  Mpp::log PARSE_SHELL => $firstword, $actions[3], $rule
+	    if $Mpp::log_level;
+	  $$found = 2;		# Not 1, but continue
+	  return;
+	}
+	# Must be p_skip_word; doesn't count as found
+	Mpp::log PARSE_SKIP_WORD => $firstword, $rest[0], $rule
+	  if $Mpp::log_level;
+	$_[1] = $command = join ' ', @rest; # parse only rest
+	$firstword = shift @rest;
+	undef $parser;
+      } elsif(  defined $parser ) { # p_none
+	Mpp::log PARSE_NONE => $firstword, $rule
+	  if $Mpp::log_level;
+	$$found = 1;
+      } else {			# failed
+	Mpp::log SCAN_UNCACHEABLE => $rule, $firstword
+	  if $Mpp::log_level;
+	$rule->mark_scaninfo_uncacheable;
+	return;
+      }
+    } else {
+      $parser = 0;
     }
   }
-  if ($parser) {               # Did we get one?
-    $$found++;
-    $parser=&$parser($command, $rule, $dir) || 0;
-                                # Call the routine.
-    unless(UNIVERSAL::isa($parser, 'Mpp::CommandParser')) {
-      # This is assumed to mean that calling the %scanners value already
-      # did the scanning.
-      $parser=0;
-      Mpp::log SCAN_UNCACHEABLE => $rule, $firstword
-	if $Mpp::log_level;
-      $rule->mark_scaninfo_uncacheable;
-    }
-  } else {   # No parser:
-    $parser = new Mpp::CommandParser($rule, $dir);
-  }
-  $parser;
+  $parser || new Mpp::CommandParser($rule, $dir); # none, fall back to trivial parser
 }
 
 =head2 add_dependency

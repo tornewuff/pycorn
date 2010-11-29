@@ -1,15 +1,14 @@
 #!/usr/bin/perl -w
-# $Id: makeppreplay,v 1.9 2009/03/19 22:41:43 pfeiffer Exp $
+# $Id: makeppreplay,v 1.13 2010/11/17 21:35:52 pfeiffer Exp $
 
 package Mpp;
 
 use strict;
 
-our $VERSION = '@VERSION@';
 use Config;
 our $datadir;
 BEGIN {
-  eval "sub ARCHITECTURE() { '$Config{archname}' }"; # Get a tag for the architecture.
+  our $VERSION = '@VERSION@';
 
 #@@setdatadir
 #
@@ -117,7 +116,8 @@ perform eval {
       ['I', qr/include(?:[-_]?dir)?/, \$tmp, 1, sub { unshift @INC, absolute_filename file_info $tmp }],
       [qw(M module), \$tmp, 1, sub { $tmp =~ s/=(.*)/ qw($1)/ and $tmp =~ tr/,/ /; $modules .= "use $tmp;" }],
       [qw(t temporary), \$temporary],
-      @Mpp::common_options;
+
+      @Mpp::common_opts;
 
     @ARGV = '.' unless @ARGV || @targets;
     my $finfo = file_info shift, $target_cwd;
@@ -181,7 +181,7 @@ perform eval {
     }
     $finfo->{RULE} = $dinfo->{$rule_cache};
   }
-  @Mpp::common_options = ();
+  @Mpp::common_opts = ();
   close DATA;
   die "$progname: No files built by makepp in `$nothing_in_dir'.\n"
     if $nothing_in_dir;
@@ -229,10 +229,10 @@ perform eval {
       $Mpp::n_files_changed += $n_files;
       next if $temporary;
       my $sig = $build_info->{SIG_METHOD_NAME}; # All targets have the same.
-      $sig &&= $rule->set_signature_method_scanner( $sig );
+      $sig &&= $rule->set_signature_class( $sig );
       my $dep_sigs = '';	# Precalculate this for the targets loop
       my $sep = '';
-      for my $dep ( split /\cA/, $build_info->{SORTED_DEPS} ) {
+      for my $dep ( split /\cA/, $build_info->{SORTED_DEPS} || '' ) {
 	$dep = path_file_info $dep, $rule->{MAKEFILE}{CWD};
 	$dep->{BUILD_INFO} ||= load_build_info_file $dep;
 	$dep_sigs .= $sep .
@@ -264,24 +264,35 @@ perform eval {
 __DATA__
 Usage: makeppreplay [-options] [VAR=value] targets
 
-Valid options include:
+Valid options are:
 
--A or --args-file=filename
-	Take additional args from named file.
--c or --root-directory
-	Changes to the RootMakeppfile directory before trying to build targets.
--C dirname or --directory=dirname
-	Changes to the given directory before trying to build targets.
--I or --include=dir
-	Dir to load module from
--k or --keep-going
-	Build everything else even after an error.
--M or --module=module[=arg,...]
-	Module with your functions to load into every dir.
--t or --temporary
-	Do not modify build info, so makepp will repeat everything.
---version
-	Print out the current version.
+-A filename, --args-file=filename, --arguments-file=filename
+    Read the file and parse it as possibly quoted whitespace- and/or
+    newline-separated options.
+-C directory, --directory=directory
+    Cd to the given directory before loading the makefile and trying to
+    build the targets.
+-c, --root-dir, --root-directory
+    Cd up to the directory containing a RootMakeppfile.
+-I directory, --include=directory, --include-dir=directory
+    Add directory to Perl load path @INC.
+-?, -h, --help
+    Print out a brief summary of the options.
+-k, --keep-going
+    Build as many files as possible, even if some of them have errors.
+-M module[=arg,...], --module=module[=arg,...]
+    Load module and import any functions it exports.
+-n, --dry-run, --just-print, --recon
+    Print out commands without actually executing them.
+--no-print-directory
+    Turn off the entering or leaving directory messages.
+-t, --temporary
+    Makeppreplay modifies the build info of all files it touched and of all
+    dependencies it found modified.
+-V, --version
+    Print out the version number.
+--no-warn
+    Don't print any warning messages.
 
 Look at @htmldir@/makeppreplay.html for wrapper details,
 or at http://makepp.sourceforge.net/@BASEVERSION@/makeppreplay.html

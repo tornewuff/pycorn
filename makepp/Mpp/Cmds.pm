@@ -1,4 +1,4 @@
-# $Id: Cmds.pm,v 1.64 2009/02/11 23:22:37 pfeiffer Exp $
+# $Id: Cmds.pm,v 1.66 2010/09/29 22:19:53 pfeiffer Exp $
 
 =head1 NAME
 
@@ -25,6 +25,11 @@ use Mpp::File;
 use Mpp::Subs;
 use POSIX ();
 
+BEGIN {
+  my $ln_cp = $ENV{MAKEPP_LN_CP} || 0;
+  *NO_LINK = $Mpp::Text::N[$ln_cp & 2 ? 1 : 0];
+  *NO_SYMLINK = $Mpp::Text::N[$ln_cp & 1 || 0];
+}
 
 sub eval_or_die($) {
   $Mpp::Rule::unsafe = 1;
@@ -256,6 +261,8 @@ sub c_cp {
   $mv = shift @ARGV if ref $_[0];
   my( $link, $symbolic );
   frame {
+    undef $link if NO_LINK;
+    undef $symbolic if NO_SYMLINK;
     my $dest = @ARGV == 1 ? '.' : pop @ARGV;
     require File::Copy;
     my $cmd = $mv ? 'move' : 'copy';
@@ -491,7 +498,7 @@ sub c_ln {
     for( @ARGV ) {
       my $dirdest = $d ? $dest . '/' . f_notdir $_ : $dest;
       _rm $dirdest if $force && ($d ? -l( $dirdest ) || -e _ : defined $d);
-      if( $ENV{MAKEPP_LN_CP} and $ENV{MAKEPP_LN_CP} & ($resolve || $symbolic ? 1 : 2) ) {
+      if( NO_LINK == NO_SYMLINK ? NO_LINK : NO_SYMLINK == ($resolve || $symbolic || 0) ) {
 	$_ = f_relative_filename f_dir( $dirdest ) . $_
 	  if $symbolic && !$resolve;
 	require File::Copy;
@@ -511,11 +518,9 @@ sub c_ln {
 
 sub c_mkdir {
   local @ARGV = @_;
-  my $mode = 755;	 	# Makefile must set the option, if this is not right.
-  my $parent;
+  my( $mode, $parent );
   frame {
-    $mode = oct $mode;
-    my $umask = umask 0;	# Ignore environment, to guarantee result.
+    $mode = umask ~oct $mode if defined $mode;
     my @created;
     for( @ARGV ) {
       if( $parent ) {
@@ -524,16 +529,16 @@ sub c_mkdir {
 	  $dir .= $_;
 	  next if -d $dir;
 	  _rm $dir if $force && -e _;
-	  perform { (my $d = $dir) =~ s!/+$!!; mkdir $d, $mode or $! == POSIX::EEXIST && -d $dir } "create directory `$dir'";
+	  perform { (my $d = $dir) =~ s!/+$!!; mkdir $d or $! == POSIX::EEXIST && -d $dir } "create directory `$dir'";
 	  push @created, $dir;
 	}
       } elsif( ! -d ) {
 	_rm $_ if $force && -e _;
-	perform { (my $d = $_) =~ s!/+$!!; mkdir $d, $mode } "create directory `$_'";
+	perform { (my $d = $_) =~ s!/+$!!; mkdir $d } "create directory `$_'";
 	push @created, $_;
       }
     }
-    umask $umask;
+    umask $mode if defined $mode;
     @created;
   } 'f',
     [qw(m mode), \$mode, 1],

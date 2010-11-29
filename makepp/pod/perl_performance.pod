@@ -2,7 +2,7 @@
 
 makepp_perl_performance -- How to make perl faster
 
-=for vc $Id: perl_performance.pod,v 1.8 2008/09/28 21:20:07 pfeiffer Exp $
+=for vc $Id: perl_performance.pod,v 1.9 2010/07/16 21:15:23 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -28,12 +28,12 @@ them.  Others need measuring to believe them, so:
 
 =item Profile your program
 
-Makepp comes with a module F<profiler.pm>.  This is first run as a program on
-a copy(!) of your code, which it instruments.  Then you run your copy and get
-configurable statistics per interval and a final total on the most frequently
-called functions and on the most time spent in functions (minus subcalls).
-Both are provided absolutely and in caller-callee pairs.  (Documentation
-within.)
+Makepp comes with a module F<profiler.pm> in its cvs repository.  This is
+first run as a program on a copy(!) of your code, which it instruments.  Then
+you run your copy and get configurable statistics per interval and a final
+total on the most frequently called functions and on the most time spent in
+functions (minus subcalls).  Both are provided absolutely and in caller-callee
+pairs.  (Documentation within.)
 
 This tells you which functions are the most promising candidates for tuning.
 It also gives you a hint where your algorithm might be wrong, either within

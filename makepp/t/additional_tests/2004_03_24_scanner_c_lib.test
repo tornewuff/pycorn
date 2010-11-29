@@ -9,9 +9,9 @@ $(phony x):
 iftrue $(filter %cl %cl.exe %bcc32 %bcc32.exe, $(CC))
   perl { die }
 endif
-###	68	644	1160341077	1210245688	Makefile
+###	62	644	1160341077	1287952300	Makefile
 #
-# Test various things about the command parser:
+# Test various things about the lexer, command parsers and C scanner:
 # 1) Splitting command up into multiple lines;
 # 2) Ignoring the echo with quoted string;
 # 3) Handling -lxyz.
@@ -72,12 +72,6 @@ xyz.h:
 #
 a.c :
 	&touch $@
-
-perl_begin
-    $scanners{'foo'} = sub {};
-    my $hashref = \%{'scanners'};
-    die unless $hashref->{'foo'};
-perl_end
 ###	1	644	1080322036	1080160284	b.vpp
 #include "c.v"
 ###	9	644	1080322036	1210245158	main.c

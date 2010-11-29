@@ -1,4 +1,4 @@
-# $Id: AutomakeFixer.pm,v 1.2 2009/02/09 22:07:39 pfeiffer Exp $
+# $Id: AutomakeFixer.pm,v 1.3 2010/10/18 21:48:19 pfeiffer Exp $
 
 =head1 NAME
 
@@ -24,14 +24,14 @@ sub remove_automake_junk {
   local $_ = $_[0];
   my $lineno = 0;
   s/\n/++$lineno; "\05$lineno\n"/eg; # Append the line number to each line, so
-                                # we can preserve the line numbers when we 
+                                # we can preserve the line numbers when we
                                 # remake the final file.
   s/\\\05\d+\n//g;              # Get rid of all the trailing backslashes,
                                 # so we can parse things easier.
 
 #
-# Extract a list of the targets that are handled by recursive make, and 
-# fix them so they use Makepp's method instead.  This converts a line like 
+# Extract a list of the targets that are handled by recursive make, and
+# fix them so they use Makepp's method instead.  This converts a line like
 # this:
 #
 #    RECURSIVE_TARGETS = info-recursive dvi-recursive ...
@@ -52,7 +52,7 @@ sub remove_automake_junk {
     } split(' ', $1));
 
     s/\n\$\(RECURSIVE_TARGETS\):[\s\S]+?\n\05\d+\n//;
-                                # Get rid of the action rule that we're 
+                                # Get rid of the action rule that we're
                                 # replacing.  Delete everything from the rule
                                 # start to the blank line afterwards.
   }
@@ -96,7 +96,7 @@ sub remove_automake_junk {
 #
   s{\n
     ( (?:\$\(\w+\)/ )?
-      (?: Makefile |             # These are the targets that are in the 
+      (?: Makefile |             # These are the targets that are in the
           config\.h |            # makefile to rerun automake and configure.
           stamp-h1 |
           config\.h\.in |

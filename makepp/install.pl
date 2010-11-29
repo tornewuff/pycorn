@@ -3,7 +3,7 @@
 # This script asks the user the necessary questions for installing
 # makepp and does some heavy HTML massageing.
 #
-# $Id: install.pl,v 1.89 2010/04/22 20:35:25 pfeiffer Exp $
+# $Id: install.pl,v 1.97 2010/11/17 21:35:52 pfeiffer Exp $
 #
 
 package Mpp;
@@ -32,41 +32,14 @@ system $^X, 'makepp', '--version'; # make sure it got a chance to apply workarou
 
 print 'Using perl in ' . PERL . ".\n";
 
-#
-# Load the version number so it can be automatically inserted into the
-# files.
-#
+warn "\nMakepp will be installed with DOS newlines, as you unpacked it.\n\n"
+  if ($_ = <DATA>) =~ tr/\r//d;
+
 our $eliminate = '';		# So you can say #@@eliminate
 $eliminate = $eliminate if Mpp::is_perl_5_6;
-open(VERSION, "VERSION") || die "You are missing the file VERSION.  This should be part of the standard distribution.\n";
-our $VERSION = <VERSION>;
-close VERSION;
-our $BASEVERSION = $VERSION;
-chomp $VERSION;
-warn "Makepp will be installed with DOS newlines, as you unpacked it.\n" if $VERSION =~ tr/\r//d;
-				# Native Windows chomps \r.
 
-if( $VERSION =~ s/beta// ) {
-  $BASEVERSION = $VERSION;
-#
-# Grep all our sources for the checkin date.  Make a composite version
-# consisting of the three most recent dates (shown as mmdd, but sorted
-# including year) followed by the count of files checked in that day.  This
-# assumes that we have at least three check ins a year.
-#
-  my %VERSION = qw(0/00/00 0 00/00/00 0); # Default in case all modules change on same day.
-  for( <makepp Mpp{,/*,/*/*}.pm makepp_builtin_rules.mk> ) {
-    open my( $fh ), $_;
-    while( <$fh> ) {
-      if( /\$Id: .+,v [.0-9]+ ([\/0-9]+)/ ) {
-	$VERSION{$1}++;
-	last;
-      }
-    }
-  }
-  $VERSION .= join '-', '',
-    grep s!\d+/(\d+)/(\d+)!$1$2$VERSION{$_}!, (reverse sort keys %VERSION)[0..2];
-}
+our( $BASEVERSION ) = $VERSION =~ /^([^-]+)/;
+$BASEVERSION = $BASEVERSION if Mpp::is_perl_5_6;
 
 #
 # Now figure out where everything goes:
@@ -86,7 +59,7 @@ Where should the makepp executable be installed [$prefix/bin]? ") ||
 $bindir =~ m@^(.*)/bin@ and $prefix = $1;
 				# See if a prefix was specified.
 
-$datadir = shift @ARGV || read_with_prompt("
+my $datadir = shift @ARGV || read_with_prompt("
 Makepp has a number of library files that it needs to install somewhere.  Some
 of these are perl modules, but they can't be used by other perl programs, so
 there's no point in installing them in the perl modules hierarchy; they are
@@ -164,7 +137,7 @@ if( $destdir ) {
 }
 
 make_dir("$datadir/$_") for
-  qw(Mpp Mpp/ActionParser Mpp/BuildCheck Mpp/CommandParser Mpp/Scanner Mpp/Signature);
+  qw(Mpp Mpp/ActionParser Mpp/BuildCheck Mpp/CommandParser Mpp/Lexer Mpp/Scanner Mpp/Signature);
 
 our $useoldmodules = '';
 if( $ENV{MAKEPP_INSTALL_OLD_MODULES} ) {
@@ -202,14 +175,14 @@ substitute_file( $_, $bindir, 0755, 1 ) for
   qw(makepp makeppbuiltin makeppclean makeppgraph makeppinfo makepplog makeppreplay makepp_build_cache_control);
 
 substitute_file( $_, $datadir, 0644 ) for
-  qw(recursive_makepp Mpp/FileOpt.pm Mpp/BuildCacheControl.pm);
+  qw(recursive_makepp Mpp/Text.pm);
 
-copy("Mpp.pm", "$datadir/Mpp.pm");
-chmod 0644, "$datadir/Mpp.pm";
-foreach $module (qw(AutomakeFixer BuildCache File Glob Event Cmds Makefile
-		    Subs Recursive Repository Rule Text Utils
+foreach $module (qw(../Mpp
 
-		    ActionParser ActionParser/Legacy ActionParser/Specific
+		    AutomakeFixer BuildCache BuildCacheControl File FileOpt Glob
+		    Event Cmds Makefile Subs Recursive Repository Rule Utils
+
+		    Lexer ActionParser/Legacy ActionParser/Specific
 
 		    BuildCheck BuildCheck/architecture_independent
 		    BuildCheck/exact_match BuildCheck/ignore_action
@@ -261,14 +234,23 @@ if ($mandir ne 'none') {
 # Now massage and install the HTML pages.
 #
 use Pod::Html ();
+BEGIN {
+    *html_short_names = $Mpp::Text::N[$Pod::Html::VERSION < 1.0901 ? 0 : 1];
+    no warnings;
+    my %entity = qw(< lt > gt & amp);
+    *Pod::Html::process_pre = sub { # undo bad magic, should do all ours here
+	1 while ${$_[0]} =~ s/^([^\t\n]*)(\t+)/$1 . (' ' x (length($2) * 8 - length($1) % 8))/egm; # untabify
+	${$_[0]} =~ s/([<>&])/&$entity{$1};/g;
+    };
+}
 
 sub highlight_keywords() {
   s!\G(\s*)((?:noecho\s+|ignore_error\s+|makeperl\s+|perl\s+|[-\@]|&amp;(?:cat|chmod|cp|mv|cut|echo|expr|printf|yes|grep|sed|(?:un)?install|ln|mkdir|perl|preprocess|rm|sort|template|touch|uniq)\b)+)!$1<b>$2</b>! or
 
   s!\G((?:override )?(?:define|export|global)|override|ifn?def|makesub|sub)(&nbsp;| +)([-.\w]+)!<b>$1</b>$2<i>$3</i>! or
-  s!\G(register_scanner|signature)(&nbsp;| +)([-.\w]+)!<b>$1</b>$2<u>$3</u>! or
+  s!\G(register[_-](?:(?:command[_-])?parser|scanner)|signature)(&nbsp;| +)([-.\w]+)!<b>$1</b>$2<u>$3</u>! or
   # repeat the above, because they may appear in C<> without argument
-  s!\G(\s*(?:and |or |else )?if(?:n?(?:def|eq|sys|true|xxx)|(?:make)?perl)|build_cache|else|endd?[ei]f|export|global|fi|[_-]?include|load[_-]makefile|makeperl|no[_-]implicit[_-]load|override|perl(?:|[_-]begin|[_-]end)|repository|runtime|unexport|define|makesub|sub|register_scanner|signature)\b!<b>$1</b>! && s|xxx|<i>xxx</i>| or
+  s!\G(\s*(?:and |or |else )?if(?:n?(?:def|eq|sys|true|xxx)|(?:make)?perl)|build[_-]cache|else|endd?[ei]f|export|global|fi|[_-]?include|load[_-]makefile|makeperl|no[_-]implicit[_-]load|override|perl(?:|[_-]begin|[_-]end)|repository|runtime|unexport|define|makesub|sub|register[_-](?:(?:command[_-])?parser|scanner)|signature)\b!<b>$1</b>! && s|xxx|<i>xxx</i>| or
 
     # highlight assignment
     s,\G\s*(?:([-.\w\s%*?\[\]]+?)(\s*:\s*))?((?:override\s+)?)([-.\w]+)(?= *(?:[:;+?!]|&amp;)?=),
@@ -279,9 +261,9 @@ sub highlight_keywords() {
     $pre && !/define|export|global|override/ && s!\G(\s*)([^&\s].*?)(?=\s*:(?:$|.*?[^;{]\n))!$1<u>$2</u>!m;
 
   # highlight rule options
-  s!(: *)(build_c(?:ache|heck)|foreach|include|scanner|signature)(&nbsp;| +)([-_/\w%.]+)!$1<b>$2</b>$3<u>$4</u>!g or
+  s!(: *)(build_c(?:ache|heck)|(?:command[_-])?parser|foreach|include|scanner|signature)(&nbsp;| +)([-_/\w%.]+)!$1<b>$2</b>$3<u>$4</u>!g or
   # repeat the above, because they may appear in C<> without argument
-  s!(: *)(build_c(?:ache|heck)|foreach|include|last_chance|quickscan|scanner|signature|smartscan)\b!$1<b>$2</b>!g;
+  s!(: *)(build_c(?:ache|heck)|(?:command[_-])?parser|foreach|include|last_chance|quickscan|scanner|signature|smartscan)\b!$1<b>$2</b>!g;
 }
 
 sub highlight_variables() {
@@ -392,7 +374,7 @@ if ($htmldir_val ne 'none') {
   my $tmp = '/tmp/makepp' . substr rand, 1;
   make_dir($htmldir_val);
   $htmldir_val =~ s!^([^/])!../$1!;
-  my $empty_line = '';
+  my $next_tall = '';
   for( @pods ) {
     my $has_commands_with_args = /makepp(?:_(?:builtins|command|extending|functions|statements)|builtin|graph|log)\.pod/;
     my( $timestamp, $author ) = ('', '');
@@ -404,8 +386,13 @@ if ($htmldir_val ne 'none') {
 	}
       }
     }
-    Pod::Html::pod2html qw'--libpods=makepp_functions:makepp_rules:makepp_statements:makepp_variables:makepp_signatures:makepp_build_cache
+    if( fork ) {		# separate pod2html, or they append numbers to same name in different files
+      wait;
+    } else {
+      Pod::Html::pod2html qw'--libpods=makepp_functions:makepp_rules:makepp_statements:makepp_variables:makepp_signatures:makepp_build_cache
 			   --podpath=. --podroot=. --htmlroot=. --css=makepp.css --infile', $_, '--outfile', $tmp;
+      exit;
+    }
     open my( $tmpfile ), $tmp;
     s/pod$/html/;
     my $img = '<img src="makepp.gif" width="142" height="160" title="makepp" border="0">';
@@ -437,7 +424,7 @@ if ($htmldir_val ne 'none') {
 	$_ = $unread . $_;
 	undef $unread;
       }
-      if ( /^<\/head>/../<h1>.*(?:DESCRIPTION|SYNOPSIS)/ ) {
+      if( /^<\/head>/../<h1>.*(?:DESCRIPTION|SYNOPSIS)/ ) {
 	if ( /<(?:\/?ul|li)>/ ) {
 	  # These are visible anyway when the index is.
 	  next if /NAME|DESCRIPTION|SYNOPSIS|AUTHOR/;
@@ -457,9 +444,9 @@ if ($htmldir_val ne 'none') {
 	$_ = "<link rel='icon' href='url.png' type='image/png' />
 <meta name='keywords' content='makepp, make++, Make, build tool, repository, cache, Perl, Make alternative, Make replacement, Make enhancement, Make improvement, Make substitute, dmake, gmake, GNU Make, nmake, pmake, easymake, imake, jmake, maketool, mmake, omake, ppmake, PVM gmake, shake, SMake, ant, maven, cook, jam, Cons, SCons, cc -M, gcc -MM, g++ -MM, makedepend, makedep, mkdep, CCache, Compilercache, cachecc1, Make::Cache, automake' />
 </head><body>$nav<h1>$title</h1>\n<p><b>$_</p>$index";
-      } elsif ( s/<pre>\n// ) {
+      } elsif( s/<pre>\n// ) {
 	$pre = 1;
-      } elsif ( $pre ) {
+      } elsif( $pre ) {
 
 	if( /^(.*#.*\|.*\|.*#.*\|.*\|.*)<\/pre>$/ ) { # Special case for compatibility table.
 
@@ -504,12 +491,14 @@ if ($htmldir_val ne 'none') {
 	  s/^ {1,7}\t(\t*)(?!#)/$1    / or s/^    ?//;
 
 	  if( /^\s+$/ ) {
-	    $empty_line = '<span class="tall">&nbsp;</span>';
+	    $next_tall = '<sup class="tall">&nbsp;</sup>';
 	    next;
 	  } else {
 	    # don't parse comments
-	    $end = s/(#(?: .*?)?)((?:<\/pre>)?)$// ? "<span class='comment'>$1</span>$empty_line$2" : $empty_line;
-	    $empty_line = '';
+	    $end = s/(#|# .*?)?((?:<\/pre>)?)$// ?
+		($1 ? "<span class='comment'>$1</span>$next_tall$2" : "$next_tall$2") :
+		$next_tall;
+	    $next_tall = '';
 	  }
 
 	  s!^([%\$]? ?)(makepp(?:builtin|clean|log|graph|replay|_build_cache_control)?)\b!$1<b>$2</b>!g or
@@ -524,33 +513,37 @@ if ($htmldir_val ne 'none') {
 	  $pre = 0 if m!</pre>!;
 
 	}
-      } elsif ( /^<\/dd>$/ ) { # repair broken nested =over
+      } elsif( /^<\/dd>$/ ) { # repair broken nested =over
 	$dd = 1;
 	next;
-      } elsif ( $dd and /^<(?:d[dt]|\/dl)>/ ) {
+      } elsif( $dd and /^<(?:d[dt]|\/dl)>/ ) {
 	$dd = 0;
-	s!(<strong>-. )(.+?<)!$1<i>$2/i><! ||	# Repetitions of same don't get itemized.
-	s!("item_[^"]*">--[^<=]*=)(.+?) ?<!$1<i>$2</i><! ||
-	s!("item_[^"]*">[^ <,]* )(.+?) ?<!$1<i>$2</i><!
-	  if $has_commands_with_args;		# italicize args
-	s!"item_(\w+)[^"]*">(\1)!"$1">$2!i;	# fix =item anchor
-	s!"item_(_2d\w+)">!"$1">! ||		# fix =item hexcode-anchor
-	s! name="item_(_\w+?)(?:__[25][db].*?)?">!$seen{$1}++ ? '>' : " name='$1'>"!e;
-	s!"item_(%[%\w]+)">!(my $i = $1) =~ tr/%/_/; "'$i'>"!e; # Perl 5.6
+	if( !html_short_names ) {
+	  s!(<strong>-. )(.+?<)!$1<i>$2/i><! ||	# Repetitions of same don't get itemized.
+	    s!("item_[^"]*">--[^<=]*=)(.+?) ?<!$1<i>$2</i><! ||
+	      s!("item_[^"]*">[^ <,]* )(.+?) ?<!$1<i>$2</i><!
+		if $has_commands_with_args;		# italicize args
+	  s!"item_(\w+)[^"]*">(\1)!"$1">$2!i;	# fix =item anchor
+	  s!"item_(_2d\w+)">!"$1">! ||		# fix =item hexcode-anchor
+	    s! name="item_(_\w+?)(?:__[25][db].*?)?">!$seen{$1}++ ? '>' : " name='$1'>"!e;
+	  s!"item_(%[%\w]+)">!(my $i = $1) =~ tr/%/_/; "'$i'>"!e; # Perl 5.6
+	}
       } elsif( ! s/<title>\w+/<title>$title/ ) {
 	s!([\s>]|^)([Mm]ake)pp([\s,.:])!$1<i><span class="makepp">$2</span>pp</i>$3!g;
 	s!("#_)(?=\w+">&amp;)!${1}26!g;		# fix builtins index link
 	s!<li></li>!<li>!;
-	s!(<strong>-. )(.+?<)!$1<i>$2/i><! ||	# Repetitions of same don't get itemized.
-	s!("item_[^"]*">--[^<=]*=)(.+?) ?<!$1<i>$2</i><! ||
-	s!("item_[^"]*">[^ <,]* )(.+?) ?<!$1<i>$2</i><!
-	  if $has_commands_with_args;		# italicize args
-	s!"item_(\w+)[^"]*">(\1)!"$1">$2!i;	# fix =item anchor
-	s!"item_(_2d\w+)">!"$1">! ||		# fix =item hexcode-anchor
-	s! name="item_(_\w+?)(?:__[25][db].*?)?">!$seen{$1}++ ? '>' : " name='$1'>"!e;
-	s!#item_(\w+)">!#$1">!g;		# fix =item link
-	s!"item_(%[%\w]+)">!(my $i = $1) =~ tr/%/_/; "'$i'>"!e; # Perl 5.6
-	s!#item_(%[%\w]+)">!(my $i = $1) =~ tr/%/_/; "#$i\">"!ge; # Perl 5.6
+	if( !html_short_names ) {
+	  s!(<strong>-. )(.+?<)!$1<i>$2/i><! ||	# Repetitions of same don't get itemized.
+	    s!("item_[^"]*">--[^<=]*=)(.+?) ?<!$1<i>$2</i><! ||
+	      s!("item_[^"]*">[^ <,]* )(.+?) ?<!$1<i>$2</i><!
+		if $has_commands_with_args;		# italicize args
+	  s!"item_(\w+)[^"]*">(\1)!"$1">$2!i;	# fix =item anchor
+	  s!"item_(_2d\w+)">!"$1">! ||		# fix =item hexcode-anchor
+	    s! name="item_(_\w+?)(?:__[25][db].*?)?">!$seen{$1}++ ? '>' : " name='$1'>"!e;
+	  s!#item_(\w+)">!#$1">!g;		# fix =item link
+	  s!"item_(%[%\w]+)">!(my $i = $1) =~ tr/%/_/; "'$i'>"!e; # Perl 5.6
+	  s!#item_(%[%\w]+)">!(my $i = $1) =~ tr/%/_/; "#$i\">"!ge; # Perl 5.6
+	}
 	s!\./(\.html.+? in the (.+?) manpage<)!$2$1!g;		  # at least up to 5.8.5
 	highlight_keywords while /<code>/g;	# g creates "pseudo-BOL" \G for keywords
 	highlight_variables;
@@ -643,7 +636,7 @@ sub substitute_file {
     my $perl = PERL;
     s@^\#!\s*(\S+?)/perl(\s|$)@\#!$perl$2@o	# Handle #!/usr/bin/perl.
        if $. == 1;
-    s/\\?\@(\w+)\@/${$1}/g;		# Substitute anything containg @xyz@.
+    s/\\?\@(\w+)\@/$$1/g;		# Substitute anything containg @xyz@.
     if( /^#\@\@(\w+)/ ) {		# Substitute anything containg #@@xyz ... #@@
       1 until substr( <INFILE>, 0, 3 ) eq "#\@\@";
       $_ = $$1;
@@ -718,3 +711,5 @@ sub read_with_prompt {
   }
   return $_;
 }
+__DATA__
+Dummy line for newline test.

@@ -4,7 +4,7 @@ is_windows < 1 &&		# Strawberry and ActiveState don't export empty vars
 is_windows != -2		# Msys 5.6.1 dumps on delete from %ENV
 ###	20	755	1100740057	1210256087	makepp_test_script.pl
 $ENV{FOO} = '';
-makepp 'RUN=1';
+makepp qw(RUN=1 PARSER=foo);
 cp 'a', 'a-1';
 cp 'b', 'b-1';
 cp 'c', 'c-1';
@@ -13,7 +13,7 @@ rename 'rescan', 'rescan-1';
 
 # a gets rebuilt, because $A goes from undef to ''
 $ENV{A} = '';
-makepp qw(B_VAL=b_val MY_PATH_VAL=.:nodir RUN=2);
+makepp qw(B_VAL=b_val MY_PATH_VAL=.:nodir RUN=2 PARSER='Mpp::CommandParser::foo');
 cp 'a', 'a-2';
 cp 'b', 'b-2';
 cp 'c', 'c-2';
@@ -22,8 +22,8 @@ rename 'rescan', 'rescan-2';
 
 $ENV{A} = 'a';
 delete $ENV{FOO};
-makepp qw(B_VAL=b F_IN_DIR=1 RUN=3);
-###	52	644	1100739927	1210850233	Makeppfile
+makepp qw(B_VAL=b F_IN_DIR=1 RUN=3 PARSER=bar);
+###	53	644	1289339760	1289339760	Makeppfile
 $(phony default): a b c d
 
 export RUN := $(RUN)
@@ -47,12 +47,13 @@ perl_begin
 	close(RESCAN);
 	$self->add_env_dependency("FOO");
     }
+    sub factory {
+       shift;
+       __PACKAGE__->new( @_ );
+    }
  }
 
- sub parser_foo {
-    require Mpp::ActionParser::Specific;
-    return new Mpp::ActionParser::Specific("foo");
- }
+ *p_bar = \&Mpp::CommandParser::foo::factory;
 perl_end
 
 a:
@@ -66,7 +67,7 @@ b:
 c: : env "f in MY_PATH"
 	echo $$RUN > $@
 
-d: : scanner foo
+d: : parser $(PARSER)		# try both class and function
 	echo $$RUN > $@
 
 ifdef F_IN_DIR

@@ -1,4 +1,4 @@
-# $Id: C.pm,v 1.25 2009/02/11 23:22:37 pfeiffer Exp $
+# $Id: C.pm,v 1.28 2010/11/17 21:35:52 pfeiffer Exp $
 
 =head1 NAME
 
@@ -36,12 +36,12 @@ use Mpp::Text ();
 # The base class uses a scalar to describe a scope; we use arrayrefs.
 # These are the indices into the arrayref that describes a scope:
 BEGIN {
-  *ACT = \&Mpp::Text::CONST0;	# Are we outside of a disabled '#if' block
-  *PREV_ACT = \&Mpp::Text::CONST1; # Has the current or a previous block of the
+  (*ACT,			# Are we outside of a disabled '#if' block
+   *PREV_ACT,			# Has the current or a previous block of the
 				# current '#if'...'#elif' chain been active?
-  *EXPR = \&Mpp::Text::CONST2;	# The expression that caused the state to be
+   *EXPR,			# The expression that caused the state to be
 				# unknown, if any.
-  *UNKNOWN = \&Mpp::Text::CONST3; #any number except 0 or 1
+   *UNKNOWN) = @Mpp::Text::N;	# any number except 0 or 1
 }
 
 our $dont_scan_hook;
@@ -213,7 +213,7 @@ sub get_directive {
 # Override this in subclasses for picking up additional directives.
 # Return 0 if not interested, or undef to abort.
 #
-*other_directive = \&Mpp::Text::CONST0;
+*other_directive = $Mpp::Text::N[0];
 
 sub xscan_file {
   my ($self, $cp, undef, $finfo, $conditional, $fh)=@_;
@@ -244,7 +244,7 @@ sub xscan_file {
     }
     # Get rid of single line comments.
     s!/(/.*|\*.*?\*/)!$continued_comment=1 if $continuation && ord $1 == ord '/'; ' '!eg;
-    # Parse multiline instructions and comments.
+    # Scan multiline instructions and comments.
     if( s!/\*.*! ! and $pending_comment = 1 or $continuation ) {
       chomp;
       $line_so_far .= $_;
@@ -261,21 +261,21 @@ sub xscan_file {
       defined $ret or return undef;
       if( $ret ) {
 	warn "$absname:$.: Ignoring trailing cruft \"$_\"\n" if $_;
-      }
-      elsif($directive eq 'include' ) {
+      } elsif( $directive eq 'include' ) {
 	$_ = $self->expand_macros($_) if $conditional;
         my $userinc = s/^\"([^"]*)\"//;
 	if($userinc || s/^\<([^>]*)\>//) {
+	  warn "$absname:$.: Ignoring trailing cruft \"$_\"\n" if /\S/;
 	  local $_;		# Preserve $_ for later
-          warn "$absname:$.: File $1 included because condition ", $self->get_bad_expr," cannot be evaluated\n"
-	    if ($go == UNKNOWN);
+          warn "$absname:$.: File $1 included because condition ", $self->get_bad_expr, " cannot be evaluated\n"
+	    if $go == UNKNOWN;
 	  $self->include($cp, $userinc ? 'user' : 'sys', $1, $finfo)
 	    or return undef;
+	} else {
+	  warn "$absname:$.: Include $_ not scanned\n" if /\S/;
 	}
 	$scanworthy = 1;
-        warn "$absname:$.: Ignoring trailing cruft \"$_\"\n" if /\S/;
-      }
-      elsif($conditional) {
+      } elsif( $conditional ) {
 	if( $go && $directive eq 'define' && /^(\w+)\s*(.*)/ ) {
 	  $self->set_var($1, $2);
 	  if( defined $guard_scope && $guard_scope == $self->{SCOPES}[-1] && $guard eq $1 ) {
@@ -283,12 +283,10 @@ sub xscan_file {
 	    next LINE;
 	  }
 	  $scanworthy = 1;
-	}
-	elsif( $go && $directive eq 'undef' && /^\w+$/ ) {
+	} elsif( $go && $directive eq 'undef' && /^\w+$/ ) {
 	  $self->set_var($_, undef);
 	  $scanworthy = 1;
-	}
-	elsif( (my $no=$directive eq 'ifndef') || $directive eq 'ifdef' and /^\w+$/ ) {
+	} elsif( (my $no=$directive eq 'ifndef') || $directive eq 'ifdef' and /^\w+$/ ) {
 	  my $def = defined $self->get_var( $_ );
           $go = $no ? !$def : $def;
           $go = $go ? 1 : 0;
@@ -298,19 +296,16 @@ sub xscan_file {
 	    $guard = $_;
 	    next LINE;
 	  }
-	}
-	elsif($directive eq 'else') {
+	} elsif( $directive eq 'else' ) {
 	  $self->update_scope(1);
 	  warn "$absname:$.: Ignoring trailing cruft \"$_\"\n" if $_;
-	}
-	elsif($directive eq 'endif') {
+	} elsif( $directive eq 'endif' ) {
 	  $guarded = $guard_scope = 0 # Include guard is ok so far.
 	    if $guarded && $guard_scope == $self->{SCOPES}[-1];
 	  $self->pop_scope();
 	  warn "$absname:$.: Ignoring trailing cruft \"$_\"\n" if $_;
 	  next LINE;
-	}
-	elsif($directive eq 'if' ) {
+	} elsif( $directive eq 'if' ) {
 	  my $maybe_guard = $1
 	    if !defined $guarded && !defined $guard && /^!\s*defined\s*\(?\s*(\w+)\s*\)?$/;
           $self->update_scope(undef, "$absname:$.:", $_);
@@ -319,8 +314,7 @@ sub xscan_file {
 	    $guard = $maybe_guard;
 	    next LINE;
 	  }
-	}
-        elsif($directive eq 'elif' ) {
+	} elsif( $directive eq 'elif' ) {
           $self->update_scope(1, "$absname:$.:", $_);
 	} elsif( !$scanworthy && !$go && ($directive eq 'define' || $directive eq 'undef') ) {
 	  $scanworthy = 1;	# Not doing it this time, but maybe from another command.

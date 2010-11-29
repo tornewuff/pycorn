@@ -2,15 +2,17 @@
 
 makepp_build_check -- How makepp decides to rebuild files
 
-=for vc $Id: makepp_build_check.pod,v 1.10 2009/02/09 22:07:39 pfeiffer Exp $
+=for vc $Id: makepp_build_check.pod,v 1.12 2010/09/29 22:06:41 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
-L<B<a>rchitecture_independent|/architecture_independent>,E<nbsp>
-L<B<e>xact_match|/exact_match>,E<nbsp>
-L<B<i>gnore_action|/ignore_action>,E<nbsp>
-L<B<o>nly_action|/only_action>,E<nbsp>
-L<B<t>arget_newer|/target_newer>
+=for genindex '\w+' makepp_build_check.pod
+
+B<A:>E<nbsp>L</architecture_independent>,E<nbsp>
+B<E:>E<nbsp>L</exact_match>,E<nbsp>
+B<I:>E<nbsp>L</ignore_action>,E<nbsp>
+B<O:>E<nbsp>L</only_action>,E<nbsp>
+B<T:>E<nbsp>L</target_newer>
 
 Makepp stores a variety of information about how any given file was
 built the last time.  This information includes the build command, the
@@ -21,18 +23,17 @@ decides to rebuild the file.  The build check method is what controls
 makepp's decision to rebuild.  It decides which information to look at,
 and which to ignore.
 
-Makepp usually picks the correct build check method automatically.
-However, you can change the signature method for an individual rule by
-using C<:build_check> modifier on the rule (see
-L<makepp_rules/build_check>), or for all rules in a makefile by using
-the C<build_check> statement (see L<makepp_statements/build_check>, or
-for all makefiles at once using the C<-m> or C<--build-check-method>
-command line option (see L<makepp_command/--build-check-method>).
+Makepp usually picks the correct build check method automatically.  However,
+you can change the signature method for an individual rule by using
+L<:build_check|makepp_rules/build_check_build_check_method> modifier on the
+rule, or for all rules in a makefile by using the
+L<build_check|makepp_statements/build_check_build_check_method> statement, or
+for all makefiles at once using the L<-m or
+--build-check-method|makepp_command/build_check_method> command line option.
 
 =head2 Build check methods included in the distribution
 
-At present, there are four build check methods included in the
-distribution.
+At present, there are five build check methods included in the distribution:
 
 =over 4
 

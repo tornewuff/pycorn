@@ -2,7 +2,7 @@
 
 makepp_builtin -- Built in rules for makepp
 
-=for vc $Id: makepp_builtin.pod,v 1.9 2007/05/29 20:06:20 pfeiffer Exp $
+=for vc $Id: makepp_builtin.pod,v 1.10 2010/07/16 21:15:23 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -92,9 +92,9 @@ The link rule looks something like this:
     xyz: $(infer_objects xyz.o, *.o)
  	$(infer_linker $(inputs)) $(inputs) $(LDFLAGS) $(LDLIBS) $(LIBS) -o $(output)
 
-C<infer_objects> attempts to infer what other C<.o> files need to be linked in
-based on what C<.h> files are included; see L<makepp_functions/infer_objects>
-for details.
+L<C<$(infer_objects)>|makepp_functions/infer_objects_file1_file2_pattern>
+attempts to infer what other C<.o> files need to be linked in based on what
+C<.h> files are included.
 
 The "inferred linker" is a special bit of magic that turns into C<$(CC)>
 if all the sources are C code, C<$(CXX)> if any of the sources are C++,

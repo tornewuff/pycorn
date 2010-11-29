@@ -91,12 +91,14 @@ BEGIN {
 				# executable, which should always be in the
 				# directory above us.
 
-  push @INC, substr $makepp_path, 0, rindex $makepp_path, '/';
+  our $datadir = substr $makepp_path, 0, rindex $makepp_path, '/';
+  push @INC, $datadir;
   unless( eval { require Mpp::Text } ) {
     open my $fh, '<', $makepp_path;
     while( <$fh> ) {
       if( /^\$datadir = / ) {
 	eval;
+	$INC[-1] = $datadir;
 	require Mpp::Text;
 	last;
       }
@@ -203,7 +205,6 @@ for( $ENV{PATH} ) {
   $_ = "$source_path$sep$_";
 }
 
-
 #
 # Equivalent of system() except that it handles INT signals correctly.
 #
@@ -238,7 +239,7 @@ sub makepp(@) {
     rename log => 'log' . $log_count++;
     chdir '..';
   }
-  system_intabort \"makepp$suffix", PERL, -f 'makeppextra.pm' ? '-Mmakeppextra' : (), $makepp_path.$suffix, @_;
+  system_intabort \"makepp$suffix", PERL, '-w', -f 'makeppextra.pm' ? '-Mmakeppextra' : (), $makepp_path.$suffix, @_;
   1;				# Command succeeded.
 }
 
@@ -301,7 +302,7 @@ sub un_spar() {
 
 # With -d report '.' for success, 's' for skipped because of symlink failure,
 # 'w' for not applicable on windows, '-' for otherwise skipped.
-sub dot($$) {
+sub dot($$;$) {
   if( defined $_[0] ) {
     if( $test ) {
       for( "$_[1]" ) {
@@ -313,6 +314,7 @@ sub dot($$) {
       print $_[$dot ? 0 : 1];
       $dotted = 1 if $dot;
     }
+    return;
   } elsif( $test ) {
     print "not ok $test $_[1]";
     $test++;
@@ -320,6 +322,11 @@ sub dot($$) {
     print "\n" if defined $dotted;
     print "FAILED $_[1]";
     undef $dotted;
+  }
+  if( $_[2] ) {			# See the error in logs that people send in.
+    open my $fh, '>>', $_[2];
+    print $fh "\nmakepp: run_tests.pl `FAILED' $_[1]"; # Format that Emacs makes red.
+    close $fh;
   }
 }
 
@@ -456,6 +463,7 @@ foreach $archive (@ARGV) {
       $page_break = '';
       $log_count = 1;
       if( -r 'makepp_test_script.pl' ) {
+	local %ENV = %ENV;	# some test wrappers change it.
 	do 'makepp_test_script.pl' or
 	  die 'makepp_test_script.pl ' . ($@ ? "died: $@" : "returned false\n");
       } elsif( -x 'makepp_test_script' ) {
@@ -486,7 +494,7 @@ foreach $archive (@ARGV) {
 	open MTFILE, "$tdir/$mtfile"
 	  or die "$mtfile\n";
 	my $mtfile_contents = <MTFILE>; # Read in the whole file.
-	$mtfile_contents =~ s/\r//g; # For cygwin, strip out the extra CRs.
+	$mtfile_contents =~ tr/\r//d; # For cygwin, strip out the extra CRs.
 	$mtfile_contents eq $tfile_contents or push @errors, $mtfile;
     }, 'answers' if -d 'answers';
     close TFILE;
@@ -541,9 +549,9 @@ foreach $archive (@ARGV) {
     } elsif ($@ =~ /^\S+$/) {	# Just one word?
       my $loc = $@;
       $loc =~ s/\n//;		# Strip off the trailing newline.
-      dot undef, "$testname (at $loc)\n";
+      dot undef, "$testname (at $loc)\n", $log;
     } else {
-      dot undef, "$testname: $@";
+      dot undef, "$testname: $@", $log;
     }
     ++$n_failures;
     close TFILE; close MTFILE;	# or cygwin will hang

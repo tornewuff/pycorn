@@ -2,9 +2,18 @@
 
 makepp_build_cache -- How to set up and use build caches
 
-=for vc $Id: makepp_build_cache.pod,v 1.22 2009/02/09 22:07:39 pfeiffer Exp $
+=for vc $Id: makepp_build_cache.pod,v 1.24 2010/09/29 22:06:41 pfeiffer Exp $
 
 =head1 DESCRIPTION
+
+=for genindex '(?!atime)[a-z_]+' makepp_build_cache.pod
+
+B<C:>E<nbsp>L<clean|/clean_option_path_to_cache>,
+  L<create|/create_option_path_to_cache>,E<nbsp>
+B<M:>E<nbsp>L<makepp_build_cache_control|/makepp_build_cache_control_command>,
+  L<mppbcc|/makepp_build_cache_control_command>,E<nbsp>
+B<S:>E<nbsp>L<show|/show_option_path_to_cache>,
+  L<stats|/stats_option_path_to_cache>
 
 A B<build cache> is a directory containing copies of previous targets that
 makepp already built.  When makepp is asked to build a new target, it sees if
@@ -247,10 +256,11 @@ Once the build cache has been created, it is now available to makepp.  There
 are several options you can specify during creation; see L<How to manage a
 build cache> for details.
 
-A build cache is specified with the C<--build-cache> command line option
-(see L<makepp_command/--build-cache>), with the C<build_cache> statement
-within a makefile (see L<makepp_statements/build_cache>), or with the
-C<:build_cache> rule modifier (see L<makepp_rules/build_cache>).
+A build cache is specified with the
+L<--build-cache|makepp_command/b_directory> command line option, with the
+L<build_cache|makepp_statements/build_cache_path_to_build_cache> statement within a
+makefile, or with the
+L<:build_cache|makepp_rules/build_cache_path_to_build_cache> rule modifier.
 
 The most useful ways that I have found so far to work with build caches
 are:
@@ -362,12 +372,17 @@ the build cache either.
 
 =head2 How to manage a build cache
 
+=over
+
+=item makepp_build_cache_control I<command ...>
+
+=item mppbcc I<command ...>
+
+=back
+
 B<makepp_build_cache_control, mppbcc> is a utility that administers build caches for
 makepp.  What B<makepp_build_cache_control> does is determined by the first
 word of its argument.
-
-    makepp_build_cache_control command ...
-    mppbcc command ...
 
 In fact this little script is a wrapper to the following command, which you
 might want to call directly in your cron jobs, where the path to
@@ -390,7 +405,7 @@ L<makepp_builtins>, are:
 
 =over 4
 
-=item create [option ...] path/to/cache ...
+=item create I<[option ...] path/to/cache ...>
 
 Creates the build caches with the given options.  Valid options are:
 
@@ -398,11 +413,11 @@ Standard options: C<-v, --verbose>
 
 =over 4
 
-=item -e group
+=item -e I<group>
 
-=item --extend=group
+=item --extend=I<group>
 
-=item --extend-group=group
+=item --extend-group=I<group>
 
 Add the new build cache to the C<group>.  This may have been a single stand
 alone build cache upto now.
@@ -424,9 +439,9 @@ allow hard linking to symlinks.  In that case cleaning will migrate the
 members to the preferred disk.  You may create several caches within a group
 with this option, in which case the files will be migrated randomly to them.
 
-=item -s n1,n2,...
+=item -s I<n1,n2,...>
 
-=item --subdir-chars=n1,n2,...
+=item --subdir-chars=I<n1,n2,...>
 
 Controls how many levels of subdirectories are created to hold the cached
 files, and how many files will be in each subdirectory.  The first I<n1>
@@ -445,11 +460,11 @@ will get you quite far.  On a file system optimized for huge directories you
 might even say S<C<-s ''>> or S<C<--subdir-chars=>> to store all files at the
 top level.
 
-=item -m perms
+=item -m I<perms>
 
-=item --mode=perms
+=item --mode=I<perms>
 
-=item --access-permissions=perms
+=item --access-permissions=I<perms>
 
 Specifies the directory access permissions when files are added to the build
 cache.  If you want other people to put files in your build cache, you must
@@ -473,7 +488,7 @@ apply throughout the lifetime of the build cache.
 
 =back
 
-=item clean [option ...] /path/to/cache ...
+=item clean I<[option ...] /path/to/cache ...>
 
 Cleans up the cache.  Makepp never deletes files from the build cache; it is
 up to you to delete the files with this command.  For multiuser caches the
@@ -512,11 +527,11 @@ Standard options: C<-v, --verbose>
 
 =over
 
-=item -a spec
+=item -a I<spec>
 
-=item --atime spec
+=item --atime I<spec>
 
-=item --access-time spec
+=item --access-time I<spec>
 
 The last time the file was read.  For a linked file this can happen anytime.
 Otherwise this is the last time the file was copied.  On badly behaved systems
@@ -546,11 +561,11 @@ symlinks, because it may migrate members from one group to another.
 Subsequent non blended cleans, may then clean them form the original group
 prematurely.
 
-=item -c spec
+=item -c I<spec>
 
-=item --ctime spec
+=item --ctime I<spec>
 
-=item --change-time spec
+=item --change-time I<spec>
 
 The last change time of the file's inode.  In a linking situation this could
 be the time when the last user recreated the file differently, severing his
@@ -559,11 +574,11 @@ had to change the user.  On well behaved systems this could also be the time
 when the last tape backup or search index creation covered its marks by
 resetting the atime.
 
-=item -m spec
+=item -m I<spec>
 
-=item --mtime spec
+=item --mtime I<spec>
 
-=item --modification-time spec
+=item --modification-time I<spec>
 
 The last modification time of the file.  As explained elsewhere it is
 discouraged to have makepp update a file.  So the last modification will
@@ -571,11 +586,11 @@ usually be the time of creation.  (But in the future makepp may optionally
 update the mtime when deleting files.  This is so that links on atime-less
 filesystems or copies can be tracked.)
 
-=item -g group
+=item -g I<group>
 
-=item --newgrp=group
+=item --newgrp=I<group>
 
-=item --new-group=group
+=item --new-group=I<group>
 
 Set the effective and real group id to group (name or numeric).  Only root may
 be able to do this.  This is needed when you use grouped build caches, and you
@@ -605,11 +620,11 @@ This option makes C<clean> read every symbolic link which has no external hard
 links to verify that it points to the desired member.  As this is somewhat
 expensive, it is sugested doing this only at night.
 
-=item -M spec
+=item -M I<spec>
 
-=item --in-mtime spec
+=item --in-mtime I<spec>
 
-=item --incoming-modification-time spec
+=item --incoming-modification-time I<spec>
 
 The last modification time for files in the incoming directory.
 This directory is used for temporary files with process-specific names that
@@ -637,11 +652,11 @@ go from saturday 1:00 to monday 1:00, or southern hemisphere winter weekends
 from friday 23:00 to sunday 23:00 or however much your timezone changes the
 time.  Holidays are also not taken into account.
 
-=item -p perlcode
+=item -p I<perlcode>
 
-=item --perl=perlcode
+=item --perl=I<perlcode>
 
-=item --predicate=perlcode
+=item --predicate=I<perlcode>
 
 TODO: adapt this description to group changes!
 
@@ -655,19 +670,19 @@ If I<perlcode> returns C<undef> it is as if it weren't there, that is the
 other options decide.  If it returns true the file is deleted.  If it returns
 false, the file is retained.
 
-=item -s spec
+=item -s I<spec>
 
-=item --size spec
+=item --size I<spec>
 
 The file size specification works just like time specifications, with C<+> for
 bigger than or C<-> for smaller than, except that the units must be C<c>
 (bytes, the default), C<k> (kilobytes), C<M> (megabytes) or C<G> (gigabytes).
 
-=item -u user
+=item -u I<user>
 
-=item --user=user
+=item --user=I<user>
 
-=item --set-user=user
+=item --set-user=I<user>
 
 This option is very different.  It does not say when to delete a file.
 Instead it applies to the files that do not get deleted.  Note that on many
@@ -699,7 +714,7 @@ objects being rapidly created.  Something like an hourly run with
 C<--mtime=-2h --ctime=+1h> during the daytime will catch those guys the
 creator deleted within less than an hour, and nobody else has wanted since.
 
-=item show [option ...] /path/to/cache ...
+=item show I<[option ...] /path/to/cache ...>
 
 This is a sort of recursive C<ls -l> or C<stat> command, which shows the
 original owner too, for when the owner of the cached file has been changed and
@@ -751,9 +766,9 @@ The size (of one copy) in bytes.
 =item atime, mtime, ctime
 
 In the long verbose form you get the file access (read) time, the modification
- time and the inode change time (e.g. when some user deleted his external link
- to the cached file).  In the short standard form you get only one of the
- three times in three separate columns:
+time and the inode change time (e.g. when some user deleted his external link
+to the cached file).  In the short standard form you get only one of the three
+times in three separate columns:
 
 =item AD, MD, CD
 
@@ -819,16 +834,16 @@ non-verbose mode.
 
 Show only deletable files, i.e. those with an external link count of 0.
 
-=item -p pattern
+=item -p I<pattern>
 
-=item --pattern=pattern
+=item --pattern=I<pattern>
 
 I<Pattern> is a bash style file name pattern (i.e. ?, *, [], {,,}) matched
 against member names after the underscore separating them from the key.
 
-=item -s list
+=item -s I<list>
 
-=item --sort=list
+=item --sort=I<list>
 
 In non-verbose mode change the sorting order.  The list is a case insensitive
 comma- or space-separated order of column titles.  There are two special
@@ -843,7 +858,7 @@ empty list.
 
 =back
 
-=item stats [option ...] /path/to/cache ...
+=item stats I<[option ...] /path/to/cache ...>
 
 This outputs several tables of statistics about the build cache contents.
 Each table is split into three column groups.  The first column varies for
@@ -897,9 +912,9 @@ copies become symlinks when cleaning finds they have no more external links.
 Display the first three tables in much finer granularity.  The column headings
 change to B<AH>, B<CH> or B<MH> accordingly.
 
-=item -p pattern
+=item -p I<pattern>
 
-=item --pattern=pattern
+=item --pattern=I<pattern>
 
 I<Pattern> is a bash style file name pattern (i.e. ?, *, [], {,,}) matched
 against member names after the underscore separating them from the key.  All
@@ -1025,4 +1040,3 @@ Furthermore, there is a peculiar race that can occur when a file is
 simultaneously aged and replaced, in which the files don't correspond even
 after the NFS cache flushes.
 This appears to be unavoidable.
-

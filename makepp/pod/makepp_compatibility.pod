@@ -2,7 +2,7 @@
 
 makepp_compatibility -- Compatibility list for makepp
 
-=for vc $Id: makepp_compatibility.pod,v 1.22 2010/04/22 20:35:25 pfeiffer Exp $
+=for vc $Id: makepp_compatibility.pod,v 1.26 2010/11/17 21:34:28 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -37,54 +37,58 @@ list below.  The first two lines are special, based on the OS field being
 empty.  This is converted to html by install.pl and readable as is in other
 formats.  The 1st header line is currently not dynamic.
 
-		#||	5.6		#|||||||||			5.8						#|	 5.10	# 5.12	#
+		#||	5.6		#|||||||||			5.8						#|	5.10	#||	5.12		#
 
-		# .0	| .1	| .2	# .0	| .1	| .2	| .3	| .4	| .5	| .6	| .7	| .8	| .9	# .0	| .1	# .0	#
+		# .0	| .1	| .2	# .0	| .1	| .2	| .3	| .4	| .5	| .6	| .7	| .8	| .9	# .0	| .1	# .0	| .1	| .2	#
 
- GNU/Linux (x86)# x	| x	| req	# x	| x	| x	| x	| x	|	| x	| x	| x	| x	# x	| x	# x	#
+ GNU/Linux (x86)# x	| x	| req	# x	| x	| x	| x	| x	|	| x	| x	| x	| x	# x	| x	# x	| x	| x	#
 
- GNU/Linux (amd64)#	|	|	#	|	|	|	|	| x	|	|	|	|	#	|	#	#
+ GNU/Linux (amd64)#	|	|	#	|	|	|	|	| x	|	|	|	|	#	|	#	|	| x	#
 
- GNU/Linux (alpha)#	| x	|	#	|	|	|	|	|	|	|	|	|	#	|	#	#
+ GNU/Linux (alpha)#	| x	|	#	|	|	|	|	|	|	|	|	|	#	|	#	|	|	#
 
- GNU/Linux (S/390)#	|	| x	#	|	|	|	|	|	|	|	| x	| x	# x	| x	#	#
+ GNU/Linux (S/390)#	|	| x	#	|	|	|	|	|	|	|	| x	| x	# x	| x	#	|	|	#
 
- FreeBSD (x86)	#	| x	| x	#	|	|	|	|	|	|	|	| x	|	# x	|	#	#
+ FreeBSD (x86)	#	| x	| x	#	|	|	|	|	|	|	|	| x	| x	# x	| x	# x	| x	| x	#
 
- NetBSD (alpha)	#	|	|	#	|	|	|	|	|	|	|	|	|	# x	|	#	#
+ NetBSD (x86)	#	|	|	#	|	|	|	|	|	|	|	|	| x	# x	| x	# x	| x	| x	#
 
- OpenBSD (x86)	#	|	|	# x	|	|	|	|	|	|	|	|	|	#	|	#	#
+ NetBSD (alpha)	#	|	|	#	|	|	|	|	|	|	|	|	| x	# x	| x	#	|	|	#
 
-
- AIX (PPC)	#	|	|	#	| x	| x	|	|	|	|	| x	| x	|	#	|	#	#
-
- Darwin (PPC)	# x	|	|	#	|	|	|	|	|	|	|	|	|	#	|	#	#
-
- HP/UX (IA64)	#	|	|	# HPUX	|	|	| HPUX	|	|	|	|	|	|	#	|	#	#
-
- Irix		#	|	|	#	|	|	|	|	|	|	|	| x	|	#	|	#	#
-
- Reliant (Mips)	# Nest	| Nest	|	#	|	|	|	|	|	|	|	|	|	#	|	#	#
-
- Solaris (Sparc)# x	| req	|	# x	| x	| x	| x	| x	| x	| x	| x	| x	| x	# x	|	# x	#
-
- Solaris (64bit)#	|	|	#	| x	|	|	|	|	|	|	| x	|	#	|	#	#
-
- Solaris (x86)	#	| x	|	#	| x	|	|	|	|	|	|	| x	|	#	|	#	#
+ OpenBSD (x86)	#	|	|	# x	|	|	|	|	|	|	|	|	| x	# x	| x	# x	| x	| x	#
 
 
- BS2000 (S/390)	#	| x	|	#	| x	|	|	|	|	|	|	|	|	# /	|	#	#
+ AIX (PPC)	#	|	|	#	| x	| x	|	|	|	|	| x	| x	|	#	|	#	|	|	#
 
- z/OS USS (S/390)#	|	|	#	|	|	|	|	|	|	|	| zOS	|	# /	|	#	#
+ Darwin (x86)	# x	|	|	#	|	|	|	|	|	|	|	|	|	#	|	#	| x	|	#
+
+ Darwin (PPC)	# x	|	|	#	|	|	|	|	|	| x	| x	| x	| x	# x	| x	# x	| x	| x	#
+
+ HP/UX (IA64)	#	|	|	# HPUX	|	|	| HPUX	|	|	|	|	|	|	#	|	#	|	|	#
+
+ Irix		#	|	|	#	|	|	|	|	|	|	|	| x	|	#	|	#	|	|	#
+
+ Reliant (Mips)	# Nest	| Nest	|	#	|	|	|	|	|	|	|	|	|	#	|	#	|	|	#
+
+ Solaris (Sparc)# x	| req	|	# x	| x	| x	| x	| x	| x	| x	| x	| x	| x	# x	|	# x	| x	|	#
+
+ Solaris (64bit)#	|	|	#	| x	|	|	|	|	|	|	| x	|	# x	|	#	|	|	#
+
+ Solaris (x86)	#	| x	|	#	| x	|	|	|	|	|	|	| x	| x	# x	| x	# x	| x	| x	#
 
 
- Cygwin (x86)	#	|	|	#	|	|	|	|	|	|	| Win	| x	|	# x	|	#	#
+ BS2000 (S/390)	#	| x	|	#	| x	|	|	|	|	|	|	|	|	# /	|	#	|	|	#
 
- MinGW MSYS	#	| Win	|	#	|	|	|	|	|	|	|	|	|	#	|	#	#
+ z/OS USS (S/390)#	|	|	#	|	|	|	|	|	|	|	| zOS	|	# /	|	#	|	|	#
 
- Stawberry	#	|	|	#	|	|	|	|	|	|	|	| x	| x	# x	| x	#	#
 
- ActiveState Win# Win	| Win	|	# x	| x	| x	| x	| x	|	| x	| x	| x	| x	# x	| x	# x	#
+ Cygwin (x86)	#	|	|	#	|	|	|	|	|	|	| Win	| x	|	# x	|	#	|	|	#
+
+ MinGW MSYS	#	| Win	|	#	|	|	|	|	|	|	|	|	|	#	|	#	|	|	#
+
+ Stawberry	#	|	|	#	|	|	|	|	|	|	|	| x	| x	# x	| x	# x	|	|	#
+
+ ActiveState Win# Win	| Win	|	# x	| x	| x	| x	| x	|	| x	| x	| x	| x	# x	| x	# x	| x	|	#
 
 =for html </table>
 
@@ -106,7 +110,9 @@ probably ok using these Perls.
 
 There are 4 different Perl environments on Windows, which normally extend one
 another when installed in parallel.  Here they have been tested with a minimal
-PATH, so as to separate them completely:
+PATH, so as to separate them completely.  When using native programs, you may
+need to see the note under
+L<&ln|makepp_builtins/ln_option_sourcefile_destfile>.
 
 =over
 
@@ -133,14 +139,13 @@ makeppgraph test), at least with MD5 support.  But with very few packages
 On B<Strawberry> Perl with only native Windows most customary Unix commands
 (except Gnu compilers) are missing, and the "shell" is extremely primitive.  A
 maximal use of makepp's builtin commands and embedded Perl can increase
-makefile portability.  The builtin C<&ln> command may need C<set
-MAKEPP_LN_CP=1> or C<3>, depending on your file system.
+makefile portability.
 
 While Windows programs can handle normal slashes as directory separators, this
 does not work for command names.  Those should always be portably written as
 F<dir$/command>, where C<$/> gets replaced by a forward or backward slash,
 depending on the environment.  If you tell makepp, via the SHELL variable,
-where to find a a Unix-like Shell, you don't have these worries.
+where to find a Unix-like Shell, you don't have these worries.
 
 It cannot do smart recursive makes (but who would want them, since they are
 known to be a broken paradigm) and B<parallel> builds.
@@ -158,8 +163,9 @@ rewrite Mpp/File.pm so as to have a needed workaround for an lstat bug.
 
 On z/OS Unix System Services smart recursive make doesn't work.  If your
 compiler is picky about option order, you may have to write your own rules.
-(Perl 5.10.0 is not compilable on an Ebcdic system and for 5.8.8 in
-miniperlmain.c you may have to remove the silly "(void)env;".)
+(To compile Perl 5.8.8 in miniperlmain.c you may have to remove the silly
+"(void)env;".  Perl 5.10.0 is not compilable on an Ebcdic system and 5.12.1
+has macro errors with the z/OS C compiler.)
 
 =item Nest
 

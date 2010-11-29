@@ -28,7 +28,7 @@ ifndef STALE
 endif
 
 register_input_suffix echo .x
-d: d.x : scanner c_compilation
+d: d.x : parser c_compilation
     echo $< > $@
 
 x:

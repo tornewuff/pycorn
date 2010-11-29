@@ -2,26 +2,44 @@
 
 makepp_statements -- Various statements in a makefile
 
-=for vc $Id: makepp_statements.pod,v 1.35 2009/12/27 23:19:29 pfeiffer Exp $
+=for vc $Id: makepp_statements.pod,v 1.37 2010/11/17 21:35:52 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
-L<B<a>nd|/Conditionals>, L</autoload>,E<nbsp>
-L<B<b>uild_cache|/build_cache>, L</build_check>,E<nbsp>
-L<B<d>efine|define>,E<nbsp>
-L<B<e>lse|/Conditionals>, L<enddef|/define>, L<endef|/define>, L<endif|/Conditionals>,
-  L</export>,E<nbsp>
-L<B<g>lobal|/global>,E<nbsp>
-L<B<i>fdef|/ifdef>, L</ifeq>, L</ifmakeperl>, L<ifndef|/ifdef>, L<ifneq|/ifeq>,
-  L<ifnsys|/ifsys>, L<ifntrue|/iftrue>, L</ifperl>, L</ifsys>, L</iftrue>, L</include>, L</_include>,E<nbsp>
-L<B<l>oad_makefile|/load_makefile>,E<nbsp>
-L<B<m>ake|/prebuild>, L<makeperl|/perl>, L</makesub>,E<nbsp>
-L<B<n>o_implicit_load|/no_implicit_load>,E<nbsp>
-L<B<o>r|/Conditionals>,E<nbsp>
-L<B<p>erl|/perl>, L</perl_begin>, L<perl_end|/perl_begin>, L</prebuild>,E<nbsp>
-L<B<r>egister_scanner|/register_scanner>, L</register_command_parser>,
-  L</register_input_suffix>, L<repository|/repository>, L</runtime>,E<nbsp>
-L<B<s>ignature|/signature>, L</sub>
+=for genindex '-?\w+' makepp_statements.pod
+
+B<A:>E<nbsp>L<autoload|/autoload_filename>,E<nbsp>
+B<B:>E<nbsp>L<build_cache|/build_cache_path_to_build_cache>,
+  L<build_check|/build_check_build_check_method>,E<nbsp>
+B<D:>E<nbsp>L</define>,E<nbsp>
+B<E:>E<nbsp>L<export|/export_var>,E<nbsp>
+B<G:>E<nbsp>L<global|/global_var>,E<nbsp>
+B<I:>E<nbsp>L<ifdef|/ifdef_variable>,
+  L<ifeq|/ifeq_string1_string2>,
+  L<ifmakeperl|/ifperl_perlcode>,
+  L<ifndef|/ifdef_variable>,
+  L<ifneq|/ifeq_string1_string2>,
+  L<ifnsys|/ifsys_wildcard>,
+  L<ifntrue|/iftrue_expression>,
+  L<ifperl|/ifperl_perlcode>,
+  L<ifsys|/ifsys_wildcard>,
+  L<iftrue|/iftrue_expression>,
+  L<include|/include_makefile>,E<nbsp>
+B<L:>E<nbsp>L<load_makefile|/load_makefile_some_directory_somewhere_makefile>,E<nbsp>
+B<M:>E<nbsp>L<make|/prebuild_target>,
+  L<makeperl|/perl_perlcode>,
+  L<makesub|/sub>,E<nbsp>
+B<N:>E<nbsp>L</no_implicit_load>,E<nbsp>
+B<P:>E<nbsp>L<perl|/perl_perlcode>,
+  L</perl_begin>,
+  L<prebuild|/prebuild_target>,E<nbsp>
+B<R:>E<nbsp>L<register_command_parser|/register_command_parser_command_word_parser>,
+  L<register_input_suffix|/register_input_suffix_command_word_suffix>,
+  L<register_parser|/register_command_parser_command_word_parser>,
+  L<repository|/repository_directory>,
+  L<runtime|/runtime_program_library>,E<nbsp>
+B<S:>E<nbsp>L</signature>,
+  L</sub>
 
 A statement is any line beginning with a word which does not have a C<:> in
 it.  (A colon implies that the line is a rule.)  For example, these are
@@ -81,9 +99,9 @@ middle of rule actions, as in the above example, without disrupting the rule.
 
 =over 4
 
-=item ifeq
+=item ifeq I<string1, string2>
 
-=item ifneq
+=item ifneq I<string1, string2>
 
     ifeq ($(STR1),$(STR2))
        makefile lines if true
@@ -129,10 +147,10 @@ option instead of the C<-g> option.  Furthermore, the program C<strip>
 is run on the resulting binary (in case you happened to link with some
 libraries that were compiled in debug mode).
 
-Sometimes it is easier to use the S< C<$(if )>> or S< C<$(perl )>> function
-instead of a C<ifeq> statement; see the L<S<C<$(if )>>
-function|makepp_functions/if> or L<S<C<$(perl )>>
-function|makepp_functions/perl> for details.
+Sometimes it is easier to use the L<C<$(if)>
+function|makepp_functions/if_string_result_if_string_not_blank_result_if_string_blank>
+or L<C<$(perl)> function|makepp_functions/perl_perlcode> function instead of a
+C<ifeq> statement.
 
 If you just want to see whether a symbol is blank or not, you only need
 to supply a single argument, like this:
@@ -141,9 +159,9 @@ to supply a single argument, like this:
       # what to do if $(EXE_SUFFIX) is not blank
     endif
 
-=item ifdef VARIABLE ...
+=item ifdef I<VARIABLE ...>
 
-=item ifndef VARIABLE ...
+=item ifndef I<VARIABLE ...>
 
 These statements work analogously to the C<ifeq> and C<ifneq> statements,
 except that they test whether any of the variables is defined or not any is
@@ -185,9 +203,9 @@ written using the C<?=> assignment, like this:
 
     CFLAGS ?= -g
 
-=item ifperl perlcode
+=item ifperl I<perlcode>
 
-=item ifmakeperl perlcode
+=item ifmakeperl I<perlcode>
 
 These statements work analogously to the C<ifeq> and C<ifneq> statements,
 except that the tests are in Perl.  The first variant is plain Perl code,
@@ -204,9 +222,9 @@ variable expansion.
       CFLAGS := -g -O2
     endif
 
-=item ifsys wildcard ...
+=item ifsys I<wildcard ...>
 
-=item ifnsys wildcard ...
+=item ifnsys I<wildcard ...>
 
 Tests if the current system makepp is running on matches any of the wildcards
 or not any (i.e. none).
@@ -227,9 +245,9 @@ Shell:
 
     perl -MConfig -e'print "$^O @Config{qw(archname myarchname)} "'; uname -mps
 
-=item iftrue expression
+=item iftrue I<expression>
 
-=item ifntrue expression
+=item ifntrue I<expression>
 
 Tests if the expression evaluates to some value other than zero or the empty
 string.
@@ -343,9 +361,9 @@ power of the perl interpreter to set your variables in arbitrarily
 complicated ways.  You can run shell commands from your perl code,
 access a database, or whatever you want.
 
-=item perl perlcode
+=item perl I<perlcode>
 
-=item makeperl perlcode
+=item makeperl I<perlcode>
 
 This is the same as C<perl_begin>, but using Perl-style braces.  The first
 variant is plain Perl code, while the second variant first passes the
@@ -372,8 +390,9 @@ i.e. no leading whitespace.
 
 =back
 
-For an efficient way to call Perl scripts, see L<makepp_extending/run>.
-Unlike the L<C<$(perl)>|makepp_functions/perl> function, the return value of
+For an efficient way to call Perl scripts, see
+L<C<run>|makepp_extending/run_script_argumentsmakepp_extending/run>.  Unlike
+the L<C<$(perl)>|makepp_functions/perl_perlcode> function, the return value of
 this block is ignored.
 
     perl { print "passed this point in the makefile\n" }
@@ -456,7 +475,7 @@ See L<makepp_extending> for more details and examples.
 
 =over 4
 
-=item autoload filename ...
+=item autoload I<filename ...>
 
 Specifies one or more makefiles to load should an attempt to find a rule for
 a file in this directory otherwise fail.
@@ -486,11 +505,11 @@ change the behavior of rules in the directory's other makefileZ<>(s), as this
 will cause that behavior to depend on whether or not some previously built
 target caused makefiles to be autoloaded.
 
-=item build_cache /path/to/build/cache
+=item build_cache I</path/to/build/cache>
 
 Specifies a path to a build cache.  See L<makepp_build_cache> for details.
 The build cache must already exist; see
-L<makepp_build_cache/makepp_build_cache_control> for how to make it in the
+L<makepp_build_cache/How to manage a build cache> for how to make it in the
 first place.  A C<build_cache> statement in a makefile overrides the
 C<--build-cache> command line option for rules in the makefile, but it may be
 overridden by the C<:build_cache> rule modifier on a per-rule basis.
@@ -498,7 +517,7 @@ overridden by the C<:build_cache> rule modifier on a per-rule basis.
 Specify C<none> instead of a path to a directory if you want to disable
 the build cache for all rules in this makefile.
 
-=item build_check build_check_method
+=item build_check I<build_check_method>
 
 Specifies the default build check method for all rules in this
 makefile.  See L<makepp_build_check> for details.  The C<build_check>
@@ -506,25 +525,25 @@ statement overrides the C<--build-check-method> command line option for
 all rules in the makefile, but may be overridden by the C<:build_check>
 modifier on a per-rule basis.
 
-=item export VAR ...
+=item export I<VAR ...>
 
-=item export assignment
+=item export I<assignment>
 
     export PATH := $(PWD):$(PATH)
 
 Marks the given variables for export to subprocesses.  See L<setting
 variables|makepp_variables/Setting variables inside a makefile>.
 
-=item global VAR ...
+=item global I<VAR ...>
 
-=item global assignment
+=item global I<assignment>
 
     global MYPROJECT.INFO = info to be seen in all makefiles
 
 Marks the given variables as global to all makefiles.  See L<setting
 variables|makepp_variables/Setting variables inside a makefile>.
 
-=item include makefile
+=item include I<makefile>
 
 This inserts the contents of another makefile into the current makefile.  It
 can be useful if you have boilerplate files with a number of rules or
@@ -576,18 +595,18 @@ instead of F<standard_rules.mk>.  This way, when you run the makefile
 with GNU make, it loads F<standard_rules.mk>, but with makepp, it loads
 F<standard_rules.mk.makepp>.
 
-=item _include makefile
+=item _include I<makefile>
 
 A minor variant on C<include>, the C<_include> statement includes the file if
 it exists but doesn't generate a fatal error if it does not.  The C<_include>
 statement used to be important for include file scanning with GNU make, but is
 seldom useful for makepp.
 
-=item load_makefile /some/directory/somewhere/Makefile
+=item load_makefile I</some/directory/somewhere/Makefile>
 
-=item load_makefile subdir
+=item load_makefile I<subdir>
 
-=item load_makefile VAR1=value1 VAR2=value2 subdir
+=item load_makefile I<VAR1=value1 VAR2=value2 subdir>
 
 This statement causes makepp to cd to the directory containing the makefile
 and load its rules into makepp's internal database.  If you specify just a
@@ -654,9 +673,9 @@ specify the directories that you are interested in, e.g.,
 will turn off implicit loading for all subdirectories except F<dir1> and
 F<dir2> and their subdirectories.
 
-=item prebuild target
+=item prebuild I<target>
 
-=item make target
+=item make I<target>
 
 The arguments (which undergo Make-style variable expansion) are built
 immediately.  This is useful when the list of targets that the Makefile can
@@ -666,30 +685,40 @@ Currently, it will quietly fail to build targets if there is a dependency
 loop among the prebuilt targets and the Makefiles that must be loaded to
 build them, but that ought to be treated as an error.
 
-=item register_scanner command_word scanner_name
+=item register_command_parser I<command_word parser>
 
-Registers the C<scanner_name> (which usually begins with prefix "scanner_"
-that can be omitted here) as the command parser for commands whose base name
-is C<command_word>.  In the name you can use C<-> interchangeably with C<_>.
-The predefined scanners are documented in L<makepp_scanning>.
+=item register_parser I<command_word parser>
 
-=item register_command_parser command_word class_name
+When L<lexically analyzing rule actions|makepp_scanning>, use I<parser> for
+I<command_word>, which may be the full path or just the basename.  The
+basename is usually enough because the lexer tries both.
 
-Register an anonymous subroutine that constructs and returns an object of
-exact type Mpp::CommandParser::C<class_name> as the command parser
-for commands whose base name is C<command_word>.
+The I<parser> may either be a classname with or without the leading
+C<Mpp::CommandParser::>.  Such a class must have a member function called
+C<factory> that returns an object of that class.  If the classname contains
+colons, it must be quoted, so as not make this line look like a rule.
 
-=item register_input_suffix command_word suffix ...
+Or, because that class is usually not yet loaded, instead the factory function
+may reside in the Makefile namespace.  These functions have a prefix of C<p_>
+which must not be given.  This is the case of the L<builtin
+parsers|makepp_scanning/SCANNERS (PARSERS)>.
 
-Add C<suffix> ... to the list of input file suffixes recognized when an
-action beginning with C<command_word> is scanned.  The scanner would
-normally pick this up via Mpp::CommandParser::input_filename_regexp, but it
-might instead ignore this entirely.
+The effect is comparable to the L<C<:parser> rule
+option|makepp_rules/parser_parser>.  But for multi-command rules this is the
+better way.
 
-Mpp::Scanners don't normally pick up all the arguments that aren't recognized as
-options, because they might be arguments of unrecognized options.
-(For example, F<i386v> is I<not> an input file of the command C<gcc -b i386v foo.c>.)
-Instead, they pick up only positional arguments that look like input filenames.
+=item register_input_suffix I<command_word suffix ...>
+
+Add C<suffix> ... to the list of input file suffixes recognized when an action
+beginning with C<command_word> is parsed.  The parser would normally pick this
+up via Mpp::CommandParser::input_filename_regexp, but it might instead ignore
+this entirely.
+
+Parsers don't normally pick up all the arguments that aren't recognized as
+options, because they might be arguments of unrecognized options.  (For
+example, F<i386v> is I<not> an input file of the command C<gcc -b i386v
+foo.c>.)  Instead, they pick up only positional arguments that look like input
+filenames.
 
 It is not unusual to use standard tools with site-specific nonstandard suffixes
 in order to signify that those files require special handling, such as
@@ -699,9 +728,9 @@ different command options and/or postprocessing steps.  For example:
     %.v: %.vpp
         cpp $< > $@
 
-=item repository dirname
+=item repository I<directory>
 
-=item repository destdir=srcdir
+=item repository I<destdir=srcdir>
 
 Specifies one or more L<repository directories|makepp_repositories>.
 The first repository specified has precedence over the others if the
@@ -718,9 +747,7 @@ equals sign, e.g,
 You should put the repository statement near the top of your makefile, before
 any rules that may need to use it.
 
-=item runtime
-
-    runtime program,library
+=item runtime I<program,library>
 
 Store C<library> as a runtime dependency of C<program>.
 Both C<program> and C<library> may contain multiple words, in which case

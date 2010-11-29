@@ -3,7 +3,7 @@
 # This test depends entirely on the builtin rules and the existence of a C compiler.
 #
 # Tests several things about C compilation:
-# 1) Correctly scanning command lines for include files.
+# 1) Correctly parsing command lines to scan for include files.
 # 2) Correctly calculating checksums so if files change we do not
 #    rebuild, but we always rebuild when necessary.
 # 3) Tests the builtin rules.

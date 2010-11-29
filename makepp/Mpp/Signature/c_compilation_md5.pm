@@ -1,4 +1,4 @@
-# $Id: c_compilation_md5.pm,v 1.21 2009/02/11 23:22:37 pfeiffer Exp $
+# $Id: c_compilation_md5.pm,v 1.23 2010/11/17 21:35:52 pfeiffer Exp $
 use strict;
 package Mpp::Signature::c_compilation_md5;
 
@@ -66,26 +66,25 @@ sub signature {
   my $finfo = $_[0];
 
   if( &file_exists ) {		    # Does file exist yet?
-    if( !Mpp::File::is_writable( $finfo->{'..'} ) || # Not a writable directory--don't bother
-				# scanning.
+    if( !Mpp::File::is_writable( $finfo->{'..'} ) || # Dir not writable--don't bother.
 	$self->excludes_file( $finfo )) { # Looks like some kind of a binary file?
       &Mpp::File::signature;    # Use the normal signature method.
     } elsif( $self->recognizes_file( $finfo )) {
       my $build_info_key = $self->build_info_key;
       my $stored_cksum = Mpp::File::build_info_string( $finfo, $build_info_key );
-      if( !$stored_cksum ) {	# Do not bother rescanning if
-				# we have already scanned the file.
+      if( !$stored_cksum ) {	# Do'nt bother redigesting if
+				# we have already digested the file.
 	$stored_cksum = md5sum_c_tokens( $self, &absolute_filename );
-				# Scan the file.
+				# Digest the file.
 	Mpp::File::set_build_info_string( $finfo, $build_info_key, $stored_cksum );
 				# Store the checksum so we don't have to do
 				# that again.
       }
       $stored_cksum;
     } elsif( -B &absolute_filename ) { # Binary file?
-      &Mpp::File::signature; # Don't use MD5 scanning.
+      &Mpp::File::signature; # Don't use MD5 digesting.
     } else {
-      # Use regular MD5 scanning if it exists, but we can't tell what it is
+      # Use regular MD5 digesting if it exists, but we can't tell what it is
       # by its extension.
       require Mpp::Signature::md5;	  # Make sure the MD5 signature module is loaded.
       Mpp::Signature::md5::signature( $Mpp::Signature::md5::md5, $finfo );
@@ -94,10 +93,10 @@ sub signature {
 }
 
 #
-# This is the function that does the work of scanning C or C++ source code,
+# This is the function that does the work of digesting C or C++ source code,
 # breaking it into tokens, and computing the MD5 checksum of the tokens.  All
 # tokens except words (which might be macros with __LINE__) are pulled up as
-# far as possible.  Argument is the file name to scan.
+# far as possible.  Argument is the file name to digest.
 #
 sub md5sum_c_tokens {
   #my( $self, $fname ) = @_;	# Name the arguments.
@@ -114,7 +113,7 @@ sub md5sum_c_tokens {
 				# comments.)
   local $_ = "\n" . <$infile>;	# Read it all.  Prepend newline for preproc handling.
 
-  pos = 0;			# Start scanning at position 0.
+  pos = 0;			# Start digesting at position 0.
 
   my $add_space;		# Need a space here.
   my $word;			# Last saw a word.
@@ -154,13 +153,13 @@ sub md5sum_c_tokens {
 
       } elsif( /\G\"/gc ) {	# Quoted string?
 	my $quotepos = pos()-1;	# Remember where the string started.
-	1 while pos() < length and /\G[^\\\"]+/sgc || /\G\\./sgc;
+	1 while pos() < length and /\G[^\\"]+/sgc || /\G\\./sgc;
 				# Skip over everything between the quotes.
 	$tokens .= substr $_, $quotepos, ++pos()-$quotepos;
 				# Add the string to the checksum.
       } elsif( /\G\'/gc ) {	# Single quote expression?
 	my $quotepos = pos()-1;	# Remember where the string started.
-	1 while pos() < length and /\G[^\\\"]+/sgc || /\G\\./sgc;
+	1 while pos() < length and /\G[^\\']+/sgc || /\G\\./sgc;
 				# Skip over everything between the quotes.
 	$tokens .= substr $_, $quotepos, ++pos()-$quotepos;
 				# Add the string to the checksum.

@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: config.pl,v 1.25 2009/03/19 22:39:43 pfeiffer Exp $
+# $Id: config.pl,v 1.28 2010/10/18 21:40:21 pfeiffer Exp $
 #
 # Configure this package.
 #
@@ -56,33 +56,8 @@ Mpp::Text::getopts
   [qw(d datadir), \$datadir, 1],
   [qw(f findbin), \$findbin, 1],
   [undef, 'makefile', \$makefile, 1],
-  [qr/[h?]/, 'help', undef, undef, \&usage];
+  splice @Mpp::Text::common_opts;
 
-sub usage {
-  die "Usage: configure [option]
-
-where options are:
-   -p, --prefix=/path/to/installation
-                 Specify location where you want to install everything.
-   -b, --bindir=/path/to/installation/bin
-                 Where the binaries go.  Makepp's binaries are just perl
-                 scripts so they are architecture independent.
-   -h, --htmldir=/path/to/installation/share/html
-                 Where the HTML documentation goes.  Specify 'none' if you
-                 do not want the documentation installed.  (You can always
-                 read it online at http://makepp.sourceforge.net.)
-   -m, --mandir=/path/to/man
-                 Where the manual pages should reside.  Specify 'none' if you
-                 do not want the documentation installed.
-   -d, --datadir=/path/to/installation/share/makepp
-                 Where to install makepp's library files.
-   -f, --findbin=relative/path/to/datadir/from/bindir
-                 Where to find libraries relative to executables. Specify
-                 'none' (the default) to find them in datadir.
-       --makefile=/path/to/Makefile (default: .)
-                 Specify location where you can write the Makefile.
-   -h, -?, --help This help message.\n";
-};
 
 $makefile .= '/Makefile' if -d $makefile;
 $bindir ||= "$prefix/bin";
@@ -94,13 +69,7 @@ foreach ($bindir, $datadir, $htmldir) {
   s@~/@$ENV{HOME}/@;
 }
 
-#
-# Load the current version:
-#
-open(VERSION, "VERSION") || die "$0: file VERSION is missing\n";
-my $VERSION = <VERSION>;
-chomp $VERSION;
-close VERSION;
+our $VERSION;
 
 #
 # Write out a makefile for this.  This makefile ought to work with any version
@@ -125,14 +94,14 @@ all: test
 
 test: .test_done
 
-.test_done: *.pm Mpp/*.pm Mpp/Signature/*.pm Mpp/Scanner/*.pm Mpp/CommandParser/*.pm Mpp/ActionParser/*.pm makepp \
+.test_done: *.pm Mpp/*.pm Mpp/Signature/*.pm Mpp/Scanner/*.pm Mpp/CommandParser/*.pm Mpp/Lexer/*.pm makepp \
 	t/*.test t/run_tests.pl
 	cd t && PERL=$(PERL) $(PERL) run_tests.pl --hint
 	touch $@
 
 testall: .testall_done
 
-.testall_done: *.pm Mpp/*.pm Mpp/Signature/*.pm Mpp/Scanner/*.pm Mpp/CommandParser/*.pm Mpp/ActionParser/*.pm makepp \
+.testall_done: *.pm Mpp/*.pm Mpp/Signature/*.pm Mpp/Scanner/*.pm Mpp/CommandParser/*.pm Mpp/Lexer/*.pm makepp \
 	t/*.test t/*/*.test t/run_tests.pl
 	cd t && PERL=$(PERL) $(PERL) run_tests.pl --hint *.test */*.test
 	touch $@
@@ -142,7 +111,7 @@ distribution: $(VERSION).tar.gz
 $(VERSION).tar.gz: README INSTALL LICENSE VERSION makepp.lsm ChangeLog \
 	makepp recursive_makepp makeppclean \
 	Mpp/*.pm Mpp/Signature/*.pm Mpp/Scanner/*.pm \
-	Mpp/BuildCheck/*.pm Mpp/CommandParser/*.pm Mpp/ActionParser/*.pm *.mk *.pm \
+	Mpp/BuildCheck/*.pm Mpp/CommandParser/*.pm Mpp/Lexer/*.pm *.mk *.pm \
 	pod/*.pod \
 	t/*.test t/*/*.test t/run_tests.pl \
 	config.pl configure install.pl makepp_build_cache_control
@@ -151,7 +120,7 @@ $(VERSION).tar.gz: README INSTALL LICENSE VERSION makepp.lsm ChangeLog \
 	mkdir $(VERSION) \
 	   $(VERSION)/pod $(VERSION)/t \
 	   $(VERSION)/Mpp $(VERSION)/Mpp/Signature $(VERSION)/Mpp/Scanner \
-	   $(VERSION)/Mpp/CommandParser $(VERSION)/Mpp/ActionParser
+	   $(VERSION)/Mpp/CommandParser $(VERSION)/Mpp/Lexer
 	for file in $^; do cp $$file $(VERSION)/$$file; done
 	GZIP=-9 tar --create --gzip --file $@ $(VERSION)
 	cd $(VERSION) && make test    # Make sure it all runs.
@@ -162,3 +131,30 @@ install: all
 
 .PHONY: all distribution install test testall
 ];
+
+__DATA__
+Usage: configure [option]
+
+Valid options are:
+
+-b, --bindir=/path/to/installation/bin
+    Where the binaries go.  Makepp's binaries are just perl scripts so they
+    are architecture independent.
+-d, --datadir=/path/to/installation/share/makepp
+    Where to install makepp's library files.
+-f, --findbin=relative/path/to/datadir/from/bindir
+    Where to find libraries relative to executables. Specify 'none' (the
+    default) to find them in datadir.
+-h, --htmldir=/path/to/installation/share/html
+    Where the HTML documentation goes.  Specify 'none' if you do not want the
+    documentation installed.  (You can always read it online at
+    http://makepp.sourceforge.net.)
+-m, --mandir=/path/to/man
+    Where the manual pages should reside.  Specify 'none' if you do not want
+    the documentation installed.
+--makefile=/path/to/Makefile (default: .)
+    Specify location where you can write the Makefile.
+-p, --prefix=/path/to/installation
+    Specify location where you want to install everything.
+-?, --help
+    This help message.

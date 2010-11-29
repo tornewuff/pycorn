@@ -1,4 +1,4 @@
-# $Id: Glob.pm,v 1.34 2009/02/11 23:22:37 pfeiffer Exp $
+# $Id: Glob.pm,v 1.36 2010/11/17 21:35:52 pfeiffer Exp $
 
 package Mpp::Glob;
 
@@ -243,8 +243,8 @@ sub find_all_subdirs {
 # become directories.)	We make sure that all real directories have a
 # DIRCONTENTS hash (even if it's empty).
 #
-  unless( exists $dirinfo->{SCANNED_FOR_SUBDIRS} ) {
-    undef $dirinfo->{SCANNED_FOR_SUBDIRS};
+  unless( exists $dirinfo->{LOOKED_FOR_SUBDIRS} ) {
+    undef $dirinfo->{LOOKED_FOR_SUBDIRS};
 				# Don't do this again, because we may have
 				# to stat a lot of files.
     if( &is_dir ) {		# Don't even try to do this if this directory
@@ -429,14 +429,12 @@ sub wild_to_regex {
   my $anchor = $_[1] || 0;
   return $regexp_cache[$anchor]{$_} if $regexp_cache[$anchor]{$_}; # Processed this before.
 
-  if( $anchor || /[[?*]/ ) {	# Is it possible that there are wildcards?  If
-				# not, don't bother to do the more complicated
-				# parsing.
+  if( $anchor || /[[?*]/ ) {	# Is it possible that there are wildcards?  If not,
+				# don't bother to do the more complicated parsing.
     my $is_wildcard = 0;	# Haven't seen a wildcard yet.
     my $file_regex = '';	# A regular expression to match this level.
     pos() = 0;
 
-  parseloop:
     while( pos() < length ) {
       if( /\G([^\\\[\]\*\?]+)/gc ) { # Ordinary characters?
 	$file_regex .= quotemeta($1); # Just add to regex verbatim, with

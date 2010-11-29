@@ -1,4 +1,4 @@
-# $Id: Scanner.pm,v 1.51 2009/02/11 23:22:37 pfeiffer Exp $
+# $Id: Scanner.pm,v 1.55 2010/10/18 21:40:21 pfeiffer Exp $
 
 =head1 NAME
 
@@ -56,10 +56,7 @@ package Mpp::Scanner;
 use Mpp::Text ();
 
 BEGIN {
-  *INCLUDE_DIRS = \&Mpp::Text::CONST0;
-  *INCLUDE_SFXS = \&Mpp::Text::CONST1;
-  *TAG_MAP = \&Mpp::Text::CONST2;
-  *SHOULD_FIND = \&Mpp::Text::CONST3;
+  (*INCLUDE_DIRS, *INCLUDE_SFXS, *TAG_MAP, *SHOULD_FIND) = @Mpp::Text::N;
 }
 
 # Most C implementations use 100, but that runs into the perl subroutine
@@ -152,8 +149,7 @@ sub add_include_dir {
       }
     }
     else {
-      $Mpp::warn_level and warn
-	'invalid directory ' . absolute_filename( $dirinfo ) .
+      warn 'invalid directory ' . absolute_filename( $dirinfo ) .
 	' mentioned in command `' . $self->{RULE}->source . "'\n"
         unless $dir_warnings{absolute_filename( $dirinfo )}++;
 				# Don't give the same warning more than
@@ -161,7 +157,7 @@ sub add_include_dir {
     }
     $self->{RULE}->add_include_dir(
       $self->get_tagname($tag),
-      Mpp::ActionParser::relative_path( $self->{DIR}, $path ),
+      Mpp::Lexer::relative_path( $self->{DIR}, $path ),
       $front
     );
   }
@@ -502,25 +498,6 @@ sub find {
   undef;
 }
 
-=head2 add_dependency
-
-  $scanner->add_dependency($command_parser, $tag, $name, $src);
-
-Similar to find, except that a dependency is added if the file is found.
-This is a I<simple> dependency, as opposed to I<meta> dependencies, which
-are created by calling include() or scan_file().
-
-=cut
-
-sub add_dependency {
-  my ($self, $command_parser, $tag, $name, $src)=@_;
-  my $finfo = &find;
-  $command_parser->add_simple_dependency(
-    $finfo, $self->get_tagname($tag), $src, $name
-  );
-  $finfo;
-}
-
 =head2 include
 
   $scanner->include($command_parser, $tag, $name, $src);
@@ -603,7 +580,7 @@ Returns the Mpp::File object associated with $name relative to dir().
 
 =cut
 
-sub get_file_info { file_info($_[1], file_info($_[0]{DIR}, $_[0]{RULE}->build_cwd)) }
+sub get_file_info { file_info $_[1], file_info $_[0]{DIR}, $_[0]{RULE}->build_cwd }
 
 =head2 get_context
 

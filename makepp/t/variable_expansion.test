@@ -429,7 +429,7 @@ word1
 a b c q v
 "a b c"
 a b c
-c c
+.c .c
 bar
 bar baz
 3

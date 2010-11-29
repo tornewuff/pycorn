@@ -4,7 +4,7 @@ package Mpp;
 
 chdir 't';			# failure ignored, when called from here
 
-my %c;				# CC=gehtnich CXX=gehtnich ./run_all.pl
+my %c;				# CC=gehtnich CXX=gehtnich ./run_all.t
 @c{qw(
 c_compilation.test
 log_graph.test
@@ -22,6 +22,7 @@ additional_tests/2004_12_17_idl.test
 additional_tests/2005_03_31_scanfail.test
 additional_tests/2005_07_12_build_cache_cp.test
 additional_tests/2006_12_07_scan_order.test
+additional_tests/2009_12_27_skip_word_unix.test
 )} = ();
 
 BEGIN {
@@ -78,20 +79,23 @@ if( $ENV{AUTOMATED_TESTING} || $^O =~ /^MSWin/ ) {	# exec detaches a child proce
   system $^X, $0, @ARGV;
   exit( $? >> 8 || $? ) unless $ENV{AUTOMATED_TESTING};
   $reason =
-    $? == -1 ? "system $^X, $0, @ARGV failed: $!\n" :
-    $? & 127 ? "system $^X, $0, @ARGV died with signal $?\n" :
-    $? ? "system $^X, $0, @ARGV exited with value " . ($? >> 8) . "\n" :
+    $? == -1 ? "failed: $!: system $^X, $0, @ARGV \n" :
+    $? & 127 ? "died with signal $?: system $^X, $0, @ARGV \n" :
+    $? ? "exited with value " . ($? >> 8) . ": system $^X, $0, @ARGV\n" :
     '';
 } else {
   exec $^X, $0, @ARGV;
+  die $!;
 }
 
 sub mail {
   my $a = 'occitan@esperanto.org';
-  if( open MAIL, "| exec 2>/dev/null; mailx -s$_[0] $a || mail -s$_[0] $a || /usr/lib/sendmail $a || mail $a" ) {
-    print MAIL "$_[0]\n$reason\n";
-    open VERSION, "$^X ../makeppinfo --version|";
-    print MAIL <VERSION>, "\n";
+  open VERSION, "$^X ../makeppinfo --version|";
+  my $v = <VERSION>;
+  $v =~ /makeppinfo version ([^:\n]+)(.*)/s;
+  my $s = "-s'$_[0] V$1' ";
+  if( open MAIL, "| exec 2>/dev/null; mailx $s$a || nail $s$a || mail $s$a || /usr/lib/sendmail $a || mail $a" ) {
+    print MAIL "$_[0] V$1$2\n$reason\n$v\n\n\@INC: @INC\n\n";
     my %acc;
     for( sort keys %Config ) {
       next unless defined $Config{$_};
@@ -112,10 +116,13 @@ my $perltype =
   '';
 $v .= "-$perltype" if $perltype;
 (my $arch = $Config{myarchname}) =~ tr/ ;&|\\'"()[]*\//-/d; # clear out shell meta chars
-if( !<$v/*.failed> ) {
-  mail "SUCCESS-$arch-$v";
-} elsif( mail "FAIL-$arch-$v" ) {
+unless( $reason || <$v/*.{failed,tdir}> ) {
+  mail "SUCCESS-$arch $v";
+  exit 0;
+}
+if( mail "FAIL-$arch $v" ) {
   open SPAR, "$^X spar -d - $v|";
   undef $/;
   print MAIL "\nbegin 755 $arch-$v.spar\n" . pack( 'u*', <SPAR> ) . "\nend\n";
 }
+exit 1;

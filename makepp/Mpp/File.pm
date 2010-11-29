@@ -1,4 +1,4 @@
-# $Id: File.pm,v 1.90 2009/02/11 23:22:37 pfeiffer Exp $
+# $Id: File.pm,v 1.94 2010/09/29 22:19:53 pfeiffer Exp $
 
 package Mpp::File;
 require Exporter;
@@ -85,8 +85,6 @@ the functional syntax is to be preferred.
   if ($finfo->is_dir) { ... }
   if (is_writable( $finfo )) { ... }
   if ($finfo->is_writable) { ... }
-  if (is_executable( $finfo )) { ... }
-  if ($finfo->is_executable) { ... }
   if (is_symbolic_link( $finfo )) { ... }
   if ($finfo->is_symbolic_link) { ... }
 
@@ -132,14 +130,10 @@ overrides some of the routines here.
 # makepp's memory footprint by 1.5% and execution time by 4% compared to the
 # 13-element array.
 #
-# These consts correspont to real stat indexes 2, 3, 4, 7, 9, 0 as use in lstat_array!
 BEGIN {
-  *STAT_MODE =  \&Mpp::Text::CONST0;
-  *STAT_NLINK = \&Mpp::Text::CONST1;
-  *STAT_UID =   \&Mpp::Text::CONST2;
-  *STAT_SIZE =  \&Mpp::Text::CONST3;
-  *STAT_MTIME = \&Mpp::Text::CONST4;
-  *STAT_DEV =   \&Mpp::Text::CONST5; # Added by lstat only for dirs.
+  *AS_ROOT = $Mpp::Text::N[$> ? 0 : 1];
+  # These consts correspond to real stat indexes 2, 3, 7, 9, 0 as use in lstat_array
+  (*STAT_MODE, *STAT_NLINK, *STAT_SIZE, *STAT_MTIME, *STAT_DEV) = @Mpp::Text::N;
 }
 
 =head2 case_sensitive_filenames
@@ -165,7 +159,7 @@ our $stat_exe_separate;
 BEGIN {
   my $done;
   if( exists $ENV{MAKEPP_CASE_SENSITIVE_FILENAMES} ) {
-    *case_sensitive_filenames = $ENV{MAKEPP_CASE_SENSITIVE_FILENAMES} ? \&Mpp::Text::CONST1 : \&Mpp::Text::CONST0;
+    *case_sensitive_filenames = $Mpp::Text::N[$ENV{MAKEPP_CASE_SENSITIVE_FILENAMES} ? 1 : 0];
     return if !Mpp::is_windows;
     $done = 1;
   }
@@ -178,7 +172,7 @@ BEGIN {
     close $fh;			# For unlinking on Windows.
   } else {
     $stat_exe_separate = Mpp::is_windows > 0;
-    *case_sensitive_filenames = Mpp::is_windows ? \&Mpp::Text::CONST0 : \&Mpp::Text::CONST1
+    *case_sensitive_filenames = $Mpp::Text::N[Mpp::is_windows ? 0 : 1]
       unless $done;
     return;
 				# If that doesn't work for some reason, assume
@@ -186,7 +180,7 @@ BEGIN {
 				# sensitive for unix.
   }
 
-  *case_sensitive_filenames = -e uc $test_fname ? \&Mpp::Text::CONST0 : \&Mpp::Text::CONST1
+  *case_sensitive_filenames = $Mpp::Text::N[-e uc $test_fname ? 0 : 1]
     unless $done;
 				# Look for it with different case.
   $stat_exe_separate = !-e substr $test_fname, 0, -4 if Mpp::is_windows;
@@ -260,10 +254,6 @@ $root = bless { NAME => '',
 #		For files that can be imported from a repository, this field
 #		contains a reference to the Mpp::File structs for the file in
 #		the repositories.
-# SCANNED_FOR_SUBDIRS
-#		Exists iff this is a directory and we have found all of the
-#		subdirectories under the current directory, i.e., we don't
-#		need to stat any more files to see if they are subdirectories.
 # FULLNAME	The absolute filename cached for performance.
 # WILDCARD_ROUTINES
 #		For a directory, this is a list of subroutines to be called
@@ -472,6 +462,7 @@ explicitly in places where I<filename> is (almost) sure to have directory separa
 
 =cut
 
+my $self_unc;
 sub path_file_info {
   my $file = case_sensitive_filenames ? $_[0] : lc $_[0];
 				# Copy the file name only if we continue.
@@ -491,8 +482,13 @@ sub path_file_info {
 				# level directory's filename actually have
 				# a couple of slashes in it, but that's ok.
       my $share = "/$1";
-      if( -e $share ) {		# False alarm, e.g. //bin/ls
-	substr $file, 0, 0, $1;
+      unless( $self_unc ) {
+	$self_unc = +(POSIX::uname)[1];
+	$self_unc = qr!^/\Q$self_unc\E/([A-Z])\$$!is;
+      }
+      if( -e $share or $share =~ $self_unc ) { # False alarm, e.g. //bin/ls
+				# or //myhost/c$/ different notation for c:/ -- $ problematic
+	substr $file, 0, 0, -e _ ? "$1/" : "$1:/";
 	$dinfo = $root;
       } else {
 	$dinfo = $root->{DIRCONTENTS}{$share} ||=
@@ -621,27 +617,6 @@ sub is_or_will_be_dir {
 }
 
 
-=head2 is_executable
-
-  if (is_executable( $finfo )) { ... }
-
-Returns true (actually, returns the Mpp::File structure) if the given file is
-executable by this user.  We don't actually handle the group executable
-bit correctly right now, since it's a pain to find out what groups this
-user is actually in.
-
-=cut
-
-sub is_executable {
-  my $stat = &stat_array;	# Get the status info.
-  @$stat or return undef;	# File doesn't exist.
-  ($stat->[STAT_MODE] & (011)) || # User or group executable?
-    (($stat->[STAT_MODE] & 0100) && # User executable?
-      $stat->[STAT_UID] == $>) and return $_[0]; # We're the owner?
-				# It's executable.
-  undef;
-}
-
 =head2 is_readable
 
   if (is_readable( $finfo )) { ... }
@@ -725,7 +700,7 @@ write a file to that directory.
 
 sub is_writable {
   my $dirinfo = $_[0];		# Access the fileinfo struct.
-  if (exists($dirinfo->{IS_WRITABLE})) { # Did we try this test before?
+  if( exists $dirinfo->{IS_WRITABLE} ) { # Did we try this test before?
     return $dirinfo->{IS_WRITABLE}; # Use the cached value.
   }
 
@@ -751,7 +726,7 @@ sub is_writable {
   local( $>, $) ) = @ids_for_check # Check with a different UID because root
 				# can write too much.  See setting of ids_for_check
 				# for an explanation of why.
-    if !$> && $ids_for_check[0]; # Are we running as root?
+    if AS_ROOT && $ids_for_check[0]; # Are we running as root?
 
   if( open my $fh, '>', $test_fname ) { # Can we create such a file?
       close $fh;
@@ -788,7 +763,7 @@ sub touched_filesystem {
 =head2 lstat_array
 
    $statinfo = stat_array( $fileinfo );
-   $uid = $statinfo->[STAT_UID];	# Or whatever field you're interested in.
+   $uid = $statinfo->[STAT_SIZE];	# Or whatever field you're interested in.
 
 Returns the array of values returned by the C<lstat> function on the file.
 The values are cached, so calling this repeatedly entails only minimal extra
@@ -810,12 +785,12 @@ sub lstat_array {
     }
     if( lstat &absolute_filename_nolink ) { # Restat the file, and cache the info.
 				# File actually exists?
-      $stat_arr = $fileinfo->{LSTAT} = [(lstat _)[2, 3, 4, 7, 9]]; # These must correspond to STAT_* above!
+      $stat_arr = $fileinfo->{LSTAT} = [(lstat _)[2, 3, 7, 9]]; # These must correspond to STAT_* above!
       if( -l _ ) {		# Profit from the open stat structure, unless it's a symlink.
 	undef $fileinfo->{LINK_DEREF};
       } else {
 	$fileinfo->{HAVE_READ_PERMISSION} = -r _; # Let Perl figure out readability
-	$fileinfo->{IS_READABLE} = -r _ if -p _;
+	$fileinfo->{IS_READABLE} = -r _ if -p _;  # See is_readable.
 #
 # When a file has been created or changed, it's possible that it has become
 # a directory.	If this is true, then we definitely need to tag it as a
@@ -850,6 +825,7 @@ Indicates that a file may have changed, so that any cached values (such as the
 signature or the file time) are invalid.
 
 =cut
+
 sub may_have_changed {
   my $finfo = $_[0];
 
@@ -871,6 +847,7 @@ This is used in place of may_have_changed in order to prevent the unnecessary
 destruction of build info, which is expensive to compute in some cases.
 
 =cut
+
 sub check_for_change {
   return if $Mpp::gullible;
   my $finfo = $_[0];
@@ -931,6 +908,7 @@ sub mkdir {
 Returns the directory containing the file.
 
 =cut
+
 sub parent { $_[0]{'..'} }
 
 =head2 read_directory
@@ -943,11 +921,10 @@ Rereads the given directory so we know what files are actually in it.
 
 sub read_directory {
   my $dirinfo = $_[0];		# Find the directory.
+  my $dircontents = $dirinfo->{DIRCONTENTS};
 
-  delete @{$_}{qw(LINK_DEREF EXISTS IS_READABLE LSTAT HAVE_READ_PERMISSION IS_WRITABLE)}
-    for values %{$dirinfo->{DIRCONTENTS}};
-				# Forget what we used to know about which
-				# files exist.
+  my %previous_files;
+  @previous_files{keys %$dircontents} = (); # remember the file names
 
   opendir my $dirhandle, &absolute_filename_nolink or return;
 				# Just quit if we can't read the directory.
@@ -958,12 +935,22 @@ sub read_directory {
   foreach( readdir $dirhandle ) {
     next if $_ eq '.' || $_ eq '..'; # Skip the standard subdirectories.
     case_sensitive_filenames or tr/A-Z/a-z/;
-    my $finfo = ($dirinfo->{DIRCONTENTS}{$_} ||=
+    my $finfo = ($dircontents->{$_} ||=
 		 bless { NAME => $_, '..' => $dirinfo });
 				# Get the file info structure, or make
 				# one if there isn't one available.
-    undef $finfo->{EXISTS};	# Remember that this file exists.
+    delete $previous_files{$_};
+    unless( exists $finfo->{EXISTS} ) {
+      delete @{$finfo}{qw(LINK_DEREF IS_READABLE LSTAT HAVE_READ_PERMISSION IS_WRITABLE)};
+				# Should never have anything to delete.
+      undef $finfo->{EXISTS};	# Remember that this file exists.
+    }
     publish($finfo);		# Activate any wildcard routines.
+  }
+
+  for my $fname ( keys %previous_files ) {	# Forget what we knew about newly inexistant files.
+    ($dircontents->{$fname}{LSTAT} || 0) == $empty_array or
+      delete @{$dircontents->{$fname}}{qw(LINK_DEREF EXISTS IS_READABLE LSTAT HAVE_READ_PERMISSION IS_WRITABLE)};
   }
 
   delete dereference( $dirinfo )->{LSTAT};
@@ -1212,12 +1199,10 @@ $CWD_INFO = file_info cwd;
 # actually do the check with the UID and GID of whoever owns the directory.
 #
 @ids_for_check = (stat absolute_filename $CWD_INFO)[4, 5]
-				# Use the IDs of whoever owns the current directory,
-  unless $>;			# if we running as root?
+  if AS_ROOT;			# Use the IDs of whoever owns the current directory.
 
-$ENV{HOME} ||= (Mpp::is_windows > 0 ? $ENV{USERPROFILE} : eval { (getpwuid $<)[7] }) || '.';
-dereference file_info $ENV{HOME};
-				# Make sure we get a symbolic name for the home directory.
+$ENV{HOME} ||= (Mpp::is_windows > 0 ? $ENV{USERPROFILE} : eval { (getpwuid $>)[7] }) || '.';
+dereference file_info $ENV{HOME}; # Make sure we notice a symbolic name for the home directory.
 
 1;
 

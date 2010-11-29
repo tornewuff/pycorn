@@ -2,39 +2,69 @@
 
 makepp_variables -- How to use variables in makepp
 
-=for vc $Id: makepp_variables.pod,v 1.32 2009/02/11 23:22:37 pfeiffer Exp $
+=for vc $Id: makepp_variables.pod,v 1.37 2010/09/29 22:06:41 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
-L<B<A>R|/AR>, L</ARFLAGS>, L</AS>,E<nbsp>
-L<B<C>C|/CC>, L</CFLAGS>, L</changed_dependencies>, L</changed_inputs>, L</CURDIR>,
-  L</CXX>, L</CXXFLAGS>,E<nbsp>
-L<B<d>efine|/define>, L</dependencies>, L</dependency>,E<nbsp>
-L<B<e>xport|/export>,E<nbsp>
-L<B<F>77|/F77>, L</FC>, L</foreach>,E<nbsp>
-L<B<g>lobal|/global>,E<nbsp>
-L<B<i>nput|/input>, L</inputs>,E<nbsp>
-L<B<L>D|/LD>, L</LEX>, L</LIBTOOL>,E<nbsp>
-L<B<M>AKE|/MAKE>, L</MAKECMDGOALS>, L</MAKEINFO>, L</makepp_percent_subdirs>,
-  L</makepp_require_phony>, L</makepp_simple_concatenation>,E<nbsp>
-L<B<o>utput|/output>, L</outputs>,E<nbsp>
-L<B<P>WD|/PWD>,E<nbsp>
-L<B<R>M|/RM>, L</ROOT>,E<nbsp>
-L<B<S>HELL|SHELL>, L</sorted_dependencies>, L</sorted_inputs>, L</stem>,E<nbsp>
-L<B<t>arget|/target>, L</targets>,E<nbsp>
-L<B<Y>ACC|/YACC>,E<nbsp>
-C<=>,
-C<:=>,
-C<+=>,
-C<?=>,
-C<!=>,
-C<$@>,
-C<$^>,
-C<$*>,
-C<$+>,
-C<$?>,
-C<$/>,
-C<$E<lt>>
+=for genindex '$str =~ s/^(?=.=)/=/; $str =~ s/^_(\w+)/$1z/' '\S+' makepp_variables.pod
+
+B<$:>E<nbsp>L<$*|/stem>,
+  L<$+|/sorted_dependencies>,
+  L<$/|/__>,
+  L<$?|/changed_dependencies>,
+  L<$@|/output>,
+  L<$E<lt>|/dependency>,
+  L<$^|/dependencies>,E<nbsp>
+B<=:>E<nbsp>L<=|/_>,
+  L<!=|/__>,
+  L<&=|/__>,
+  L<+=|/__>,
+  L<:=|/__>,
+  L<;=|/__>,
+  L<?=|/_>,E<nbsp>
+B<A:>E<nbsp>L<AR|/ar>,
+  L<ARFLAGS|/arflags>,
+  L<AS|/as>,E<nbsp>
+B<C:>E<nbsp>L<CC|/cc>,
+  L<CFLAGS|/cflags>,
+  L</changed_dependencies>,
+  L<changed_inputs|/changed_dependencies>,
+  L<CURDIR|/curdir>,
+  L<CXX|/cxx>,
+  L<CXXFLAGS|/cxxflags>,E<nbsp>
+B<D:>E<nbsp>L</dependencies>,
+  L</dependency>,E<nbsp>
+B<F:>E<nbsp>L<F77|/f77>,
+  L<FC|/fc>,
+  L</foreach>,E<nbsp>
+B<I:>E<nbsp>L<input|/dependency>,
+  L<inputs|/dependencies>,E<nbsp>
+B<L:>E<nbsp>L<LD|/ld>,
+  L<LEX|/lex>,
+  L<LIBTOOL|/libtool>,E<nbsp>
+B<M:>E<nbsp>L<MAKE|/make>,
+  L<MAKECMDGOALS|/makecmdgoals>,
+  L<MAKEFLAGS|/makeflags>,
+  L<MAKEINFO|/makeinfo>,
+  L<MAKEPPFLAGS|/makeppflags>,
+  L<_MAKEPPFLAGS|/_makeppflags>,
+  L<MAKEPP_LN_CP|/makepp_ln_cp>,
+  L</makepp_percent_subdirs>,
+  L</makepp_require_phony>,
+  L</makepp_simple_concatenation>,
+  L<MAKEPP_VERSION|/makepp_version>,E<nbsp>
+B<O:>E<nbsp>L</output>,
+  L</outputs>,E<nbsp>
+B<P:>E<nbsp>L<PWD|/pwd>,E<nbsp>
+B<R:>E<nbsp>L<RM|/rm>,
+  L<ROOT|/root>,E<nbsp>
+B<S:>E<nbsp>L<SHELL|/shell>,
+  L</sorted_dependencies>,
+  L<sorted_inputs|/sorted_dependencies>,
+  L</stem>,E<nbsp>
+B<T:>E<nbsp>L<target|/output>,
+  L<targets|/outputs>,E<nbsp>
+B<Y:>E<nbsp>L<YACC|/yacc>
 
 Makefiles typically use variables in many places.  One important reason for
 using variables is to ensure that information is contained in only one place
@@ -48,8 +78,8 @@ anything other than alphanumeric characters, C<_>, and C<->.
 Each makefile has its own set of variables, and setting a variable in one
 makefile will have no effect on its value in any other makefile.  If you want
 to have variables set in many makefiles, the best way to do it is to have each
-of them include a common definitions file (see the
-L<include statement|makepp_statements/include>) or use C<global> variables.
+of them include a common definitions file (see the L<include
+statement|makepp_statements/include_makefile>) or use C<global> variables.
 
 
 =head2 Variable Assignment
@@ -537,9 +567,9 @@ makepp supports:
 
 =over 4
 
-=item target
-
 =item output
+
+=item target
 
 =item $@
 
@@ -548,16 +578,27 @@ targets for any rule, this is the B<first> target.  For example, in the
 following rule
 
     y.tab.c y.tab.h : parser.y
- 	$(YACC) $(YFLAGS) $(input)
+ 	$(YACC) -o $(output) $(YFLAGS) $(input)
 
 C<$(output)> will contain the value F<y.tab.c>.  Since these magic variables
 are in fact functions, you can also pass an index as argument.  This counts
 from 1 or backwards from -1.  So C<$(output 2)> or C<$(output -1)> will
 contain the value F<y.tab.h>.
 
-=item targets
+While all three forms of this variable have the same value, there is a
+difference in interpretation for multitarget rules.  If you use the old-style
+cryptic name C<$@>, makepp will interpret that as an old-style rule set,
+rather than a modern rule that produces all those targets in one go:
+
+    a b:			# really: one rule each for a and b
+ 	touch $@
+ 
+    c d:			# error: mpp complains that this didn't build d
+ 	touch $(output)
 
 =item outputs
+
+=item targets
 
 All targets of the current rule.  Same as C<$(target)> unless there is more
 than one target.  In the above example, C<$(outputs)> will be S<y.tab.c
@@ -607,9 +648,9 @@ wildcard this is not too promising).
 All the dependencies of the target, in sorted order, with duplicates
 removed.  Equivalent to S<C<$(sort $(inputs))>>.
 
-=item changed_inputs
-
 =item changed_dependencies
+
+=item changed_inputs
 
 =item $?
 
@@ -686,7 +727,7 @@ that makepp supports.  For example,
 See the documentation on L<the foreach clause in
 rules|makepp_rules/Foreach rules> for more details and examples.
 
-=item $/
+=item $/ X<slashconst>
 
 This is essentially a constant, either C</>, or on native Windows C<\>.  You
 need it, if you want to start a program portably, e.g. one you built in the
@@ -764,10 +805,9 @@ I<Default:> C<libtool>.
 
 =item MAKE
 
-This variable has no default value, and is not used by makepp.  It is however
-the preferred way in older makes to implement recursive make.  That's why
-makepp recognizes when this variable is used and turns off some features, even
-before the recursion actually takes place.
+This variable has two different values, depnding on the presence or not of
+C<--traditional-recursive-make>.  Makepp recognizes when this variable is used
+and turns off some features, even before the recursion actually takes place.
 
 =item MAKECMDGOALS
 
@@ -783,9 +823,31 @@ provided.  Empty when implicitly building default target.
  	# no explicit targets
     endif
 
+=item MAKEFLAGS (exported)
+
+The standard options with which makepp was called.  Those that have a single
+letter form are combined at the beginning without a leading C<-> (heaven knows
+why gmake chose to drop the C<->).
+
 =item MAKEINFO
 
 I<Default:> C<makeinfo>.
+
+=item MAKEPPFLAGS (exported)
+
+This is set to the same value as MAKEFLAGS, but only if this variable is
+present in makepp's environment.
+
+=item _MAKEPPFLAGS (exported)
+
+The makepp specific options needed for POSIX/gmake compatibility, with which
+makepp was called.  These are in a separate variable so a legacy makefile
+can't break compatibility by unsetting MAKEFLAGS.  This is only set with
+C<--traditional-recursive-make>.
+
+=item MAKEPP_LN_CP
+
+See the note under L<&ln|makepp_builtins/ln_option_sourcefile_destfile>.
 
 =item makepp_percent_subdirs
 
@@ -809,6 +871,14 @@ Set this to some true value (like C<1>) to prevent L</rc-style substitution>.
 
 I<Default:> undefined
 
+=item MAKEPP_VERSION
+
+The version of makepp you are running with.  If it is a beta version, it will
+have a hyphen followed by YYMMDD plus some more internal data.  You can use
+this for C<ifdef> to hide makepp specific constructs from other makes.
+
+I<Default:> The same value displayed by C<makepp --version>
+
 =item PWD
 
 An alias for L</CURDIR>.
@@ -816,9 +886,9 @@ An alias for L</CURDIR>.
 =item RM
 
 I<Default:> C<rm -f>.  This is meant for legacy Makefiles.  For new ones
-preferably use the builtin L<&rm|makepp_builtins/&rm> command directly.  If
-you want to write a phony clean rule, look at the C<makeppclean -r> command
-instead.
+preferably use the builtin L<&rm|makepp_builtins/rm_option_filename> command
+directly.  If you want to write a phony clean rule, look at the C<L<makeppclean>
+-r> command instead.
 
 =item ROOT
 
@@ -855,7 +925,7 @@ C<Mpp::global> package.  In fact any variable, not yet present in the current
 makefile, and which you assign to in this package will from then on be global,
 as though you had just issued the C<global> statement for it.
 
-This direct access is however error-prone!  The user may have overriden these
+This direct access is however error-prone!  The user may have overridden these
 variables on the command line or through the environment.  Some other makefile
 loaded before this one may have made the variable global or target specific.
 In these cases you would not find the value of the variable, or when assigning

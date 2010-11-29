@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: makeppgraph,v 1.20 2009/02/21 11:28:49 pfeiffer Exp $
+# $Id: makeppgraph,v 1.24 2010/09/29 22:19:53 pfeiffer Exp $
 
 #TODO: when losing BECAUSE child thru merge, become {SELF}BECAUSE
 
@@ -7,11 +7,11 @@ package Mpp;
 
 use strict;
 
-our $VERSION = '@VERSION@';
 use POSIX ();
 
 our $datadir;
 BEGIN {
+  our $VERSION = '@VERSION@';
 #@@setdatadir
 #
 # Find the location of our data directory that contains the auxiliary files.
@@ -43,7 +43,6 @@ BEGIN {
 use Mpp::Utils;
 use Mpp::Glob ();
 use Mpp::File;
-use Mpp::FileOpt;
 use Mpp::Text ();
 
 sub eval_or_die($) {
@@ -53,12 +52,8 @@ sub eval_or_die($) {
 }
 
 BEGIN {
-  *DEPEND = \&Mpp::Text::CONST1;
-  *INCL = \&Mpp::Text::CONST2;
-  *PHONY = \&Mpp::Text::CONST2;
-  *BECAUSE = \&Mpp::Text::CONST4;
-
-  *Mpp::Makefile::implicitly_load = \&Mpp::Text::CONST0; # Don't need to and not able to do real stuff.
+  (*Mpp::Makefile::implicitly_load, # Don't need to and not able to do real stuff.
+   *DEPEND, *INCL, *PHONY, *BECAUSE) = @Mpp::Text::N[0, 1, 2, 2, 4];
 }
 sub SELF() { '' }		# Impossible node name used for own attributes.
 
@@ -274,55 +269,10 @@ my( @logfiles, $outfile, $plain );
     ['s', qr/separate[-_]?directions?/, \$bidirectional, 0, 0],
     ['t', qr/te?xt/, \$type, 0, 'txt'],
     ['u', qr/up(?:wards?)?/, \$up],
-    [undef, 'version', undef, undef, \&Mpp::File::version],
 
-    [qr/[h?]/, 'help', undef, 0, \&usage];
+    splice @Mpp::Text::common_opts;
 }
 
-sub usage { print << 'END_OF_USAGE'; exit 0 }
-Usage: makeppgraph [-options] [starting-point ...]
-Generate a graphical representation of the last build for viewing with
-uDraw(Graph), Graphviz or as a textual representation.
-
--A or --args-file=filename
-	Take additional args from named file.
--b or -because or --build-reasons
-	Highlight build reasons in red.
--D or --dependencies
-	Show dependencies with --includes.
--d or --down or --downwards
-	Follow the edges only downwards from starting-points.
--g or --graphviz or --dot
-	Produce a Graphviz .dot file.
--I dir or --include=dir or --include-dir=dir
-	Add dir to Perl load path @INC.
--i or --includes
-	Show includes instead of dependencies.
--l filename or --log=filename or --log-file=filename
-	Where makepp wrote its log.
--M module or --module=module[=arg,...]
-	Load module and import any functions it exports.
--m perlcode or --merge=perlcode
-	Perform perlcode late for every target and its dependencies.
--o filename or --output=filename
-	Write the output to this file.
--p or --plain
-	Don't use attributes like colors or dotted lines.
--r perlcode or --rename=perlcode
-	Perform perlcode early for every target and its dependencies.
--s or --separate-directions
-	Draw two separate arrows, intead of double ended, where applicable.
--t or --text
-	Produce a human readable .txt file.
--u or --up or --upwards
-	Follow the edges only upwards from starting-points.
---version
-	Print out the current version.
-
-Look at @htmldir@/makeppgraph.html for more details,
-or at http://makepp.sourceforge.net/@BASEVERSION@/makeppgraph.html
-or type "man makeppgraph".
-END_OF_USAGE
 
 if( $includes ) {
   $include{txt} = 'include' if $dependencies;
@@ -743,3 +693,60 @@ if( $type eq 'dot' ) {
   }
 }
 print $foot{$type};
+
+__DATA__
+Usage: makeppgraph [-options] [starting-point ...]
+Generate a graphical representation of the last build for viewing with
+uDraw(Graph), Graphviz or as a textual representation.
+
+Valid options are:
+
+-A filename, --args-file=filename, --arguments-file=filename
+    Read the file and parse it as possibly quoted whitespace- and/or
+    newline-separated options.
+-b, --because, --build-reasons
+    If a node was rebuilt because of a dependency, then that edge is shown
+    in red.
+-D, --dependencies
+    Draw a graph of the dependency relationship determined by makepp.
+-d, --down, --downwards
+    This option is only meaningful if you provide one or more patterns.
+-g, --graphviz, --dot
+    Produce a Graphviz .dot file, instead of the default uDraw(Graph) .udg
+    file.
+-h, --html
+    Produce a browser .html file, instead of the default uDraw(Graph) .udg
+    file.
+-?, --help
+    Print out a brief summary of the options.
+-I directory, --include=directory, --include-dir=directory
+    Add directory to Perl load path @INC.
+-i, --includes
+    Instead of dependencies (or with "-D, --dependencies" additionally to
+    them) draw a graph of include relationships.
+-l filename, --log=filename, --log-file=filename
+    The filename is to where makepp wrote its log.
+-M module[=arg,...], --module=module[=arg,...]
+    Load module and import any functions it exports.
+-m perlcode, --merge=perlcode
+    Perform perlcode for every target and its dependencies.
+-o filename, --output=filename
+    Write the output to this file.
+-p, --plain
+    Don't use attributes like colors or dotted lines.
+-r perlcode, --rename=perlcode
+    Perform perlcode for every target and its dependencies.
+-s, --separate-directions
+    Draw two separate arrows, instead of each double ended arrow, to make
+    them easier to spot.
+-t, --text
+    Produce a human readable .txt file, instead of the default uDraw(Graph)
+    .udg file.
+-u, --up, --upwards
+    This option is only meaningful if you provide one or more patterns.
+-V, --version
+    Print out the version number.
+
+Look at @htmldir@/makeppgraph.html for more details,
+or at http://makepp.sourceforge.net/@BASEVERSION@/makeppgraph.html
+or type "man makeppgraph".

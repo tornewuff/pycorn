@@ -14,7 +14,7 @@ n_files 'n_files2';
 
 unlink 'b1.h';
 makepp;
-###	46	644	1265379162	1265747981	RootMakeppfile
+###	47	644	1265379162	1284664381	RootMakeppfile
 ifdef CHECK_COMPILER
   makeperl {{
     POSIX::_exit '$(notdir $(CC))' !~ /\b(?:g|icc|xlc|cl)/;
@@ -26,7 +26,8 @@ OBJ_SUFFIX = o
 
 ifmakeperl '$(CC)' =~ /\bcl/
   sub dependify {{
-    s/(Note: including file: *)?(.+)\n/$1 ? "'$2' " : "'".f_output()."': "/e;
+    s/\$/\$\$/g;
+    s/(Note: including file: *)?(.+?)\r?\n/$1 ? "'$2' " : "'".f_output()."': "/e;
   }}
   OBJ_SUFFIX = obj
 else ifmakeperl '$(CC)' =~ /\bxlc/

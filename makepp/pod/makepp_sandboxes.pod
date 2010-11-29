@@ -2,9 +2,23 @@
 
 makepp_sandboxes -- How to partition a makepp build
 
-=for vc $Id: makepp_sandboxes.pod,v 1.3 2007/05/29 20:21:46 pfeiffer Exp $
+=for vc $Id: makepp_sandboxes.pod,v 1.4 2010/07/16 21:15:23 pfeiffer Exp $
 
 =head1 DESCRIPTION
+
+=for genindex '[-$][-?\w]+' makepp_sandboxes.pod
+
+B<D:>E<nbsp>L<--do-build|/dont_build_path>,
+  L<--dont-build|/dont_build_path>,
+  L<--dont-read|/dont_read_path>,
+  L<--do-read|/dont_read_path>,E<nbsp>
+B<I:>E<nbsp>L<--in-sandbox|/sandbox_path>,
+  L<--inside-sandbox|/sandbox_path>,E<nbsp>
+B<O:>E<nbsp>L<--out-of-sandbox|/sandbox_path>,E<nbsp>
+B<S:>E<nbsp>L<--sandbox|/sandbox_path>,
+  L<--sandbox-warn|/sandbox_warn>,
+  L<--sandbox-warning|/sandbox_warn>,E<nbsp>
+B<V:>E<nbsp>L<--virtual-sandbox|/virtual_sandbox>
 
 There are a couple of reasons that you might want to partition the file tree
 for a makepp build:
@@ -46,9 +60,14 @@ of the subtree given by I<path> and all of its files and potential files:
 
 Set or reset the "dont-build" property.  Any file with this property set is
 assumed to be up-to-date already, and no build checks will be performed.  The
-default is reset (i.e. "do-build").
+default is reset (i.e. "do-build"), except if you have a C<RootMakeppfile>, in
+which case everything outside of its subtree id "dont-build".
 
 =item --sandbox I<path>
+
+=item --in-sandbox I<path>
+
+=item --inside-sandbox I<path>
 
 =item --out-of-sandbox I<path>
 
@@ -56,7 +75,17 @@ Set or reset the "in-sandbox" property.  An error is raised if makepp would
 otherwise write a file with this property reset.  Build checks are still
 performed, unless the "dont-build" property is also set.  The default is set
 (i.e. "in-sandbox"), unless there are any B<--sandbox> options, in which case
-the default is reset (i.e. "out-of-sandbox").
+the default for all other files is reset (i.e. "out-of-sandbox").
+
+=item --sandbox-warn
+
+=item --sandbox-warning
+
+Downgrade violations of "in-sandbox" and "dont-read" to warnings instead of
+errors.  This is useful when there are hundreds of violations, so that you can
+collect all of them in a single run and take appropriate corrective action.
+Otherwise, you see only one violation per makepp invocation, and you don't
+know how many are left until they're all fixed.
 
 =item --dont-read I<path>
 
@@ -66,6 +95,14 @@ Set or reset the "dont-read" property.  An error is raised if makepp would
 otherwise read a file with this property set.  The default is reset
 (i.e. "do-read").
 
+=item --virtual-sandbox
+
+Don't rewrite build infos of files that were not created by this makepp process.
+This is useful when running concurrent makepp processes with overlapping
+sandboxes, and you are certain that no two processes will attempt to build
+the same target.  Makepp will then refrain from caching additional information
+about files that it reads, because there might be other concurrent readers.
+
 =back
 
 Each of these 3 properties applies to the entire subtree, including to files
@@ -74,13 +111,6 @@ specified path may be an individual file, even if the file does not yet exist.
 
 If a property is both set and reset on the exact same path, then the option
 that appears furthest to the right on the command line takes precedence.
-
-If the B<--sandbox-warn> option is specified, then violations of "in-sandbox"
-and "dont-read" are downgraded to warnings instead of errors.  This is useful
-when there are hundreds of violations, so that you can collect all of them in
-a single run and take appropriate corrective action.  Otherwise, you see only
-one violation per makepp invocation, and you don't know how many are left
-until they're all fixed.
 
 =head2 Sandboxing for Acceleration
 

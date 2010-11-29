@@ -2,7 +2,7 @@
 
 makepp_cookbook -- The best way to set up makefiles for various situations
 
-=for vc $Id: makepp_cookbook.pod,v 1.18 2006/07/09 22:50:31 pfeiffer Exp $
+=for vc $Id: makepp_cookbook.pod,v 1.21 2010/11/17 21:35:52 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -104,29 +104,29 @@ developing the library along with a program, because you don't bother to
 compile library modules that aren't needed for the particular program
 you are working on.
 
-If your library strictly observes the convention that all functions or
-classes declared in a file F<xyz.h> are completely implemented in a
-source file that compiles to F<xyz.o> (i.e., you don't split up the
-implementation into F<xyz1.o> and F<xyz2.o>), then you can use the
-S<C<$(infer_objects )>> function to tell makepp to pull out only the
-relevant modules from the library.  This can work surprisingly well for
-libraries with even dozens of include files.  Basically,
-C<$(infer_objects )> examines the list of F<.h> files that are included,
-and looks for corresponding F<.o> files.  If you're rapidly developing a
-library and a program together, this can save compilation time, because
-you never bother to compile modules of the library that the program
-doesn't use.
+If your library strictly observes the convention that all functions or classes
+declared in a file F<xyz.h> are completely implemented in a source file that
+compiles to F<xyz.o> (i.e., you don't split up the implementation into
+F<xyz1.o> and F<xyz2.o>), then you can use the
+L<C<$(infer_objects)>|makepp_functions/infer_objects_file1_file2_pattern>
+function to tell makepp to pull out only the relevant modules from the
+library.  This can work surprisingly well for libraries with even dozens of
+include files.  Basically, C<$(infer_objects)> examines the list of F<.h>
+files that are included, and looks for corresponding F<.o> files.  If you're
+rapidly developing a library and a program together, this can save compilation
+time, because you never bother to compile modules of the library that the
+program doesn't use.
 
 Here's an example of the way I use it:
 
     my_program: $(infer_objects *.o, $(LIB1)/*.o $(LIB2)/*.o)
  	$(CXX) $(inputs) -o $(output) $(SYSTEM_LIBRARIES)
 
-The S<C<$(infer_objects )>> function returns its first argument (after
-doing wildcard expansion on it), and also scans through the list of
-files in its second argument, looking for files whose name is the same
-as the name of any F<.h> files included by any file in its first
-argument.  If any such files are found, these are added to the list.
+The S<C<$(infer_objects )>> function returns its first argument (after doing
+wildcard expansion on it), and also looks through the list of files in its
+second argument, for files whose name is the same as the name of any F<.h>
+files included by any file in its first argument.  If any such files are
+found, these are added to the list.
 
 =head3 Building a static library
 
@@ -325,7 +325,7 @@ variables, which are directly accessible from makepp:
     # Fetch values out of the config hash.
     use Config;
     $CC = $Config{'cc'};   # C compiler that perl used;
-    $byteorder_flags = "-DBYTEORDER=$Config{'byteorder'};
+    $byteorder_flags = "-DBYTEORDER=$Config{'byteorder'}";
     $longdouble_defined = $Config{'d_longdbl'} eq 'define';
     $CFLAGS_for_shared_libs = $Config{'cccdlflags'};
     $LDFLAGS_for_shared_libs = $Config{'ccdlflags'};
@@ -523,18 +523,14 @@ following:
  			# an x86.  The -r is not really useful on linux,
  			# but is important for other OSes: binaries for
  			# SunOS 5.8 typically won't run on SunOS 5.7.
-    dummy := $(shell test -d $(ARCH) || mkdir -p $(ARCH))
- 			      # Make sure the output directory exists.
+    &mkdir -p $(ARCH)	# Make sure the output directory exists.
     CFLAGS := -g -O2
     INCLUDE_DIR := $(find_upwards includes)
- 			      # Searches ., .., ../.., etc. for a file or
- 			      # directory called includes, so if you put
- 			      # all your include files in there, this will
- 			      # find them.
+ 			# Searches ., .., ../.., etc. for a file or
+ 			# directory called includes, so if you put
+ 			# all your include files in there, this will
+ 			# find them.
     INCLUDES := -I$(INCLUDE_DIR)
- 
-    dummy := $(shell test -d $(ARCH) || mkdir -p $(ARCH))
- 			      # Make sure the output directory exists.
  
     $(ARCH)/%.lo : %.c
  	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(INCLUDES) -c $(input) -o $(output)
@@ -692,7 +688,7 @@ explicitly with something like this:
 
     MOC	:= $(QTDIR)/bin/moc
     MODULES	:= whatever modules you happen to have in your program
-    MOC_MODULES := $(patsubst %.h, moc_%, $(shell grep -l Q_OBJECT *.h))
+    MOC_MODULES := $(patsubst %.h, moc_%, $(&grep -l /Q_OBJECT/ *.h))
  			# Scans all the .h files for the Q_OBJECT macro.
  
     my_program: $(MODULES).o $(MOC_MODULES).o
@@ -864,17 +860,20 @@ You can specify a rule to build the output directory, then make sure
 that each file that goes in the output directory depends on it.  But
 it's usually easier to do something like this:
 
+    # The classical way
     dummy := $(shell test -d $(OUTPUT_DIRECTORY) || mkdir -p $(OUTPUT_DIRECTORY))
  		# This is usually easier than making all files depend on
  		# $(OUTPUT_DIRECTORY) and having a rule to make it.
  		# Note that you must use := instead of = to force it to
  		# execute immediately.
-    # An alternative approach: using perl code
+    # An alternative approach: using perl code, OUTPUT_DIRECTORY local var
     perl_begin
       -d $OUTPUT_DIRECTORY or mkdir $OUTPUT_DIRECTORY;
     perl_end
+    # The modern way, does nothing for existing directories
+    &mkdir -p $(OUTPUT_DIRECTORY)
 
-These statements should be near the top of your makefile, so they are
+One of these statements should be near the top of your makefile, so they are
 executed before anything that could possibly need the directory.
 
 =head3 How do I force a command to execute on every build?

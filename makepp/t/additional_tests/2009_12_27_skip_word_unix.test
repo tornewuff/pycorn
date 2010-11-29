@@ -1,24 +1,27 @@
 ###	SPAR <http://www.cpan.org/scripts/>
-###	26	644	1250804840	1261696569	Makeppfile
-# The 1st rule used complain that it did not find a scanner in the recursive
+###	29	644	1289337252	1289337252	Makeppfile
+# The 1st rule used complain that it did not find a parser in the recursive
 # parse, as did th 2nd in the outer parse, which additionally didn't recognize
-# the compiler.
+# the compiler.  This is history because the new special parsers don't recurse.
 
-$(phony all): a/a.o b.o c.o
+$(phony all): $( a/a b c d).o
 
 a/a.o:
 	if [ ! -d a ]; then mkdir a; fi
 	$(CC) -E a.c > $(output)
 
 
-b.o: : scanner skip-word
+b.o: : parser shell
 	trap '$(CC) -E c.c > $(output)' 0
 
 
-register-scanner echo skip-word
+register-parser echo skip-word
 
 c.o:
-	echo $(CC) -E b.c > $(output)
+	echo libtool $(CC) -E b.c > $(output)
+
+d.o: : parser none
+	echo libtool $(CC) -E d.c > $(output)
 
 
 %.c: :last_chance
@@ -27,5 +30,5 @@ c.o:
 %.h: :last_chance
 	&echo 'int f();' -o $(output)
 ###	D	755	1261610241	1261610241	answers
-###	1	644	1261610241	1261610241	answers/n_files
-9 1 0
+###	1	644	1289337201	1289337201	answers/n_files
+10 1 0

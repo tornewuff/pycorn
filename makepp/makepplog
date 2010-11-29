@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: makepplog,v 1.33 2010/02/24 23:28:27 pfeiffer Exp $
+# $Id: makepplog,v 1.40 2010/11/17 21:35:52 pfeiffer Exp $
 
 package Mpp;
 
@@ -42,13 +42,14 @@ my %log_msg =
   INFER_DEP => 'infer_objects adding %s to dependency list because of %s',
   INFER_SEED => 'infer_objects called with seed objects %s',
 
+  LEX_RULE => 'Lexically analyzing rule for %s because %s',
   LOAD => 'Loading makefile %s with default directory %s',
   LOAD_AGAIN => 'Reloading makefile %s (because of %s) with default directory %s',
   LOAD_AUTOMAKE => 'Cleaning automake junk out of %S',
   LOAD_DEFAULT => 'Loading default makefile for directory %s',
   LOAD_END => 'Finished loading %s',
   LOAD_INCL => 'Including %s from %s',
-  LOAD_REC => 'Makefile%s seems recursive, so makefiles for its dependencies will not be implicitly loaded',
+  LOAD_REC => 'Makefile %s seems recursive, so makefiles for its dependencies will not be implicitly loaded',
 
   MAYBE_STALE => 'Ignoring possibly stale generated file %s',
   NOT_FOUND => '%s not found in $PATH at %s',
@@ -58,6 +59,9 @@ my %log_msg =
   N_REP_HITS => '%d files imported from repositories',
   OUT_OF_DATE => 'Discarding out-of-date or corrupt build info file %s',
   PARSE => 'Parsing command %s from directory %s for rule %s',
+  PARSE_NONE => 'Parser none for %s for rule %s',
+  PARSE_SHELL => 'Parser shell %s command %s for rule %s',
+  PARSE_SKIP_WORD => 'Parser skip_word from %s to %s for rule %s',
   PREBUILD => 'Pre-building %s from %s',
   REMOVE => 'Removing target %s before running its rule',
 
@@ -89,8 +93,7 @@ my %log_msg =
   SCAN_INFO_NOT => 'Couldn\'t use %s to retrieve scan info because %s',
   SCAN_NOT_SYS => 'Not scanning system file %s',
   SCAN_NOT_UNWRITABLE => 'Not scanning unwritable file %s',
-  SCAN_RULE => 'Scanning rule for %s because %s',
-  SCAN_UNCACHEABLE => 'Not caching scan info for %s because the scanner for %s doesn\'t support it',
+  SCAN_UNCACHEABLE => 'Not caching scan info for %s because the parser for %s doesn\'t support it',
 
   SYMLINK => 'After building, %s is a symbolic link',
   SYMLINK_KEEP => 'Keeping symbolic link %s from previous build at %s',
@@ -99,6 +102,8 @@ my %log_msg =
   TRY => 'Trying to build %s',
   UP_TO_DATE => '%s is up to date',
   USE => ' Using rule %s',
+
+  VERSION => 'Running %s with perl %s on %s',
  );
 
 # This list contains a hashref for every logging version, which is the list
@@ -117,15 +122,16 @@ $obsolete_msg[0] =
  };
 $obsolete_msg[1] =
  {
-  N_FILES => '%d files updated and %d targets failed'
+  N_FILES => '%d files updated and %d targets failed',
+
+  SCAN_RULE => 'Scanning rule for %s because %s',
  };
 
 
 
-our $VERSION = '@VERSION@';
-
 our $datadir;
 BEGIN {
+  our $VERSION = '@VERSION@';
 #@@setdatadir
 #
 # Find the location of our data directory that contains the auxiliary files.
@@ -156,10 +162,9 @@ BEGIN {
 
 use Mpp::Utils;
 use Mpp::File;
-use Mpp::FileOpt;
 use Mpp::Text ();
 
-my( $cwd, $instdir, $keylist, $noindent, $rename, $tabulate, $uniq );
+my( $cwd, $instdir, $keylist, $noindent, $rename, $tabulate, $uniq, $tmp );
 my( @logfiles, $outfile );
 my $follow = 0;
 my $prefix = '';
@@ -170,6 +175,10 @@ my $showkey = '';
   Mpp::Text::getopts
     ['c', qr/current[-_]?working[-_]?dir(?:ectory)/, \$cwd, 0, 0],
     ['C', qr/current[-_]?working[-_]?dir(?:ectory)[-_]?and[-_]?up/, \$cwd, 1],
+    ['d', qr/set[-_]?dir(?:ectory)/, \$tmp, 1, sub {
+       $CWD_INFO = file_info $tmp;
+       $cwd = 0 unless defined $cwd;
+     }],
     [qw(f follow), \$follow],
     ['i', qr/install(?:ation)?[-_]?dir(?:s|ectory|ectories)/, \$instdir],
     ['k', qr/key(?:s|list)/, \$keylist, 1],
@@ -180,48 +189,12 @@ my $showkey = '';
     [qw(p prefix), \$prefix, 0, 'makepplog: '],
     [qw(t tabulate), \$tabulate],
     ['u', qr/uniq(?:ue)?/, \$uniq],
-    [undef, 'version', undef, undef, \&Mpp::File::version],
 
-    [qr/[h?]/, 'help', undef, 0, \&usage];
+    splice @Mpp::Text::common_opts;
 }
 
 $| = 1 if $follow > 1;
 
-sub usage { print << 'END_OF_USAGE'; exit 0 }
-Usage: makepplog [-options]
-Render and optionally filter what makepp logged about the last build.
-
--A or --args-file=filename
-	Take additional args from named file.
--c, --current-working-dir or --current-working-directory
-	Make all files under current dir, be relative to it.
--C N, --current-working-dir-and-up=N or --current-working-directory-and-up=N
-	Make all files under current N dirs up, be relative to this one.
--i, --install-dir or --installation-directory
-	Replace path to makepp internal files with ...
--k LIST, --keys=LIST or --keylist=LIST
-	Show only messages with, !without or ^without keys, {bash,patterns}.
--K or --showkey
-	Prepend every message with its internal key (to see what to select)
--l FILE, --log=FILE or --logfile=FILE
-	Alternate file or dir to get log from, can be given more than once.
--n or --no-indent
-	Don't show scanner nesting with indentation.
--o FILE or --output=FILE
-	Redirect output.
--p or --prefix
-	Prefix every line with makepplog:
--t or --tabulate
-	Put each list item on a new line.
--u, --uniq or --unique
-	Don't repeat lines about inclusion or scanning.
---version
-	Print out the current version.
-
-Look at @htmldir@/makepplog.html for more details,
-or at http://makepp.sourceforge.net/@BASEVERSION@/makepplog.html
-or type "man makepplog".
-END_OF_USAGE
 
 my %instdir;
 sub instdir {
@@ -281,7 +254,7 @@ for my $logfile ( @logfiles ) {
       }
       for my $re ( split ) {
 	if( $re =~ s/^[!^]// ) {
-	  @want{keys %log_msg} = () if !%want;
+	  @want{keys %log_msg} = () unless %want;
 	  delete @want{grep /^$re$/, keys %want};
 	} else {
 	  @want{grep /^$re$/, keys %log_msg} = ();
@@ -291,7 +264,7 @@ for my $logfile ( @logfiles ) {
 
     @want{keys %log_msg} = () if !%want;
   }
-  s!^(?:[a-z]:)?/.+(?=/makepp\b)!...!i if $instdir;
+  s!^'?(?:[a-z]:)?/.+(/makepp)\b'?!...\l$1!i if $instdir;
   print;
 
   my $indent = '';
@@ -396,7 +369,7 @@ for my $logfile ( @logfiles ) {
 	  printf "$prefix$showkey$indent$log_msg{CACHED_DEP}\n",
 	    '`' . (join $tabulate ? "',\n$prefix$showkey$indent  `" : "', `", map $file_name{$_}, @cached_dep) . "'",
 	    "`$file_name{$cached_dep}'";
-	  goto CACHED_DEP if $key eq 'CACHED_DEP'; # Next one follows right behind.
+	  no warnings 'deprecated'; goto CACHED_DEP if $key eq 'CACHED_DEP'; # Next one follows right behind.
 	  undef $cached_dep;
 	  @cached_dep = ();
 	}
@@ -426,3 +399,49 @@ for my $logfile ( @logfiles ) {
     goto RETRY;
   }
 }
+
+__DATA__
+Usage: makepplog [-options]
+Render and optionally filter what makepp logged about the last build.
+
+Valid options are:
+
+-A filename, --args-file=filename, --arguments-file=filename
+    Read the file and parse it as possibly quoted whitespace- and/or
+    newline-separated options.
+-c, --current-working-directory, -C number, --current-working-directory-and-up=number
+    The first two options strip the current directory from the front of all
+    filenames it outputs.
+-f, --follow
+    As in "tail" command, process more lines of logfile as it grows.
+-?, -h, --help
+    Print out a brief summary of the options.
+-i, --install-dirs, --installation-directories
+    These options replace the invocation of makepp and the pathes to the
+    built in makefiles with .
+-k list, --keys=list, --keylist=list
+    The list specifies one or more space separated Shell style patterns
+    (with [xyz], ?, , {a,bc,def}).
+-K, --showkey
+    This prefixes each output line with the internal name of the message
+    key, for use with "--keys".
+-l filename, --log=filename, --log-file=filename
+    The filename is to where makepp wrote its log.
+-n, --no-indent
+    Makepp puts indentation information into the log file to show you what
+    happened because of what else.
+-o filename, --output=filename
+    Write the output to this file, rather than stdout.
+-p, --prefix
+    Prefix every structured message with the string "makepplog: ".
+-t, --tabulate
+    Put each list item on a new line, rather than outputting a line that can
+    easily become longer than a screenful.
+-u, --uniq, --unique
+    Report each found include statement and each scan output only once.
+-V, --version
+    Print out the version number.
+
+Look at @htmldir@/makepplog.html for more details,
+or at http://makepp.sourceforge.net/@BASEVERSION@/makepplog.html
+or type "man makepplog".

@@ -6,7 +6,7 @@
 # The parent makepp process sets the environment variable MAKEPP_SOCKET
 # to be the name of a file that we're supposed to write information about the
 # cwd and make command.
-# $Id: recursive_makepp,v 1.4 2009/09/25 20:09:53 pfeiffer Exp $
+# $Id: recursive_makepp,v 1.5 2010/09/03 21:09:35 pfeiffer Exp $
 #
 
 use Cwd;
@@ -67,12 +67,12 @@ $response .= $_
 if ($response =~ s/^(\d+)\s+//) { # Status is the first word of the response.
   $status = $1;
 } else {
-  warn "recursive_makepp: protocol error\n";
+  warn "recursive_makepp: protocol error '$response'\n";
   $status = 253;
 }
 
 chomp $response;                # Strip extra newline out if there is one.
-$response and print STDERR "$response\n"; # Any error message?
+$response and print STDERR "\$(MAKE): $response\n"; # Any error message?
 
 #chomp $_;
 #print "Recursive make: status was '$_'\n";

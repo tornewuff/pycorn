@@ -2,7 +2,7 @@
 
 makepp_tutorial -- Tutorial on writing makefiles
 
-=for vc $Id: makepp_tutorial.pod,v 1.11 2006/07/02 16:41:01 pfeiffer Exp $
+=for vc $Id: makepp_tutorial.pod,v 1.13 2010/11/17 21:35:52 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
@@ -282,19 +282,17 @@ like this:
     processing.o: processing.cxx processing.h simple_vector.h list.h
  	c++ -c processing.cxx -o processing.o
 
-However, it is a real nuisance to modify the makefile every time you
-change the list of files that are included, and it is also extremely
-error prone.  You would not only have to list the files that
-C<processing.cxx> includes, but also all the files that those files
-include, etc.  B<You don't have to do this.> Makepp is smart enough to
-check for include files automatically.  Any time it sees a command that
-looks like a C or C++ compilation (by looking at the first word of the
-action), it reads in the source files looking for C<#include>
-directives.  It knows where to look for include files by scanning for
-C<-I> options on your compiler command line.  Any files which are
-included are automatically added to the dependency list, and any files
-which those include.  If any of them has changed, the file will be
-recompiled.
+However, it is a real nuisance to modify the makefile every time you change
+the list of files that are included, and it is also extremely error prone.
+You would not only have to list the files that C<processing.cxx> includes, but
+also all the files that those files include, etc.  B<You don't have to do
+this.> Makepp is smart enough to check for include files automatically.  Any
+time it sees a command that looks like a C or C++ compilation (by looking at
+the first word of the action), it reads in the source files looking for
+C<#include> directives.  It knows where to look for include files by parsing
+your compiler command line for C<-I> options .  Any files which are included
+are automatically added to the dependency list, and any files which those
+include.  If any of them has changed, the file will be recompiled.
 
 Once makepp knows that C<processing.o> is up to date, it then determines
 whether C<gui.o> needs to be rebuilt by applying the same procedure to
@@ -462,7 +460,7 @@ that it appears in.  The most useful automatic variables are:
 The name of the first input file.  In this rule, this would be the file
 that matches the C<%.c> pattern.  C<$(dependency)> is a synonymn for
 C<$(input)>.  In older makefiles, you will also see the cryptic symbol
-C<E<lt>> used as well.
+C<$E<lt>> used as well.
 
 =item C<$(output)>
 
@@ -1238,30 +1236,25 @@ details, see L<makepp_repositories>.
 
 =head2 Debugging Makefiles
 
-=head3 .makepp_log
+=head3 Log File
 
-If you have a complicated build procedure, you find that makepp is
-rebuilding things more often than you think they need to be rebuilt.  Or
-you may find that it is not rebuilding things when it should.  You don't
-have to keep staring at your makefiles until you see the problem.  On
-every build, makepp produces a log file that explains which rule it
-thought it was supposed to use to build each target, what files it
-thought each target depended on, and (if it did decide to rebuild) why
-it thought a rebuild was necessary.  This file is called C<.makepp_log>
-and it is placed in the directory you actually ran makepp from.  (Of
-course, the filename has a leading period, which means that you won't
-see it there unless you specifically look for it.  It's designed to be
-unobtrusive.)
+If you have a complicated build procedure, you find that makepp is rebuilding
+things more often than you think they need to be rebuilt.  Or you may find
+that it is not rebuilding things when it should.  You don't have to keep
+staring at your makefiles until you see the problem.  On every build, makepp
+produces a log file that explains which rule it thought it was supposed to use
+to build each target, what files it thought each target depended on, and (if
+it did decide to rebuild) why it thought a rebuild was necessary.  This binary
+file is viewed L<makepplog, mppl|makepplog> utility.
 
-The log file's format is more or less self-explanatory.  Indentation in
-the log file conveys depth in makepp's inference tree.  Suppose the
-target is C<all>, and C<all> depends on C<my_program>, and C<my_program>
-depends on C<*.o>, which depend on the corresponding C<.c> files.  Log
-messages related to C<all> will not be indented, log messages related to
-building the target C<my_program> will be indented two spaces, log
-messages related to building any of the object files will be indented 4
-spaces, and log messages related to building any of the source files
-will be indented 6 spaces.
+The output format is more or less self-explanatory.  Indentation conveys depth
+in makepp's inference tree.  Suppose the target is C<all>, and C<all> depends
+on C<my_program>, and C<my_program> depends on C<*.o>, which depend on the
+corresponding C<.c> files.  Log messages related to C<all> will not be
+indented, log messages related to building the target C<my_program> will be
+indented two spaces, log messages related to building any of the object files
+will be indented 4 spaces, and log messages related to building any of the
+source files will be indented 6 spaces.
 
 If you're doing a parallel make (using the C<-j> command line option),
 the order of the messages in the log file will not make nearly as much
@@ -1282,11 +1275,11 @@ makepp smarter.)  However, if you are running commands other than
 compilation, or dealing with languages other than C or C++, it is much
 easier to run into problems.
 
-If you don't tell makepp all of the dependencies of a file, and it can't
-infer them by looking at the command line or scanning the files for
-includes, then it may not rebuild a file when it should.  You can make
-this kind of error less likely by using only automatic variables in your
-actions, rather than repeating the dependency lists.  For example,
+If you don't tell makepp all of the dependencies of a file, and it can't infer
+them by parsing the command line or scanning the files for includes, then it
+may not rebuild a file when it should.  You can make this kind of error less
+likely by using only automatic variables in your actions, rather than
+repeating the dependency lists.  For example,
 
     combined_file: a b c
  	 do_something a b c d > combined_file

@@ -2,93 +2,116 @@
 
 makepp_command -- Command line syntax for makepp
 
-=for vc $Id: makepp_command.pod,v 1.44 2010/04/22 20:36:21 pfeiffer Exp $
+=for vc $Id: makepp_command.pod,v 1.49 2010/09/29 22:06:41 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
-L<-B<A>|/_2da_filename>,
-  L<--assume-new|/_2DW_filename>,
-  L<--argsfile|/_2da_filename>,
-  L<--assume-old|/_2Do_filename>,E<nbsp>
-L<-B<b>|/_2d_2dbuild_2dcache>,
-  L<--build-cache|/_2d_2dbuild_2dcache>,
-  L<--build-check|/_2d_2dbuild_2dcheck_3dmethod>,E<nbsp>
-L<-B<c>|/_2dc>,
-  L<-C|/_2dc_dirname>,E<nbsp>
-L<--B<d>irectory|/_2dc_dirname>,
-  L<--do-build|/_2D_2Ddo_2Dbuild_3Dfilename>,
-  L<--do-read|/_2D_2Ddo_2Dread_3Dfilename>,
-  L<--dont-build|/_2D_2Ddont_2Dbuild_3Dfilename>,
-  L<--dont-read|/_2D_2Ddo_2Dread_3Dfilename>,
-  L<--dry-run|/_2Dn>,
-  L<--dump_makefile|/_2D_2Ddump_2Dmakefile_3Dfilename>,E<nbsp>
-L<-B<e>|/_2De>,
-  L<--env-overides|/_2De>,
-  L<--environment-overides|/_2De>,E<nbsp>
-L<-B<f>|/_2df_makefile>,
-  L<-F|/_2df_makeppfile>,
-  L<--file|/_2Df_makefile>,
-  --final-rules-only,
-  L<--force-copy-from-bc|/_2d_2dforce_2dcopy_2dfrom_2dbc>,
-  --force-rebuild,
-  --force-rescan,E<nbsp>
---B<g>ullible,E<nbsp>
-L<-B<I>|/_2di_dir>,
-  --implicit-load-makeppfile-only,
-  L<--include|/_2di_dir>,
-  L<--include-dir|/_2di_dir>,
-  --in-sand-box,
-  --inside-sand-box,E<nbsp>
-L<-B<j>|/_2Dj_n>,
-  L<--jobs|/_2Dj_n>,
-  L<--just-print|/_2Dn>,E<nbsp>
-L<-B<k>|/_2Dk>,
-  L<--keep-going|/_2Dk>,E<nbsp>
-L<--B<l>og-file|/_2D_2Dlog_2Dfile_3Dlogfilename>,
-  L<--load-makefile|/_2d_2dload_2dmakefile_makefile>,E<nbsp>
-L<-B<m>|/_2Dm_method>,
-  L<--makefile|/_2df_makefile>,
-  L<--makeppfile|/_2df_makeppfile>,E<nbsp>
-  L<--md5-check-bc|/_2d_2dmd5_2dcheck_2dbc>,
-L<-B<n>|/_2Dn>,
-  L<--no-builtin-rules|/_2D_2Dno_2Dbuiltin_2Drules>,
-  L<--no-implicit-load|/_2D_2Dno_2Dimplicit_2Dload>,
-  L<--no-log|/_2D_2Dno_2Dlog>,
-  L<--no-log-scan|/_2D_2Dno_2Dlog_2Dscan>,
-  L<--no-path-executable-dependencies|/_2d_2dno_2dpath_2dexecutable_2ddependencies>,
-  L<--no-populate-bc|/_2d_2dno_2dpopulate_2dbc>,
-  L<--no-remake-makefiles|/_2D_2Dno_2Dremake_2Dmakefiles>,
-  L<--no-warn|/_2D_2Dno_2Dwarn>,E<nbsp>
-L<-B<o>|/_2Do_filename>,
-  L<--old-file|/_2Do_filename>,
-  L<--out-of-sandbox|/_2D_2Dsandbox_3Dfilename>,E<nbsp>
-L<--B<p>ercent-subdirs|/_2D_2Dpercent_2Dsubdirs>,
-  L<--populate-bc-only|/_2d_2dpopulate_2dbc_2donly>
-  --profile,E<nbsp>
-L<-B<q>|/_2Dq>,
-  L<--quiet|/_2Dq>,E<nbsp>
-L<-B<r>|/_2Dr>,
-  L<-R|/_2DR_dir>,
-  L<--repository|/_2DR_dir>,
-  L<--rm-stale|/_2D_2Drm_2Dstale>,
-  L<--remove-stale|/_2D_2Drm_2Dstale>,
-  L<--root-directory|/_2dc>,E<nbsp>
-L<-B<s>|/_2Ds>,
-  L<--sandbox|/_2D_2Dsandbox_3Dfilename>,
-  --sand-box-warning,
-  L<--signature-method|/__2Dm_method>,
-  L<--silent|/_2Ds>,
-  L<--stop|/_2D_2Dstop>,
-  L<--stop-after-loading|/_2D_2Dstop>,E<nbsp>
-  --stop-on-race
-  L<--symlink-in-repository-as-file|/_2D_2Dsymlink_2Din_2Drepository_2Das_2Dfile>,
-L<--B<t>raditional-recursive-make|/_2D_2Dtraditional_2Drecursive_2Dmake>,E<nbsp>
-L<-B<v>|/_2Dv>,
-  L<--verbose|/_2Dv>,
-  L<--version|/_2D_2Dversion>,E<nbsp>
-  L<--virtual-sandbox|/_2D_2Dvirtual_2Dsandbox>,E<nbsp>
-L<-B<W>|/_2DW_filename>,
-  L<--what-if|/_2DW_filename>
+=for genindex '[-$][-?\w]+' makepp_command.pod
+
+B<?:>E<nbsp>L<-?|/_>,E<nbsp>
+B<A:>E<nbsp>L<-A|/a_filename>,
+  L<--args-file|/a_filename>,
+  L<--arguments-file|/a_filename>,
+  L<--assume-new|/w_filename>,
+  L<--assume-old|/o_filename>,E<nbsp>
+B<B:>E<nbsp>L<-b|/b_directory>,
+  L<--build-cache|/b_directory>,
+  L<--build-check|/build_check_method>,
+  L<--build-check-method|/build_check_method>,E<nbsp>
+B<C:>E<nbsp>L<-C|/c_directory>,
+  L<-c|/c>,E<nbsp>
+B<D:>E<nbsp>L<--directory|/c_directory>,
+  L<--do-build|/dont_build_filename>,
+  L<--dont-build|/dont_build_filename>,
+  L<--dont-read|/dont_read_filename>,
+  L<--do-read|/dont_read_filename>,
+  L<--dry-run|/n>,
+  L<--dump-makefile|/dump_makefile_filename>,
+  L<--dump-makeppfile|/dump_makefile_filename>,E<nbsp>
+B<E:>E<nbsp>L<-e|/e>,
+  L<--environment-overides|/e>,
+  L<--env-overides|/e>,E<nbsp>
+B<F:>E<nbsp>L<-F|/f_makeppfile>,
+  L<-f|/f_makefile>,
+  L<--file|/f_makefile>,
+  L<--final-rules-only|/final_rules_only>,
+  L<--force-copy-from-bc|/force_copy_from_bc>,
+  L<--force-rescan|/force_rescan>,E<nbsp>
+B<G:>E<nbsp>L<--gullible|/gullible>,E<nbsp>
+B<H:>E<nbsp>L<-h|/_>,
+  L<--help|/_>,E<nbsp>
+B<I:>E<nbsp>L<-I|/i_directory>,
+  L<--implicit-load-makeppfile-only|/implicit_load_makeppfile_only>,
+  L<--include|/i_directory>,
+  L<--include-dir|/i_directory>,
+  L<--in-sandbox|/sandbox_directory>,
+  L<--inside-sandbox|/sandbox_directory>,E<nbsp>
+B<J:>E<nbsp>L<-j|/j_n>,
+  L<--jobs|/j_n>,
+  L<--just-print|/n>,E<nbsp>
+B<K:>E<nbsp>L<-k|/k>,
+  L<--keep-going|/k>,E<nbsp>
+B<L:>E<nbsp>L<--last-chance-rules|/last_chance_rules>,
+  L<--load-makefile|/load_makefile_makefile>,
+  L<--load-makeppfile|/load_makefile_makefile>,
+  L<--log|/log_logfilename>,
+  L<--log-file|/log_logfilename>,E<nbsp>
+B<M:>E<nbsp>L<-m|/m_method>,
+  L<--makefile|/f_makefile>,
+  L<$MAKEFLAGS|/_makeflags>,
+  L<$MAKEPP_CASE_SENSITIVE_FILENAMES|/_makepp_case_sensitive_filenames>,
+  L<--makeppfile|/f_makeppfile>,
+  L<$MAKEPPFLAGS|/_makeppflags>,
+  L<--md5-bc|/md5_bc>,
+  L<--md5-check-bc|/md5_bc>,E<nbsp>
+B<N:>E<nbsp>L<-n|/n>,
+  L<--new-file|/w_filename>,
+  L<--no-builtin-rules|/r>,
+  L<--no-cache-scaninfos|/no_cache_scaninfos>,
+  L<--no-implicit-load|/no_implicit_load>,
+  L<--no-log|/no_log>,
+  L<--no-path-executable-dependencies|/no_path_exe_dep>,
+  L<--no-path-exe-dep|/no_path_exe_dep>,
+  L<--no-populate-bc|/no_populate_bc>,
+  L<--no-print-directory|/no_print_directory>,
+  L<--no-remake-makefiles|/no_remake_makefiles>,
+  L<--no-warn|/no_warn>,E<nbsp>
+B<O:>E<nbsp>L<-o|/o_filename>,
+  L<--old-file|/o_filename>,
+  L<--out-of-sandbox|/out_of_sandbox_filename>,E<nbsp>
+B<P:>E<nbsp>L<--populate-bc-only|/populate_bc_only>,
+  L<--profile|/profile>,E<nbsp>
+B<Q:>E<nbsp>L<--quiet|/s>,E<nbsp>
+B<R:>E<nbsp>L<-R|/r_directory>,
+  L<-r|/r>,
+  L<--recon|/n>,
+  L<--remove-stale|/rm_stale>,
+  L<--remove-stale-files|/rm_stale>,
+  L<--repository|/r_directory>,
+  L<--rm-stale|/rm_stale>,
+  L<--root-dir|/c>,
+  L<--root-directory|/c>,E<nbsp>
+B<S:>E<nbsp>L<-s|/s>,
+  L<--sandbox|/sandbox_directory>,
+  L<--sandbox-warn|/sandbox_warn>,
+  L<--sandbox-warning|/sandbox_warn>,
+  L<--signature|/m_method>,
+  L<--signature-method|/m_method>,
+  L<--silent|/s>,
+  L<--stop|/stop>,
+  L<--stop-after-loading|/stop>,
+  L<--stop-on-race|/stop_race>,
+  L<--stop-race|/stop_race>,
+  L<--symlink-in-rep-as-file|/symlink_in_rep_as_file>,
+  L<--symlink-in-repository-as-file|/symlink_in_rep_as_file>,E<nbsp>
+B<T:>E<nbsp>L<--traditional-recursive-make|/traditional_recursive_make>,E<nbsp>
+B<V:>E<nbsp>L<-V|/v>,
+  L<-v|/v>,
+  L<--verbose|/v>,
+  L<--version|/v>,
+  L<--virtual-sandbox|/virtual_sandbox>,E<nbsp>
+B<W:>E<nbsp>L<-W|/w_filename>,
+  L<--what-if|/w_filename>
 
 B<makepp> S<[ I<option> ... ]> S<[ I<VAR=value> ]> S<[ I<target> ... ]>
 
@@ -105,102 +128,72 @@ assignment or environment variable in every Makefile loaded, e.g.,
 
     makepp CFLAGS=-O2
 
-Options include most of the standard make options, plus a few new ones.
+Valid options are most of the standard make options, plus a few new ones:
 
 =over 4
 
-=item -A filename
+=item -A I<filename>
 
-=item --args-file=filename
+=item --args-file=I<filename>
 
-=item --arguments-file=filename
+=item --arguments-file=I<filename>
 
 Read the file and parse it as possibly quoted whitespace- and/or newline-separated options.
 
-=item -W filename X<-W> X<--assume-new>
+=item -b I<directory>
 
-=item --assume-new=filename
-
-=item --what-if=filename
-
-Pretends the specified file has changed, so that any targets that depend
-on that file will be rebuilt.  The file itself is not necessarily
-changed (it might or might not be rebuilt, depending on whether it is up
-to date with respect to its dependencies), but everything that depends
-on it thinks that it has changed.  This can be useful for debugging a
-makefile.
-
-=item -o filename X<-o> X<--assume-old>
-
-=item --assume-old=filename
-
-Pretends that the specified file has not changed, even if it has.  Any
-targets that depend on this file will not be rebuilt because of this
-file, though they might be rebuilt if some other dependency has also
-changed.  The file itself might or might not be rebuilt, depending on
-whether it is out of date with respect to its dependencies.  (To prevent
-that, use C<--dont-build>.)
-
-=item -b
-
-=item --build-cache
+=item --build-cache=I<directory>
 
 Specifies the path to a build cache.  See L<makepp_build_cache> for details.
-The build cache must already exist; see
-L<makepp_build_cache/makepp_build_cache_control> for how to make it in the
-first place.  Build caches defined on the command line may be overridden by a
-C<build_cache> statement in a makefile (see L<makepp_statements/build_cache>)
-or a C<:build_cache> modifier to a rule (see L<makepp_rules/build_cache>).  If
-you work with several different builds, it may be useful to set the
-environment variable C<MAKEPPFLAGS> to contain
-C<--build-cache=/path/to/build/cache> so that all of your builds will take
+The build cache must already exist; see L<makepp_build_cache/How to manage a
+build cache> for how to make it in the first place.  Build caches defined on
+the command line may be overridden by a
+L<build_cache|makepp_statements/build_cache_path_to_build_cache> statement in
+a makefile or a L<:build_cache|makepp_rules/build_cache_path_to_build_cache>
+rule modifier .  If you work with several different builds, it may be useful
+to set the environment variable C<MAKEPPFLAGS> to contain
+C<--buil>C<d-cache=/path/to/build/cache> so that all of your builds will take
 advantage of the build cache by default.
 
-=item --build-check=method
+=item --build-check=I<method>
 
-=item --build-check-method=method
+=item --build-check-method=I<method>
 
 The name of a build check method to use to decide whether files need to
 be rebuilt.  See L<makepp_build_check> for information on build check
 methods.
 
-=item -e
+=item -C I<directory>
 
-=item --env-overides
+=item --directory=I<directory>
 
-=item --environment-overides
-
-Causes variables from the environment to override definitions in the
-makefile.  By default, assignments within the makefile override variable
-values which are imported from the environment.
+Cd to the given directory before loading the makefile and trying to build the
+targets.  This is similar to specifying a directory with C<-F>, except that
+subsequent C<-C>, C<-f>, C<-F>, C<-I> and C<-R> options are interpreted
+relative to the new directory, rather than the old one.
 
 =item -c
+
+=item --root-dir
 
 =item --root-directory
 
 Cd up to the directory containing a RootMakeppfile.
 
-=item -C dirname X<-C> X<--directory>
+=item --dont-build=I<filename>
 
-=item --directory=dirname
+=item --do-build=I<filename>
 
-Cd to the given directory before loading the makefile and trying to build the
-targets.  This is more or less equivalent to specifying a directory with
-C<-F>, except that subsequent C<-C>, C<-f>, C<-F>, C<-I> and C<-R> options are
-interpreted relative to the new directory, rather than the old one.
-
-=item --dont-build=filename X<--dont-build>
-
-Do not build the specified file, even if it is listed in a dependency
-list.  This is useful if you built a specific file by hand using some
-extra debugging compilation options.  Without this option, if you
-compile a module by hand and then run makepp to compile the rest of the
-program, makepp will recompile the module you compiled by hand because
-it recognizes that the file has changed since it was last built.  This
-is because makepp cannot guarantee that the build is correct if any of
-the files were not built under its control.  With this option, you tell
-makepp that you really know what you are doing in the case of this
-particular file and you promise that it's ok not to rebuild it.
+Do not build the specified file, or, if it is a directory, everything
+thereunder, even though makepp thinks it should -- or do build, overriding the
+opposite specification from a higher directory.  This is useful if you built a
+specific file by hand using different compilation options.  Without this
+option, if you compile a module by hand and then run makepp to compile the
+rest of the program, makepp will also recompile the module you compiled by
+hand, because makepp cannot guarantee that the build is correct if any of the
+files were not built under its control.  With this option, you tell makepp
+that you really know what you are doing in the case of this particular file
+and you promise that it's ok not to rebuild it.
 
 For example,
 
@@ -217,10 +210,6 @@ easier to edit the makefile than to compile by hand as in this example;
 see L<makepp_variables/Target-specific assignments> for an easy way of
 doing this.
 
-If the specified file is a directory that already exists, then files below the
-directory inherit the dont-build property.  And C<--dont-build> can override a
-C<--do-build> inherited from a directory higher up.
-
 If you put a F<RootMakeppfile(.mk)> at the root of your build system, that
 directory and everything under it defaults to C<--do-build>, while the overall
 root of your file system defaults to C<--dont-build>.  That way, everything
@@ -236,8 +225,6 @@ funny effects that tend to arise when you accidentally call C<makepp
 --repository> again in a subdirectory.  These effects include duplicate rules
 through duplicate sources, or eternal buld cache reimports because cached
 files have the right signatures but the wrong relative pathes.
-
-=item --do-build=filename X<--do-build>
 
 Override C<--dont-build> for the specified file or directory.  If you have a
 F<RootMakeppfile(.mk)> at the root of your build system, but you want makepp
@@ -258,34 +245,23 @@ to guarantee a correct build.  But since they allow greatly reducing the
 number of checks, they can speed up your builds dramatically, as explained in
 L<potentially unsafe speedup methods|makepp_speedup/Potentially Unsafe Methods>.
 
-=item --sandbox=filename X<--sandbox>
+=item --dont-read=I<filename>
 
-=item --out-of-sandbox=filename X<--out-of-sandbox>
+=item --do-read=I<filename>
 
-Generate an error rather than write files outside the "sandbox".  Like
---dont-build, more specific paths override less specific paths.  The
-filesystem root defaults to out-of-sandbox if there are any C<--sandbox>
-options.
+Do not read the specified file, or, if it is a directory, everything
+thereunder -- or do read, overriding the opposite specification from a higher
+directory.  Generate an error rather than read files marked for
+C<--dont-read>.  See L<--sandbox|/sandbox_directory>.  The filesystem
+root always defaults to readable.
 
-The purpose of the sandbox is to enable multiple concurrent makepp processes
-to safely operate on disjoint parts of the filesystem.  In order for this
-to work reliably, concurrent sandboxes must not overlap, and each process
-must mark the sandbox of every other concurrent makepp process for
-L<--dont-read|/_2D_2Ddont_2Dread_3Dfilename>.
+=item --dump-makefile=I<filename>
 
-=item --do-read=filename X<--do-read> X<--dont-read>
-
-=item --dont-read=filename
-
-Generate an error rather than read files marked for C<--dont-read>.
-See L<--sandbox|/_2D_2Dsandbox_3Dfilename>.  The filesystem root always
-defaults to readable.
-
-=item --dump-makefile=filename X<--dump-makefile>
+=item --dump-makeppfile=I<filename>
 
 Dump the raw contents of the makefileZ<>(s) for the current directory
 (as determined by the position of this option relative to any C<-C> options)
-to C<filename>.
+to F<filename>.
 Include files are interpolated, comments are stripped out and C<ifdef>'s
 are resolved.
 C<# line "file"> markers are inserted as necessary.
@@ -296,34 +272,25 @@ This is useful for debugging, but (currently) you won't necessarily be able
 use the dump file as an equivalent makefile, for example because it contains
 both the include statement and the interpolated file.
 
-=item -f Makefile X<-f>
+=item -e
 
-=item --file=Makefile
+=item --env-overides
 
-=item --makefile=Makefile
+=item --environment-overides
 
-Uses the specified makefile.  If you do not specify the C<-f> option or the
-C<-F> option, makepp looks first for a file in the current directory (or the
-directory specified by the rightmost C<-C> option, if any) called
-C<RootMakeppfile>, then C<RootMakeppfile.mk>, C<Makeppfile>, then
-C<Makeppfile.mk>, then C<makefile>, then C<Makefile>.
+Causes variables from the environment to override definitions in the
+makefile.  By default, assignments within the makefile override variable
+values which are imported from the environment.
 
-The first two are special (whether given explicitly or found implicitly).
-There should be only one of those two in any given build tree on which makepp
-is to operate.  But there may be several if you build several disjoint trees
-in one go.  Those two are looked for not only in the aforementioned directory,
-but also upwards from there.  If one is found, it is loaded before any other.
+=item -F I<Makeppfile>
 
-=item -F Makeppfile X<-F>
+=item --makeppfile=I<Makeppfile>
 
-=item --makeppfile=Makeppfile
-
-Loads the specified makefile in lieu of the makefile in the current directory,
-and any target specified to the right of this option is interpreted relative
-to the directory containing the Makefile.  If you specify a directory instead
-of a Makefile, searches for C<RootMakeppfile>, C<RootMakeppfile.mk>,
-C<Makeppfile>, C<Makeppfile.mk>, C<makefile>, and C<Makefile>.  (See the
-explanation at the previous option.)  Multiple C<-F> options may be specified.
+Loads the specified Makefile or, if you specify a directory, the F<Makefile>
+therein, instead of the one in the current directory -- any target specified
+to the right of this option is interpreted relative to the directory
+containing the Makefile.  For the details of the directory case and
+F<RootMakeppfile> see the explanation at the next option.
 
 This option can be useful if you execute makepp from unpredictable
 directories.  For example, if you compile from within emacs and you have
@@ -342,16 +309,31 @@ targets relative to the current directory like this:
 
     makepp -F /foo/bar -C . mytarget
 
-=item --load-makefile=Makefile X<--load-makefile>
+=item -f I<Makefile>
 
-=item --load-makeppfile=Makefile
+=item --file=I<Makefile>
 
-Loads the specified makefile I<before> any other makefiles, except for
-C<RootMakeppfile>, or C<RootMakeppfile.mk> above it, but do not consider this
-option for the purposes of determining the default target.  If no other
-makefile is specified, then one is sought using the usual rules.  If the
-specified makefile is the same makefile that is found using the usual rules,
-then this option has no effect.
+=item --makefile=I<Makefile>
+
+Loads the specified Makefile or, if you specify a directory, the F<Makefile>
+therein, instead of the one in the current directory.  If you do not specify
+the C<-f> option or the C<-F> option, makepp looks first for a file in the
+current directory (or the directory specified by the rightmost C<-C> option,
+if any) called, then F<RootMakeppfile.mk>, F<Makeppfile>, then
+F<Makeppfile.mk>, then F<makefile>, then F<Makefile>.  Multiple C<-F> and
+C<-f> options may be specified.
+
+The first two (F<RootMakeppfile>) are special (whether given explicitly or
+found implicitly).  There must be at most one of those two in any given build
+tree on which makepp is to operate.  But there may be several if you build
+several disjoint trees in one go.  Those two are looked for not only in the
+aforementioned directory, but also upwards from there.  If one is found, it is
+loaded before any other.
+
+=item --final-rules-only
+
+Ignore the dependencies and implicit targets of the rule unless the target is
+phony.
 
 =item --force-copy-from-bc
 
@@ -359,45 +341,209 @@ When using build caches, always copy files in and out of the cache, even if
 the source and target are on the same filesystem.  This is mainly useful for
 testing (emulating) the case in which they are not.
 
+=item --force-rescan
+
+Don't use cached scanner results from previous runs.
+
+=item --gullible
+
+Believe that the rules create what they declare, rather than checking.  This
+is faster, but doesn't catch bugs in rules.
+
+=item -?
+
 =item -h
 
 =item --help
 
 Print out a brief summary of the options.
 
-=item -j n X<-j>
+=item -I I<directory>
 
-=item --jobs=n
+=item --include=I<directory>
 
-Interprets the next word as the number of shell commands that can be
-executed in parallel.  By default, C<makepp> does not execute commands
-in parallel.
+=item --include-dir=I<directory>
 
-Unlike some other versions of make, when jobs are executed in parallel,
-makepp directs their output to a file and only displays the output when
-the commands have finished.  This prevents output from several different
-commands from being mixed together on the display, but it does mean that
-you might have to wait a little longer to see the output.
+Search the given directory for included makefiles.
+
+=item --implicit-load-makeppfile-only
+
+If implicit loading of makefiles is enabled, then automatically load only a
+file called F<RootMakeppfile>, F<RootMakeppfile.mk>, F<Makeppfile>, or
+F<Makeppfile.mk>, and B<not> F<makefile> or F<Makefile>.  This is useful if
+makepp has dependencies that are generated by some other flavor of make, and
+makepp can't read that flavor's makefiles in general.  (You want to avoid this
+situation if possible, but it tends to arise while you're in the process of
+porting a legacy build system to makepp.)  This has no effect if implicit
+loading is disabled.
+
+=item -j I<n>
+
+=item --jobs=I<n>
+
+Interprets the argument I<n> as the number of shell commands that can be
+executed in parallel.  By default, makepp does not execute commands in
+parallel.
+
+Unlike some other versions of make, when jobs are executed in parallel, makepp
+directs their output to a file and only displays the output when the commands
+have finished.  This prevents output from several different commands from
+being mixed together on the display, but it does mean that you might have to
+wait a little longer to see the output, and stderr messages will usually
+appear before stdout stuff, differing from terminal output.
 
 Native Windows Perls (i.e. Strawberry and ActiveState), because they do not
 support the Unix fork/exec paradigm, do not allow this option (Cygwin works
 fine!).  As a partial replacement, you can use the
-L<--sandbox|/_2D_2Dsandbox_3Dfilename> option there, though this is far less
+L<--sandbox|/sandbox_directory> option there, though this is far less
 comfortable.
 
 =item -k
 
 =item --keep-going
 
-Build as many files as possible, even if some of them have errors.  By
-default, makepp stops when it encounters the first error, even if there
-are other files that need to be built that don't depend on the erroneous
-file.
+Build as many files as safely possible, even if some commands have errors.  By
+default, makepp stops when it encounters the first error, even if there are
+other files that need to be built that don't depend on the erroneous file.
 
-=item --log-file=logfilename
+=item --last-chance-rules
+
+Activate limited special handling for pattern rules with '%' only on the
+target side.  This is needed because normally, unlike traditional makes,
+makepp instantiates all rules with all available files from the bottom up,
+allowing it to find all creatable dependencies.
+
+=item --load-makefile=I<Makefile>
+
+=item --load-makeppfile=I<Makefile>
+
+Loads the specified makefile I<before> any other makefiles, except for
+CFRootMakeppfile>, or F<RootMakeppfile.mk> above it, but do not consider this
+option for the purposes of determining the default target.  If no other
+makefile is specified, then one is sought using the usual rules.  If the
+specified makefile is the same makefile that is found using the usual rules,
+then this option has no effect.
+
+=item --log=I<logfilename>
+
+=item --log-file=I<logfilename>
 
 Changes the name of the log file to the indicated name.  By default, the
-log file is called C<.makepp/log>.
+log file is called F<.makepp/log>.
+
+=item -m I<method>
+
+=item --signature=I<method>
+
+=item --signature-method=I<method>
+
+Specifies the default signature method to use for rules which do not
+have the C<:signature> modifier in makefiles which do not have a
+C<signature> statement.  Possible values are C<target_newer>,
+C<exact_match>, C<md5>, and C<c_compilation_md5>.  This option has no
+effect on the signature method for C/C++ compilation; you must use the
+C<signature> statement or the C<:signature> rule modifier to affect
+that.  For more details, see L<makepp_signatures>.
+
+=item --md5-bc
+
+=item --md5-check-bc
+
+When importing from a build cache, reject cached targets unless the MD5_SUM
+is present and matches the imported target.
+When populating a build cache, calculate and store the MD5_SUM in the build
+info if it isn't there already.
+This is slower and leads to more rebuilds, but it guarantees that imported
+targets and build info files correspond exactly.
+
+=item -n
+
+=item --dry-run
+
+=item --just-print
+
+=item --recon
+
+Print out commands without actually executing them -- unreliably where
+commands depend on previous results.  This allows you to see what makepp will
+do, without actually changing any files.
+
+More precisely, makepp executes all recursive make commands as normal (but
+hopefully you're not using recursive make anywhere!).  Other commands are
+simply printed without being executed.  Even commands which are prefixed with
+C<@> or C<noecho> are printed after the C<@> or C<noecho> is stripped off.
+However commands prefixed with C<+> should be executed, but currently are not.
+
+B<Warning:> The commands that makepp executes with C<-n> are not
+necessarily the same thing it will do without C<-n>.  File signatures do
+not change at all with C<-n>, which means that makepp cannot perform
+exactly the same build tests that it does when the signatures are
+changing.  This will occasionally make a difference if you are using MD5
+signatures (which is the default for compilation commands) or if you
+have shell commands that might or might not change the date.
+
+For example, suppose that you generate a F<.h> file via some sort of
+preprocessor.  This can happen in a lot of different ways.  For concreteness,
+suppose you automatically generate a list of prototypes for functions defined
+in each C module (see L<http://cproto.sourceforge.net/> for how the C<cproto>
+application works or L<http://www.lemoda.net/cfunctions/> for the similar
+cfunctions).
+
+    prototypes.h : *.c
+ 	cproto $(CPPFLAGS) $(inputs) > $(output)
+
+Then each F<.c> file will include F<prototypes.h>.  The purpose of this is to
+maintain the forward declarations for all functions automatically, so if you
+change a function's signature or add a new function, you don't ever have to
+put in forward or extern declarations anywhere.  You don't even have to
+declare the dependency of your .o files on this one -- makepp will see the
+include statement and automatically see if it needs to (re)run cproto.
+
+Now suppose you change just one F<.c> file.  What happens when you run makepp
+with C<-n> in this case is that it realizes that F<prototypes.h> needs to be
+remade.  In all probability, remaking F<prototypes.h> won't affect its
+signature--the file contents will probably be identical because no function
+arguments have been changed--so most of the time, nothing that depends on
+F<prototypes.h> actually has to be recompiled.  But makepp doesn't know that
+unless it's actually allowed to execute the commands.  So it assumes that
+anything that depends on F<prototypes.h> will also have to be recompiled.
+Thus in this example, changing one F<.c> file will cause S<C<makepp -n>> to
+think that every single F<.c> file needs to be recompiled, even though most
+likely the regular makepp command will actually not run all those commands.
+
+This situation isn't all that common, and can only occur if (a) you use
+a signature method that depends on file contents rather than date, as
+the default compilation signature method does, or (b) if you have shell
+commands that don't always change the date.  E.g., with a traditional
+implementation of make that only looks at dates instead of file
+signatures, sometimes people will write commands like this:
+
+    prototypes.h : $(wildcard *.c)  # Hacked technique not necessary for makepp
+ 	cproto $(CPPFLAGS) $(inputs) > junk.h
+ 	if cmp -s junk.h prototypes.h; then \
+ 	   rm junk.h; \
+ 	else \
+ 	   mv junk.h prototypes.h; \
+ 	fi
+
+Thus if rerunning cproto on all the files produces exactly the same file
+contents, the file date is not updated.  This will have exactly the same
+problem as the above example with S<C<makepp -n>>: it is not known
+whether the date on F<prototypes.h> changes unless the command is
+actually run, so S<C<makepp -n>> cannot possibly be 100% accurate.
+(Note that using the traditional S<C<make -n>> will also have exactly
+the same problem on this example.)
+
+S<C<makepp -n>> should always print out more commands than a regular
+invocation of makepp, not fewer.  If it prints out fewer commands, it means
+that makepp does not know about some dependency; some file is changing that it
+is not expecting to change on the basis of what it knows about what files each
+rule affects.  This means that your makefile has a bug.
+
+=item --no-cache-scaninfos
+
+Do not record the results of scanning, forcing it to be reperformed next time
+makepp runs.
 
 =item --no-implicit-load
 
@@ -412,28 +558,130 @@ C<load_makefile> statement, makepp aborts with an error.  You can also turn
 off makefile loading on a directory-by-directory basis by using the
 C<no_implicit_load> statement in one of your makefiles.
 
-=item --implicit-load-makeppfile-only
+=item --no-log
 
-If implicit loading of makefiles is enabled, then automatically load only a
-file called C<RootMakeppfile>, C<RootMakeppfile.mk>, C<Makeppfile>, or
-C<Makeppfile.mk>, and I<not> C<makefile> or C<Makefile>.  This is useful if
-makepp has dependencies that are generated by some other flavor of make, and
-makepp can't read that flavor's makefiles in general.  (You want to avoid this
-situation if possible, but it tends to arise while you're in the process of
-porting a legacy build system to makepp.)  This has no effect if implicit
-loading is disabled.
+Don't bother writing a detailed description of what was done to the log
+file.  By default, makepp writes out an explanation of every file that
+it tried to build, and why it built it or did not build it, to a file
+called F<.makepp/log>.  This can be extremely valuable for debugging a
+makefile--makepp tells you what it thought all of the dependencies were,
+and which one(s) it thought changed.  However, it does take some extra
+CPU time, and you might not want to bother.
 
-=item -I dir
+=item --no-path-exe-dep
 
-=item --include=dir
+=item --no-path-executable-dependencies
 
-=item --include-dir=dir
+Do not add implicit dependencies on executables picked up from the command
+search path.  If this option is specified, then makepp assumes that any
+executable whose behavior might change with a new version will be specified
+with a name containing a slash.
 
-Search I<dir> for included makefiles.
+This is useful for programs such as grep and diff, which always do basically
+the same thing even if their implementation changes, though you're better off
+using the L<builtin commands|makepp_builtins> for grep.  You may also need
+this for repositories on NFS clusters, where the same commands might not have
+the same timestamp everywhere, causing unnecessary rebuilds depending what
+machine somebody works on.
+
+=item --no-populate-bc
+
+Don't populate the build cache, but still import from it when possible.
+This is useful when the environment might cause targets to be generated
+differently, but makepp doesn't know about such dependencies.
+It's also useful to avoid thrashing the build cache with a huge number
+of concurrent writers that might interfere with one another.
+
+=item --no-print-directory
+
+Turn off the entering or leaving directory messages.
+
+=item --no-remake-makefiles
+
+Ordinarily, makepp loads each makefile in, then looks to see whether
+there is a rule that specifies how to update the makefile.  If there is,
+and the makefile needs to be rebuilt, the command is executed, and the
+makefile is reread.  This often causes problems with makefiles produced
+for the standard unix make utility, because (in my experience) often the
+make rules for updating makefiles are inaccurate--they frequently omit
+targets which are modified.  This can cause makepp to remake a lot of
+files unnecessarily.  You can often solve this problem by simply
+preventing makepp from updating the makefile automatically (but you have
+to remember to update it by hand).
+
+=item --no-warn
+
+Don't print any warning messages to stderr, only to log file.  Most warning
+messages are about constructs that you might see in legacy makefiles that
+makepp considers dangerous, but a few of them concern possible errors in your
+makefile.
+
+=item -o I<filename>
+
+=item --assume-old=I<filename>
+
+=item --old-file=I<filename>
+
+Pretends that the specified file has not changed, even if it has.  Any
+targets that depend on this file will not be rebuilt because of this
+file, though they might be rebuilt if some other dependency has also
+changed.  The file itself might or might not be rebuilt, depending on
+whether it is out of date with respect to its dependencies.  (To prevent
+that, use C<--dont-build>.)
+
+=item --out-of-sandbox=I<filename>
+
+Generate an error rather than write files outside the "sandbox".  Like
+--dont-build, more specific paths override less specific paths.  The
+filesystem root defaults to out-of-sandbox if there are any C<--sandbox>
+options.
+
+The purpose of the sandbox is to enable multiple concurrent makepp processes
+to safely operate on disjoint parts of the filesystem.  In order for this to
+work reliably, concurrent sandboxes must not overlap, and each process must
+mark the sandbox of every other concurrent makepp process for
+L<--dont-read|/dont_read_filename>.  See L<partitioning into
+sandboxes|makepp_sandboxes>.
+
+=item --populate-bc-only
+
+Don't import for the build cache.  This is useful when you want to
+donate targets to the cache, but you don't want to rely on the contents
+of the cache (e.g. for mission-critical builds).
+
+=item --profile
+
+Output timestamps before and after each action.
+
+=item -R I<directory>
+
+=item --repository=I<directory>
+
+Specify the given directory as a repository (see L<makepp_repositories> for
+details).  Repositories are added in the order specified on the command line,
+so the first one you specify has precedence.  All files in the directory (and
+all its subdirectories) are automatically linked to the current directory (and
+subdirectories) if they are needed.
+
+If you just specify a directory after C<-R>, its contents are linked into the
+current directory.  You can link its contents into any arbitrary place in the
+file system by specifying the location before an equals sign, e.g, S<C<-R
+subdir1/subdir2=/users/joe/joes_nifty_library>>.
+
+=item -r
+
+=item --no-builtin-rules
+
+Don't load the default rule sets.  If this option is not specified, and
+the variable C<makepp_no_builtin> is not defined in the makefile, then a
+set of rules for compiling C, C++, and Fortran code is loaded for each
+directory.
 
 =item --rm-stale X<--rm-stale>
 
 =item --remove-stale
+
+=item --remove-stale-files
 
 Ignore stale files rather then treating them as new source files, removing
 them if necessary in order to prevent them from being read by a build command.
@@ -467,202 +715,30 @@ stale generated header file.
 If you build with C<--rm-stale>, then F<./x.h> is removed, and the result
 is the same as that of a clean build, which is almost always a good thing.
 
-=item -m method X<-m>
-
-=item --signature-method=method X<--signature-method>
-
-Specifies the default signature method to use for rules which do not
-have the C<:signature> modifier in makefiles which do not have a
-C<signature> statement.  Possible values are C<target_newer>,
-C<exact_match>, C<md5>, and C<c_compilation_md5>.  This option has no
-effect on the signature method for C/C++ compilation; you must use the
-C<signature> statement or the C<:signature> rule modifier to affect
-that.  For more details, see L<makepp_signatures>.
-
-=item -n
-
-=item --just-print
-
-=item --dry-run
-
-Print out commands without actually executing them.  This allows you to
-see what makepp will do, without actually changing any files.
-
-More precisely, makepp executes all recursive make commands as normal
-(but hopefully you're not using recursive make anywhere!).  Other
-commands are simply printed without being executed.  Even commands which
-are prefixed with C<@> or C<noecho> are printed after the C<@> or
-C<noecho> is stripped off.
-
-B<Warning:> The commands that makepp executes with C<-n> are not
-necessarily the same thing it will do without C<-n>.  File signatures do
-not change at all with C<-n>, which means that makepp cannot perform
-exactly the same build tests that it does when the signatures are
-changing.  This will occasionally make a difference if you are using MD5
-signatures (which is the default for compilation commands) or if you
-have shell commands that might or might not change the date.
-
-For example, suppose that you generate a F<.h> file via some sort of
-preprocessor.  This can happen in a lot of different ways.  For
-concreteness, suppose you automatically generate a list of prototypes
-for functions defined in each C module (see
-http://cproto.sourceforge.net for how the C<cproto> application works).
-
-    prototypes.h : *.c
- 	cproto $(CPPFLAGS) $(inputs) > $(output)
-
-Then each F<.c> file will include F<prototypes.h>.  The purpose of this
-is to maintain the forward declarations for all functions automatically,
-so if you change a function's signature or add a new function, you don't
-ever have to put in forward or extern declarations anywhere.
-
-Now suppose you change just one F<.c> file.  What happens when you run
-makepp with C<-n> in this case is that it realizes that F<prototypes.h>
-needs to be remade.  In all probability, remaking F<prototypes.h> won't
-won't affect its signature--the file contents will probably be identical
-because no function arguments have been changed--so most of the time,
-nothing that depends on F<prototypes.h> actually has to be recompiled.
-But makepp doesn't know that unless it's actually allowed to execute the
-commands.  So it assumes that anything that depends on F<prototypes.h>
-will also have to be recompiled.  Thus in this example, changing one
-F<.c> file will cause S<C<makepp -n>> to think that every single F<.c>
-file needs to be recompiled, even though most likely the regular
-C<makepp> command will actually not run all those commands.
-
-This situation isn't all that common, and can only occur if (a) you use
-a signature method that depends on file contents rather than date, as
-the default compilation signature method does, or (b) if you have shell
-commands that don't always change the date.  E.g., with a traditional
-implementation of make that only looks at dates instead of file
-signatures, sometimes people will write commands like this:
-
-    prototypes.h : $(wildcard *.c)  # Hacked technique not necessary for makepp
- 	cproto $(CPPFLAGS) $(inputs) > junk.h
- 	if cmp -s junk.h prototypes.h; then \
- 	   rm junk.h; \
- 	else \
- 	   mv junk.h prototypes.h; \
- 	fi
-
-Thus if rerunning cproto on all the files produces exactly the same file
-contents, the file date is not updated.  This will have exactly the same
-problem as the above example with S<C<makepp -n>>: it is not known
-whether the date on F<prototypes.h> changes unless the command is
-actually run, so S<C<makepp -n>> cannot possibly be 100% accurate.
-(Note that using the traditional S<C<make -n>> will also have exactly
-the same problem on this example.)
-
-S<C<makepp -n>> should always print out more commands than a regular
-invocation of C<makepp>, not fewer.  If it prints out fewer commands, it
-means that makepp does not know about some dependency; some file is
-changing that it is not expecting to change on the basis of what it
-knows about what files each rule affects.  This means that your makefile
-has a bug.
-
-=item --md5-check-bc
-
-When importing from a build cache, reject cached targets unless the MD5_SUM
-is present and matches the imported target.
-When populating a build cache, calculate and store the MD5_SUM in the build
-info if it isn't there already.
-This is slower and leads to more rebuilds, but it guarantees that imported
-targets and build info files correspond exactly.
-
-=item --no-log
-
-Don't bother writing a detailed description of what was done to the log
-file.  By default, makepp writes out an explanation of every file that
-it tried to build, and why it built it or did not build it, to a file
-called C<.makepp/log>.  This can be extremely valuable for debugging a
-makefile--makepp tells you what it thought all of the dependencies were,
-and which one(s) it thought changed.  However, it does take some extra
-CPU time, and you might not want to bother.
-
-=item --no-log-scan
-
-Don't bother putting messages about scanning into the log file.  This
-can help cut down on the irrelevant messages in the log file.
-
-=item --no-path-executable-dependencies
-
-Do not add implicit dependencies on executables picked up from the command
-search path.
-This is useful for programs such as grep and diff, which always do basically
-the same thing even if their implementation changes.
-If this option is specified, then makepp assumes that any executable whose
-behavior might change will be specified with a name containing a slash.
-
-=item --no-populate-bc
-
-Don't populate the build cache, but still import from it when possible.
-This is useful when the environment might cause targets to be generated
-differently, but makepp doesn't know about such dependencies.
-It's also useful to avoid thrashing the build cache with a huge number
-of concurrent writers that might interfere with one another.
-
-=item --no-remake-makefiles X<--noremake-makefiles>
-
-Ordinarily, makepp loads each makefile in, then looks to see whether
-there is a rule that specifies how to update the makefile.  If there is,
-and the makefile needs to be rebuilt, the command is executed, and the
-makefile is reread.  This often causes problems with makefiles produced
-for the standard unix make utility, because (in my experience) often the
-make rules for updating makefiles are inaccurate--they frequently omit
-targets which are modified.  This can cause makepp to remake a lot of
-files unnecessarily.  You can often solve this problem by simply
-preventing makepp from updating the makefile automatically (but you have
-to remember to update it by hand).
-
-=item --no-warn
-
-Don't print any warning messages.  Most warning messages are about
-constructs that you might see in legacy makefiles that makepp considers
-dangerous, but a few of them concern possible errors in your makefile.
-
-=item --populate-bc-only
-
-Don't import for the build cache.  This is useful when you want to
-donate targets to the cache, but you don't want to rely on the contents
-of the cache (e.g. for mission-critical builds).
-
-=item -q
+=item -s
 
 =item --quiet
-
-Don't print informational messages like "Scanning xyz.h" or "Loading
-makefile /users/src/bob/funproject/Makefile".
-
-=item -r
-
-=item --no-builtin-rules
-
-Don't load the default rule sets.  If this option is not specified, and
-the variable C<makepp_no_builtin> is not defined in the makefile, then a
-set of rules for compiling C, C++, and Fortran code is loaded for each
-directory.
-
-=item -R dir X<-R>
-
-=item --repository=dir X<--repository>
-
-Specify the given directory as a repository (see L<makepp_repositories> for
-details).  Repositories are added in the order specified on the command line,
-so the first one you specify has precedence.  All files in the directory (and
-all its subdirectories) are automatically linked to the current directory (and
-subdirectories) if they are needed.
-
-If you just specify a directory after C<-R>, its contents are linked into the
-current directory.  You can link its contents into any arbitrary place in the
-file system by specifying the location before an equals sign, e.g, S<C<-R
-subdir1/subdir2=/users/joe/joes_nifty_library>>.
-
-=item -s
 
 =item --silent
 
-=item --quiet
+Don't echo commands and don't print informational messages like "Scanning" or
+"Loading makefile".
 
-Don't echo commands.
+=item --sandbox=I<directory>
+
+=item --in-sandbox=I<directory>
+
+=item --inside-sandbox=I<directory>
+
+Restrain this instance of makepp to a subtree of a normally bigger build tree.
+See L<partitioning into sandboxes|makepp_sandboxes>.
+
+=item --sandbox-warn
+
+=item --sandbox-warning
+
+Downgrade violations of "in-sandbox" and "dont-read" to warnings instead of
+errors.  See L<partitioning into sandboxes|makepp_sandboxes>.
 
 =item --stop
 
@@ -684,6 +760,15 @@ you're done.
 If you use C<prebuild> or C<$(make)> it will stop when it gets to that point,
 so it might not be so useful.  Nor will it consider regeneration of
 Makeppfiles, but this is not expected to happen frequently.
+
+=item --stop-race
+
+=item --stop-on-race
+
+Exit in error rather than only warning about a sandbox access collision that
+could be fixed.
+
+=item --symlink-in-rep-as-file
 
 =item --symlink-in-repository-as-file
 
@@ -724,6 +809,8 @@ This option actually takes what would be written to the log file and displays
 it on the screen.  It's usually easier to run makepp and then look at the
 output of L<makepplog>, which allows various selections and some rewriting.
 
+=item -V
+
 =item --version
 
 Print out the version number.
@@ -731,10 +818,22 @@ Print out the version number.
 =item --virtual-sandbox
 
 Don't rewrite build infos of files that were not created by this makepp process.
-This is useful when running concurrent makepp processes with overlapping
-sandboxes, and you are certain that no two processes will attempt to build
-the same target.  Makepp will then refrain from caching additional information
-about files that it reads, because there might be other concurrent readers.
+See L<partitioning into sandboxes|makepp_sandboxes>.
+
+=item -W I<filename>
+
+=item --assume-new=I<filename>
+
+=item --new-file=I<filename>
+
+=item --what-if=I<filename>
+
+Pretends the specified file has changed, so that any targets that depend
+on that file will be rebuilt.  The file itself is not necessarily
+changed (it might or might not be rebuilt, depending on whether it is up
+to date with respect to its dependencies), but everything that depends
+on it thinks that it has changed.  This can be useful for debugging a
+makefile.
 
 =back
 
@@ -750,21 +849,23 @@ Makepp looks at the following environment variables:
 
 =over 4
 
-=item MAKEFLAGS
+=item $MAKEFLAGS
 
 Any flags in this environment variable are interpreted as command line options
-before any explicit options.  Note that the traditional make also uses this
+before any explicit options.  All command line arguments are put into this variable
+
+Note that the traditional make also uses this
 variable, so if you have to use both make and makepp, you might want to
 consider using C<MAKEPPFLAGS>.
 
-=item MAKEPPFLAGS
+=item $MAKEPPFLAGS
 
 Same as C<MAKEFLAGS> as far as makepp is concerned.  If this variable is
 not blank, then C<MAKEFLAGS> is ignored.  Sometimes this is useful
 instead of C<MAKEFLAGS> if you have to use both make and makepp, and you
 need to keep the options separate.
 
-=item MAKEPP_CASE_SENSITIVE_FILENAMES
+=item $MAKEPP_CASE_SENSITIVE_FILENAMES
 
 Makepp will attempt to determine whether its default directory is case
 sensitive by creating a file and then accessing it with a different

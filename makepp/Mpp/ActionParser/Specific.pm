@@ -1,4 +1,4 @@
-# $Id: Specific.pm,v 1.6 2009/02/09 22:45:23 pfeiffer Exp $
+# $Id: Specific.pm,v 1.7 2010/10/18 21:34:13 pfeiffer Exp $
 
 =head1 NAME
 
@@ -11,15 +11,15 @@ Mpp::ActionParser::Specific - Makepp scanner class for a specified command scann
 
 =head1 DESCRIPTION
 
-C<Mpp::ActionParser::Specific> is a class of type C<Mpp::ActionParser> that always
+C<Mpp::ActionParser::Specific> is a class of type C<Mpp::Lexer> that always
 chooses the specified command parser.
 
 =cut
 
 use strict;
 package Mpp::ActionParser::Specific;
-use Mpp::ActionParser;
-our @ISA = qw/Mpp::ActionParser/;
+use Mpp::Lexer;
+our @ISA = qw/Mpp::Lexer/;
 
 
 =head1 METHODS
@@ -28,12 +28,13 @@ our @ISA = qw/Mpp::ActionParser/;
 
 	my $rp = Mpp::ActionParser::Specific->new($command_parser_class_name);
 
-Returns a new Mpp::ActionParser object that always uses a default-constructed
+Returns a new Mpp::Lexer object that always uses a default-constructed
 object of class $command_parser_class_name as its command parser.
 
 =cut
 
 sub new {
+  warn "Use of Mpp::ActionParser::Specific is deprecated\n";
   my ($self, $cp_class)=@_;
   my $class=ref($self)||$self;
   $cp_class = "Mpp::CommandParser::$cp_class" unless $cp_class =~ /^Mpp::CommandParser::/;

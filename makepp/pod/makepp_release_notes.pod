@@ -2,13 +2,31 @@
 
 makepp_release_notes -- Major changes in each version of makepp
 
-=for vc $Id: makepp_release_notes.pod,v 1.57 2009/02/09 22:07:39 pfeiffer Exp $
+=for vc $Id: makepp_release_notes.pod,v 1.59 2010/09/03 21:26:28 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
 =head2 Version 1.50 (under development)
 
 =over 4
+
+=item *
+
+L<Scanning|makepp_scanning> terminology has been cleaned up (and the page
+rewritten) to finally match a redesign that happened a few years ago.  There
+are now 3 separate terms, the lexer (which users don't need to worry about),
+the (command) parsers and the (file) scanners.
+
+For advanced users: The new interface consists of the L<C<register_parser> or
+C<register_command_parser>|/register_command_parser_command_word_parser>
+statements, the C<:parser> rule option and the C<p_*> parser factory functions
+which get aliased to their parser class as C<factory>.  The misnamed
+C<register_scanner> statement, C<:scanner> rule option and C<:scanner_*> or
+C<:parser_*> functions are deprecated.
+
+=item *
+
+New variable MAKEPP_VERSION.
 
 =item *
 
@@ -644,8 +662,9 @@ line.  This is necessary to load makefiles in a consistent way.
 
 =item *
 
-C<$(INFERRED_OBJS)> is no longer supported (since it was not a
-well-designed interface anyway).  Use the newer S<C<$(infer_objects )>>
+C<$(INFERRED_OBJS)> is no longer supported (since it was not a well-designed
+interface anyway).  Use the newer
+L<C<$(infer_objects)>|makepp_functions/infer_objects_file1_file2_pattern>
 function instead.
 
 =item *

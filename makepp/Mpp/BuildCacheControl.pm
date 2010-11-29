@@ -1,4 +1,4 @@
-# $Id: BuildCacheControl.pm,v 1.26 2009/02/11 23:22:37 pfeiffer Exp $
+# $Id: BuildCacheControl.pm,v 1.28 2010/09/29 22:19:53 pfeiffer Exp $
 
 =head1 NAME
 
@@ -20,18 +20,13 @@ use Mpp::Cmds;
 use POSIX ':errno_h';
 
 BEGIN {
-  *DEV = \&Mpp::Text::CONST0;
-  *MODE = \&Mpp::Text::CONST2;
-  *EXTLINK = \&Mpp::Text::CONST3;
-  *UID = \&Mpp::Text::CONST4;
-  *GID = \&Mpp::Text::CONST5;
-  *BIUID = \&Mpp::Text::CONST6;
+  (*DEV, undef, *MODE, *EXTLINK, *UID, *GID, *BIUID) = @Mpp::Text::N;
   *SIZE = sub() { 7 };
   *ATIME = sub() { 8 };
   *MTIME = sub() { 9 };
   *CTIME = sub() { 10 };
 
-  *Mpp::propagate_pending_signals = \&Mpp::Text::CONST0 unless defined &Mpp::propagate_pending_signals;
+  *Mpp::propagate_pending_signals = \&DEV unless defined &Mpp::propagate_pending_signals;
 
   no warnings;
   *ESTALE = \&Mpp::BuildCache::ESTALE; # Overridden on Win ActiveState.
@@ -866,17 +861,13 @@ sub c_stats {
 }
 
 
-no warnings 'redefine';
-sub Mpp::metahelp { print STDERR <<EOF }
-usage:	makepp_build_cache_control command [option ...] directory ...
-	mppbcc command [option ...] directory ...
-	makeppbuiltin -MMpp::BuildCacheControl command [option ...] directory ...
-	mppb -MMpp::BuildCacheControl command [option ...] directory ...
-  available commands:	clean, create, show
-  to see options do:	makepp_build_cache_control command --help
-EOF
+package Mpp;			# DATA shall be in this package for help.
 
-sub Mpp::helpfoot { die <<'EOF' }
+$0 = 'makepp_build_cache_control';
+
+no warnings 'redefine';
+
+sub helpfoot { die <<'EOF' }
 
 Look at @htmldir@/makepp_build_cache.html for more details,
 or at http://makepp.sourceforge.net/@BASEVERSION@/makepp_build_cache.html
@@ -884,3 +875,11 @@ or type "man makepp_build_cache".
 EOF
 
 1;
+
+__DATA__
+command [option ...] directory ...
+	mppbcc command [option ...] directory ...
+	makeppbuiltin -MMpp::BuildCacheControl command [option ...] directory ...
+	mppb -MMpp::BuildCacheControl command [option ...] directory ...
+  available commands:	clean, create, show, stats
+  to see options do:	makepp_build_cache_control command --help

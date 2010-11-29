@@ -2,30 +2,72 @@
 
 makepp_functions -- Functions in makepp
 
-=for vc $Id: makepp_functions.pod,v 1.37 2008/09/01 07:49:18 pfeiffer Exp $
+=for vc $Id: makepp_functions.pod,v 1.39 2010/08/22 20:26:19 pfeiffer Exp $
 
 =head1 DESCRIPTION
 
-L<B<a>bsolute_filename|/absolute_filename>, L</addprefix>, L</addsuffix>,E<nbsp>
-L<B<b>asename|/basename>,E<nbsp>
-L<B<c>all|/call>,E<nbsp>
-L<B<d>ir|/dir>, L</dir_noslash>,E<nbsp>
-L<B<f>ilesubst|/filesubst>, L</filter>, L</filter_out>, L</filter_out_dirs>, L</findfile>, L</findstring>,
- L</find_program>, L</find_upwards>, L</find_first_upwards>,
-  L</first_available>, L</firstword>,E<nbsp>
-L<B<i>f|/if>, L</iftrue>, L</infer_linker>, L</infer_objects>,E<nbsp>
-L<B<j>oin|/join>,E<nbsp>
-L<B<m>ake|/prebuild>, L<makemap|/map>, L<makeperl|/perl>, L</map>, L</mktemp>,E<nbsp>
-L<B<n>otdir|/notdir>,E<nbsp>
-L<B<o>nly_generated|/only_generated>, L</only_nontargets>, L</only_phony_targets>,
-  L</only_stale>, L</only_targets>, L</origin>,E<nbsp>
-L<B<p>atsubst|/patsubst>, L</perl>, L</phony>, L</prebuild>, L</print>,E<nbsp>
-L<B<r>elative_filename|/relative_filename>, L</relative_to>,E<nbsp>
-L<B<s>hell|/shell>, L</sort>, L</sorted_dependencies>,
-  L</sorted_inputs>, L</stem>, L</strip>, L</subst>, L</suffix>,E<nbsp>
-L<B<t>emporary|/temporary>,E<nbsp>
-L<B<w>ildcard|/wildcard>, L</word>, L</wordlist>, L</words>,E<nbsp>
-L<B<x>args|/xargs>
+=for genindex '\w+' makepp_functions.pod
+
+B<A:>E<nbsp>L<absolute_filename|/absolute_filename_files>,
+  L<absolute_filename_nolink|/absolute_filename_nolink_files>,
+  L<abspath|/absolute_filename_files>,
+  L<addprefix|/addprefix_prefix_words>,
+  L<addsuffix|/addsuffix_suffix_words>,
+  L<and|/and_condition1_condition2_condition3>,E<nbsp>
+B<B:>E<nbsp>L<basename|/basename_filenames>,E<nbsp>
+B<C:>E<nbsp>L<call|/call_variable_words>,E<nbsp>
+B<D:>E<nbsp>L<dir|/dir_filenames>,
+  L<dir_noslash|/dir_noslash_filename>,E<nbsp>
+B<E:>E<nbsp>L<error|/info_text>,E<nbsp>
+B<F:>E<nbsp>L<filter|/filter_patterns_words>,
+  L<filter_out|/filter_out_patterns_words>,
+  L<filter_out_dirs|/filter_out_dirs_filenames>,
+  L<findfile|/findfile_filename_path>,
+  L<find_first_upwards|/find_first_upwards_file1_file2>,
+  L<find_program|/find_program_name>,
+  L<findstring|/findstring_find_in>,
+  L<find_upwards|/find_upwards_filename>,
+  L<first_available|/first_available_file1_file2>,
+  L<firstword|/firstword_words>,
+  L<foreach|/foreach_var_list_text>,E<nbsp>
+B<I:>E<nbsp>L<if|/if_string_result_if_string_not_blank_result_if_string_blank>,
+  L<iftrue|/if_string_result_if_string_not_blank_result_if_string_blank>,
+  L<infer_objects|/infer_objects_file1_file2_pattern>,
+  L<info|/info_text>,E<nbsp>
+B<J:>E<nbsp>L<join|/join_words1_words2>,E<nbsp>
+B<M:>E<nbsp>L<make|/prebuild_targets>,
+  L<makemap|/map_words_perlcode>,
+  L<makeperl|/perl_perlcode>,
+  L<map|/map_words_perlcode>,
+  L</mktemp>,E<nbsp>
+B<N:>E<nbsp>L<notdir|/notdir_filenames>,E<nbsp>
+B<O:>E<nbsp>L<only_generated|/only_generated_filenames>,
+  L<only_nontargets|/only_nontargets_filenames>,
+  L<only_phony_targets|/only_phony_targets_names>,
+  L<only_stale|/only_stale_filenames>,
+  L<only_targets|/only_targets_filenames>,
+  L<or|/or_condition1_condition2_condition3>,
+  L<origin|/origin_variable>,E<nbsp>
+B<P:>E<nbsp>L<patsubst|/patsubst_pattern_substitute_words>,
+  L<perl|/perl_perlcode>,
+  L<phony|/phony_words>,
+  L<prebuild|/prebuild_targets>,
+  L<print|/print_text>,E<nbsp>
+B<R:>E<nbsp>L<realpath|/absolute_filename_nolink_files>,
+  L<relative_filename|/relative_filename_file1_file2_file3>,
+  L<relative_to|/relative_to_file1_file2_file3_directory>,E<nbsp>
+B<S:>E<nbsp>L<shell|/shell_shell_command>,
+  L<sort|/sort_word1_word2_word3>,
+  L<strip|/strip_string>,
+  L<subst|/subst_from_to_text>,
+  L<suffix|/suffix_names>,E<nbsp>
+B<T:>E<nbsp>L<temporary|/temporary_words>,E<nbsp>
+B<W:>E<nbsp>L<warning|/info_text>,
+  L<wildcard|/wildcard_pattern>,
+  L<word|/word_n_text>,
+  L<wordlist|/wordlist_indexlist_words>,
+  L<words|/words_text>,E<nbsp>
+B<X:>E<nbsp>L<xargs|/xargs_command_arguments_suffix>
 
 Any expression of the format S<C<$(name arg1 arg2 arg3)>> or C<$(name)> where
 C<name> is not the name of a variable, is interpreted as a function call.  The
@@ -49,36 +91,87 @@ details), and some of its own.  You can define perl subroutines to do whatever
 you like.  See the C<sub> statement and the section on L<extending
 makepp|makepp_extending> for more details.
 
+=head2 Conditional Functions
+
+=over 4
+
+=item and I<condition1[,condition2[,condition3...]]>
+
+The and function provides a “short-circuiting” AND operation. Each argument is
+expanded, in order. If an argument expands to an empty string the processing
+stops and the result of the expansion is the empty string. If all arguments
+expand to a non-empty string then the result of the expansion is the expansion
+of the last argument.
+
+=item if I<string, result-if-string-not-blank, result-if-string-blank>
+
+=item iftrue I<string, result-if-string-true, result-if-string-false>
+
+An alternative to the C<ifeq>, etc., statements.  If the string is not blank
+(i.e., the condition is true), the second argument (the "then" clause) is
+returned (after variable expansion); if the string is blank, the third
+argument (the "else" clause) is returned.
+
+For example,
+
+    CFLAGS := $(if $(filter gcc egcc, $(CC)), -g -Wall, -g)
+
+defines CFLAGS to be C<-g -Wall> if the variable CC is either C<gcc> or
+C<egcc>, and C<-g> otherwise.  (This is what the default build rules do.)
+
+C<iftrue> is similar to C<if>, except that the string C<0> is treated as
+blank.
+
+=item or I<condition1[,condition2[,condition3...]]>
+
+The or function provides a “short-circuiting” OR operation. Each argument is
+expanded, in order. If an argument expands to a non-empty string the
+processing stops and the result of the expansion is that string. If, after all
+arguments are expanded, all of them are false (empty), then the result of the
+expansion is the empty string.
+
+=back
+
+
 =head2 File and Filename Functions
 
 =over 4
 
-=item absolute_filename files X<absolute_filename>
+=item absolute_filename I<files>
 
-Converts relative filenames into absolutes.  For example,
-S<C<$(absolute_filename xyz.c)>> might return
+=item abspath I<files>
+
+Converts relative filenames into absolutes without F<.> or F<..>.  For
+example, S<C<$(absolute_filename xyz.c)>> might return
 C</usr/src/our_project/subdir/xyz.c>.
 
-=item basename filenames X<basename>
+=item absolute_filename_nolink I<files>
+
+=item realpath I<files>
+
+Like L<absolute_filename|/absolute_filename_files>, but ensures that symbolic links
+are resolved.
+
+=item basename I<filenames>
 
 The basename is the entire file name (with the directory), minus the text
-after the last period.  E.g., S<C<$(basename myfile/version-1.0-module.c)>> is
-C<myfile/version-1.0-module>
+after and including the last period.  E.g., S<C<$(basename
+myfile/version-1.0-module.c)>> is C<myfile/version-1.0-module>
 
-=item dir filenames X<dir>
+=item dir I<filenames>
 
 Extracts the directory part of each file in the filename list, including the
 trailing slash.  Returns C<./> if there is no directory in the filename.
 
-=item dir_noslash filename X<dir_noslash>
+=item dir_noslash I<filename>
 
 Same as S<C<$(dir )>> except that it doesn't return the trailing slash.
 
-=item filter_out_dirs filenames X<filter_out_dirs>
+=item filter_out_dirs I<filenames>
 
 Returns all filenames that do not refer to directories.
 
-=item findfile filename, path X<findfile>
+=item findfile I<filename, path>
 
 Finds a file in the specified path, or in the environment variable PATH
 if nothing is specified.  This can be useful for finding binaries or
@@ -94,7 +187,7 @@ directories.  The absolute path to the file is returned.  Then
 S<C<$(dir_noslash )>> extracts that directory, and it is put into the
 include path.
 
-=item find_program name X<find_program>
+=item find_program I<name>
 
 Return the first program in the list that can be found in the PATH.
 This is useful when there are multiple equivalent programs that may be
@@ -118,7 +211,7 @@ and makepp can't find a C compiler in the list above, it will substitute
 not-found.  Otherwise the shell would attempt to execute the source file and
 the resulting error message might be really strange.
 
-=item find_upwards filename X<find_upwards>
+=item find_upwards I<filename>
 
 Searches for a file of the given name in the directory ., .., ../..,
 ../../.., etc., until the file is found or the root directory is reached
@@ -133,7 +226,7 @@ C<include> statement):
     TOP_LEVEL_INCLUDE_DIR := $(find_upwards includes)
  				# Searches for a directory that contains the
  				# includes subdirectory.
- 
+
     %.o : %.c
  	$(CC) $(CFLAGS) -I$(TOP_LEVEL_INCLUDE_DIR) -c $(input) -o $(output)
 
@@ -182,7 +275,7 @@ is equivalent to
 If you want to look for any one of the files, then use
 C<find_first_upwards> instead.
 
-=item find_first_upwards file1 file2 ... X<find_first_upwards>
+=item find_first_upwards I<file1 file2 ...>
 
 This function behaves like C<find_upwards> except that it returns the
 first file of any files in the list that it finds.  Specifically,
@@ -192,7 +285,7 @@ files exist or can be built in that directory, it checks F<..>, then
 F<../..>, etc., until it reaches either the root directory or a
 directory which is located on a different file system.
 
-=item first_available file1 file2 .. X<first_available>
+=item first_available I<file1 file2 ...>
 
 Return the first file in a list that exists or can be built.  This can
 be useful for adapting your makefiles to work on several different
@@ -209,7 +302,7 @@ This line will check for the Tcl library in all of the above places,
 stopping at the first one that it finds.  The link command then includes
 $(TCL_LIB) so we get the appropriate Tcl library.
 
-=item infer_objects
+=item infer_objects I<file1 file2 ..., pattern>
 
     $(infer_objects object1.o object2.o, *.o)
 
@@ -235,27 +328,30 @@ program, like this:
  		**/*.o /other/library/dirs/**/*.o)
  	$(CXX) $(inputs) -o $(output) $(LIBS)
 
-The C<infer_objects> function takes two arguments (separated by a comma, as
-shown).  The first is one or a few object files that are known to be required
-(wildcards are permissible here).  The second is a list of possible objects
-(normally you would use a wildcard here) that could be linked in if necessary.
-The return value from this function is a list that contains first all of the
-objects in the first argument, and then after those, all additional objects
-that were contained in the second argument that are required by the objects in
-the first argument.
+The L<C<$(infer_objects)>|makepp_functions/infer_objects_file1_file2_pattern>
+function takes two arguments (separated by a comma, as shown).  The first is
+one or a few object files that are known to be required (wildcards are
+permissible here).  The second is a list of possible objects (normally you
+would use a wildcard here) that could be linked in if necessary.  The return
+value from this function is a list that contains first all of the objects in
+the first argument, and then after those, all additional objects that were
+contained in the second argument that are required by the objects in the first
+argument.
 
 For example, suppose C<main.o> comes from C<main.cpp>, which includes
-C<my_class.h>.  C<infer_objects> looks for files with the name C<my_class.o>.
-If exactly one such file is found, it is added to the list.  (If two object
-files C<my_class.o> are found in different directories, a warning message is
-printed.)  C<infer_objects> also examines C<my_class.cpp> to see what it
-includes, and what additional object files are implied.
+C<my_class.h>.
+L<C<$(infer_objects)>|makepp_functions/infer_objects_file1_file2_pattern>
+looks for files with the name C<my_class.o>.  If exactly one such file is
+found, it is added to the list.  (If two object files C<my_class.o> are found
+in different directories, a warning message is printed.)  C<infer_objects>
+also examines C<my_class.cpp> to see what it includes, and what additional
+object files are implied.
 
 =item mktemp
 
-=item mktemp prefix
+=item mktemp I<prefix>
 
-=item mktemp prefixXXX
+=item mktemp I<prefix>XXX
 
 =item mktemp /
 
@@ -286,10 +382,10 @@ makepp.
     TMPFILE ;= $(temporary $(mktemp))	# 1 call; "=" would mean 3 calls: 3 files
     A-count: $(TMPFILE)
  	&grep -c /A/ $(input) -o $(output)
- 
+
     B-count: $(TMPFILE)
  	&grep -c /B/ $(input) -o $(output)
- 
+
     $(TMPFILE):
  	produce-As-and-Bs >$(output)
 
@@ -319,12 +415,12 @@ pattern rule:
  	&grep foo $(input) -o $(mktemp)
  	&sed bar $(mktemp /) -o $(output) # Operate on the output of &grep
 
-=item notdir filenames X<notdir>
+=item notdir I<filenames>
 
 Returns the non-directory portion of the filename(s), i.e., everything after
 the last slash if there is one, or the whole filename otherwise.
 
-=item only_generated filenames X<only_generated>
+=item only_generated I<filenames>
 
 Returns only those filenames in the list that were generated by makepp
 and not since modified, according to the build info file.
@@ -335,7 +431,7 @@ is the preferred variant):
     $(phony clean):
  	&rm -f $(only_generated **/*)
 
-=item only_nontargets filenames X<only_nontargets>
+=item only_nontargets I<filenames>
 
 Returns only those filenames in the list that are not targets of any
 rule (either explicit or pattern rules).  You may specify a wildcard
@@ -344,7 +440,7 @@ wildcards).  This can be used for generating a distribution target, for
 example:
 
     .PHONY: distribution
- 
+
     distribution:
  	&mkdir our_product-$(VERSION)
  	&cp $(filter-out %~, $(only_nontargets *)) our_product-$(VERSION)
@@ -361,7 +457,7 @@ to define variables with the C<:=> assignment; if you use it in the
 dependency list or in the body of a rule, all other rules will already
 have been seen.
 
-=item only_stale filenames X<only_stale>
+=item only_stale I<filenames>
 
 Returns only those filenames in the list that were generated by makepp
 and not since modified, according to the build info file, but are no longer
@@ -380,7 +476,7 @@ generated file becomes a source file. Makepp doesn't have such a function
 built in because makepp is (and probably ought to remain) agnostic about
 source control.
 
-=item only_targets filenames X<only_targets>
+=item only_targets I<filenames>
 
 Returns only those filenames in the list that are actually targets of
 some rule (either explicit or pattern rules).  You may specify wildcards
@@ -389,7 +485,7 @@ S<C<$(wildcard )>> function for more details.  This can be used for a
 clean target, for example:
 
     .PHONY: clean
- 
+
     clean:
  	&rm -f $(only_targets *)
 
@@ -422,10 +518,10 @@ is executed.  However, if you evaluate try to evaluate it earlier in the
 makefile with a C<:=> variable like this:
 
     ALL_TARGETS := $(only_targets *)
- 
+
     target1: dependency1
  	actions
- 
+
     target2: dependency2
  	actions
 
@@ -437,7 +533,7 @@ using recursive make anyway; use use the C<load_makefile> statement, or
 L<implicit makefile loading|makepp_build_algorithm/Implicit loading>
 instead.)
 
-=item relative_filename file1 file2 file3 X<relative_filename>
+=item relative_filename I<file1 file2 file3>
 
 Returns the name of those files relative to the current directory (the one the
 makefile is in).  This can also be used to clean unnecessary C<./> and other
@@ -452,7 +548,7 @@ Each result is guaranteed to contain a slash, so that you can use it as an
 executable name without worrying about the command search path overriding
 the directory location.
 
-=item relative_to file1 file2 file3, directory X<relative_to>
+=item relative_to I<file1 file2 file3, directory>
 
 Returns the name of those files relative to the specified directory.  This is
 typically useful when for whatever reason you have to execute a command from a
@@ -461,7 +557,21 @@ different directory:
     source_backup.tar:
  	cd .. && tar cf $(relative_to $(output), ..) $(relative_to ., ..)
 
-=item temporary words X<temporary>
+=item suffix I<names...>
+
+Extracts the suffix of each file name in names. If the file name contains a
+period, the suffix is everything starting with the last period. Otherwise, the
+suffix is the empty string. This frequently means that the result will be
+empty when names is not, and if names contains multiple file names, the result
+may contain fewer file names.
+
+For example,
+
+    $(suffix src/foo.c src-1.0/bar.c hacks)
+
+produces the result C<.c .c>.
+
+=item temporary I<words>
 
 Let makepp know that the specified targets may be removed by the rule
 that generates them.
@@ -469,7 +579,7 @@ Similar to C<phony>, except that makepp expects that a real file of that
 name will may be affected by the rule.
 A rule is not executed if only its temporary targets are out-of-date.
 
-=item wildcard pattern X<wildcard>
+=item wildcard I<pattern>
 
 Returns the sorted names of all files matching the given pattern which exist,
 or those files which do not yet exist but can be built based on the rules that
@@ -482,9 +592,9 @@ also has a wildcard C<**> which matches any number of intervening directories.
 files in the entire source tree.  C<objects/**/*.o> matches all the F<.o>
 files contained anywhere in the subdirectory F<objects> or any of its
 subdirectories or any of their subdirectories.  The C<**> wildcard will not
-follow soft links to directories, nor will it attempt to enter directories
-which exist but cannot be read.  Also files which exist but cannot be read
-will not be returned by S<C<$(wildcard )>>.
+follow soft links to directories at any level, nor will it attempt to enter
+directories which exist but cannot be read.  Also files which exist but cannot
+be read will not be returned by S<C<$(wildcard )>>.
 
 =back
 
@@ -492,7 +602,7 @@ will not be returned by S<C<$(wildcard )>>.
 
 =over 4
 
-=item addprefix prefix, words X<addprefix>
+=item addprefix I<prefix, words>
 
 Prepends the prefix string to each of the words.  This is mostly for GNU make
 compatibility; using rc-style expansion, this can be done in a more readable
@@ -502,7 +612,7 @@ fashion like this:
     X_OLD_STYLE := $(addprefix $(OBJDIR)/, $(addsuffix .o, $(MODULES)))
     X_NEW_STYLE := $(OBJDIR)/$(MODULES).o   # Isn't that easier to read?
 
-=item addsuffix suffix, words X<addsuffix>
+=item addsuffix I<suffix, words>
 
 Appends the suffix string to each of the words.  This is mostly for GNU make
 compatibility; using rc-style expansion, this can be done in a more readable
@@ -511,7 +621,7 @@ fashion like this:
     X_OLD_STYLE := $(addsuffix .o, $(MODULES))
     X_NEW_STYLE := $(MODULES).o
 
-=item call variable[, words]... X<call>
+=item call I<variable[, words]... X<call>>
 
 The function C<call> is unique in that it can be used to regard I<variable> as
 a parameterized function.  You can assign a complex expression to I<variable>
@@ -543,7 +653,7 @@ And now for a more complex example to show what is possible:
     rest = $(wordlist 2,$(words $(1)),${1})
     mymap = $(if $2,$(call $1,$(firstword $2)) $(call $0,$1,$(call rest,$2)))
     downcase = ${makeperl lc("$1")}
- 
+
     UCWORDS = ALL THESE WORDS ARE UPCASE
     DCWORDS := $(call mymap,downcase,$(UCWORDS))
 
@@ -551,14 +661,14 @@ Now C<$(DCWORDS)> contains S<C<all these words are upcase>>.  By the way: it
 makes no difference, whether we access the arguments via B<C<$1>>, B<C<${1}>>
 or B<C<$(1)>> within a macro.
 
-=item filter patterns, words X<filter>
+=item filter I<patterns, words>
 
 Returns all words in the list that match the patterns.  Patterns may simply be
 other words, or filename wildcards (i.e., C<*>, C<?>, and C<[a-z]> are
 recognized), or they may have a C<%> character, which means to match any
 string at that point (same as C<*>).
 
-=item filter_out patterns, words X<filter_out>
+=item filter_out I<patterns, words>
 
 Returns all words in the list that do not match the patterns.  Patterns may
 simply be other words, or filename wildcards (i.e., C<*>, C<?>, and C<[a-z]>
@@ -572,36 +682,17 @@ For example:
 will put all F<.o> files which exist or can be built, except those beginning
 with F<test_>, into F<libproduction.a>.
 
-=item findstring find, in X<findstring>
+=item findstring I<find, in>
 
 Return I<find>, if it is a substring of I<in>.
 
-=item firstword words X<firstword>
+=item firstword I<words>
 
 Return the first word.
 
-=item if string, result-if-string-not-blank, result-if-string-blank X<if>
+=item map I<words, perlcode>
 
-=item iftrue string, result-if-string-true, result-if-string-false X<iftrue>
-
-An alternative to the C<ifeq>, etc., statements.  If the string is not blank
-(i.e., the condition is true), the second argument (the "then" clause) is
-returned (after variable expansion); if the string is blank, the third
-argument (the "else" clause) is returned.
-
-For example,
-
-    CFLAGS := $(if $(filter gcc egcc, $(CC)), -g -Wall, -g)
-
-defines CFLAGS to be C<-g -Wall> if the variable CC is either C<gcc> or
-C<egcc>, and C<-g> otherwise.  (This is what the default build rules do.)
-
-C<iftrue> is similar to C<if>, except that the string C<0> is treated as
-blank.
-
-=item map words, perlcode
-
-=item makemap words, perlcode
+=item makemap I<words, perlcode>
 
 Similarly to perl's map, applies I<perlcode> to each word in turn and returns
 the results.  The first variant is plain Perl code, while the second variant
@@ -619,11 +710,11 @@ comma is a separator, any others are considered part of the I<perlcode>.
     # You can eliminate candidates:
     Y = $(map $(VALUES), undef $_ if /no_good/)
 
-=item join words1, words2 X<join>
+=item join I<words1, words2>
 
 Do a pairwise join of the first words and the second words.
 
-=item patsubst pattern, substitute, words X<patsubst>
+=item patsubst I<pattern, substitute, words>
 
 Performs a substitution on each word in the word list.  A
 C<%> character matches any string.  This is best
@@ -638,9 +729,42 @@ the above could have been written as
 
     OBJS = $(C_SOURCES:%.c=object_dir/%.o)
 
-=item sort word1 word2 word3 ... X<sort>
+=item sort I<word1 word2 word3 ...>
 
 Sorts the words in lexical order and removes duplicates.
+
+=item strip I<string>
+
+Removes leading and trailing whitespace from string and replaces each internal
+sequence of one or more whitespace characters with a single space. Thus,
+C<$(strip  a b  c )> results in C<a b c>.
+
+=item subst I<from,to,text>
+
+Performs a textual replacement on the text text: each occurrence of from is
+replaced by to. The result is substituted for the function call. For example,
+
+    $(subst ee,EE,feet on the street)
+
+substitutes the string C<fEEt on the strEEt>.
+
+=item word I<n,text>
+
+Returns the I<n>th word of I<text>. The legitimate values of I<n> start from 1
+at the beginning or backwards from -1 at the end. If I<n> is bigger than the
+number of words in I<text>, the value is empty.
+
+=item wordlist I<indexlist, words>
+
+=item wordlist I<firstindex, lastindex, words>
+
+In the first form you supply a list of indices (counting from 1 at the
+beginning or backwards from -1 at the end) to select the words you want.  In
+the second form you specify the range of words you want returned.
+
+=item words I<text>
+
+Returns the number of words in I<text>.
 
 =back
 
@@ -648,9 +772,56 @@ Sorts the words in lexical order and removes duplicates.
 
 =over 4
 
-=item prebuild targets X<prebuild>
+=item foreach I<var,list,text>
 
-=item make targets
+The first two arguments, I<var> and I<list>, are expanded before anything else
+is done; note that the last argument, text, is not expanded at the same
+time. Then for each word of the expanded value of list, the variable named by
+the expanded value of var is set to that word, and text is
+expanded. Presumably text contains references to that variable, so its
+expansion will be different each time.
+
+This simple example sets the variable I<files> to the list of all files in the
+directories in the list I<dirs>:
+
+    dirs := a b c d
+    files := $(foreach dir,$(dirs),$(wildcard $(dir)/*))
+
+Here text is C<$(wildcard $(dir)/*)>. The first repetition finds the value ‘a’
+for dir, so it produces the same result as C<$(wildcard a/*)>; the second
+repetition produces the result of C<$(wildcard b/*)>; and the third, that of
+C<$(wildcard c/*)>.
+
+This example has the same result (except for setting ‘dirs’) as the following example:
+
+    files := $(wildcard a/* b/* c/* d/*)
+
+When text is complicated, you can improve readability by giving it a name, with an additional variable:
+
+    find_files = $(wildcard $(dir)/*)
+    dirs := a b c d
+    files := $(foreach dir,$(dirs),$(find_files))
+
+Here we use the variable find_files this way. We use plain ‘=’ to define a
+recursively-expanding variable, so that its value contains an actual function
+call to be reexpanded under the control of foreach; a simply-expanded variable
+would not do, since wildcard would be called only once at the time of defining
+find_files.
+
+Note: Don't confuse this with the C<$(foreach)> special variable.
+
+=item info I<text>
+
+=item warning I<text>
+
+=item error I<text>
+
+Output text returning the nothing.  The first goes to STDOUT, the second to
+STDERR, the third additionally aborts processing.
+
+=item prebuild I<targets>
+
+=item make I<targets>
 
 Returns its argument verbatim, but first builds all the files listed.
 This is useful when a given file is needed when evaluating a make
@@ -659,16 +830,16 @@ of files involved is computed by some shell commands.  For example,
 
     file_list :
  	# shell commands to compute a list of files to put into the program
- 
+
     my_program : $(&cat $(prebuild file_list))
 
 If you need the list in more than one rule, it would be more efficient to use
 an expand at most once variable:
 
     file_list ;= $(&cat $(prebuild file_list))
- 
+
     my_program1 : a.o $(file_list)
- 
+
     my_program2 : b.o $(file_list)
 
 If instead you specified just S<C<$(&cat file_list)>>, then makepp would not
@@ -681,7 +852,7 @@ tempted to try other things, like this:
 but this won't work because S<C<$(&cat file_list)>> is evaluated
 before makepp attempts to build C<file_list>.
 
-=item only_phony_targets names X<only_phony_targets>
+=item only_phony_targets I<names>
 
 Returns only those names in the list that are phony targets of
 some rule (either explicit or pattern rules).  You may specify wildcards
@@ -691,9 +862,13 @@ targets, for example:
 
     $(phony tests): $(only_phony_targets */**/tests)
 
-=item perl perlcode
+=item origin I<variable>
 
-=item makeperl perlcode
+Given the name of a variable, tells you where its value comes from.
+
+=item perl I<perlcode>
+
+=item makeperl I<perlcode>
 
 Evaluates perlcode in a block and returns the result.  The first
 variant is plain Perl code, while the second variant first passes the
@@ -709,14 +884,14 @@ double it as in the last example:
     VAR3 = $(makeperl $(VAR1) * 3 + $$VAR) # one Make var and one Perl var
     VAR = $((perl if( ... ) { ... }))
 
-=item phony words X<phony>
+=item phony I<words>
 
 Indicates that the list of words are actually phony targets, and
 returns the list of targets.  It's intended to be used like
 this:
 
     $(phony all): my_program
- 
+
     $(phony clean):
  	&rm -f *.o my_program
 
@@ -725,7 +900,7 @@ this anywhere in your makefile:
 
     .PHONY: all clean
 
-=item print text X<print>
+=item print I<text>
 
 Outputs the text and returns it.  This is mostly useful for
 debugging, when you don't understand why variable substitution
@@ -740,7 +915,7 @@ will print out the result of the C<patsubst> call.
 will print out the last argument to the C<patsubst>
 call.
 
-=item shell shell-command X<shell>
+=item shell I<shell-command>
 
 Returns the output from the given shell command, with newlines
 replaced by spaces.
@@ -752,15 +927,7 @@ double it as in the second example:
     date = $(shell date)	# better: $(perl scalar localtime)
     VAR = ${{shell f() { echo hello; }; f}}
 
-=item wordlist indexlist, words X<wordlist>
-
-=item wordlist firstindex, lastindex, words
-
-In the first form you supply a list of indices (counting from 1 at the
-beginning or backwards from -1 at the end) to select the words you want.  In
-the second form you specify the range of words you want returned.
-
-=item xargs command list X<xargs>
+=item xargs I<command,arguments[,suffix]>
 
 Returns a newline-separated list of commands that each begin with the
 specified command, and end with as many elements of the list as possible
@@ -793,14 +960,7 @@ would help):
 
 =back
 
-makepp also supports many other, less useful functions that GNU make has.  See
-the GNU make documentation for details, because I don't feel like typing it in
-now.  (To my knowledge, the only ones it does not support are C<call>,
-C<error>, and C<warning>.)  These are intended mainly to support existing
-makefiles; it's very easy to L<write your own functions in
-perl|makepp_extending>, or to use the C<perl_begin> or C<sub> statements to
-manipulate variables directly in perl inside your makefile, so you can do any
-kind of manipulation if one of these built-in functions isn't adequate.
+Some of this documentation is based on the GNU make documentation.
 
 =head1 AUTHOR
 

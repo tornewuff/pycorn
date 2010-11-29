@@ -1,4 +1,4 @@
-# $Id: Text.pm,v 1.42 2009/07/15 22:10:05 pfeiffer Exp $
+# $Id: Text.pm,v 1.49 2010/11/17 21:36:59 pfeiffer Exp $
 
 =head1 NAME
 
@@ -21,13 +21,12 @@ use Config;
 # Centrally provide constants which are needed repeatedly for aliasing, since
 # perl implements them as subs, and each sub takes about 1.5kb RAM.
 BEGIN {
-  eval "sub CONST$_() { $_ }" for 0..6; # More are defined in Mpp/BuildCacheControl.pm
-  *Mpp::is_perl_5_6 = $] < 5.008 ? \&CONST1 : \&CONST0;
+  our @N = map eval( "sub(){$_}" ), 0..6; # More are defined in Mpp/BuildCacheControl.pm
+  *Mpp::is_perl_5_6 = $N[$] < 5.008 ? 1 : 0];
   *Mpp::is_windows =
     $^O eq 'cygwin' ? sub() { -1 } : # Negative for Unix like
     $^O eq 'msys' ? sub() { -2 } :   # MinGW with sh & coreutils
-    $^O =~ /^MSWin/ ? (exists $ENV{SHELL} && $ENV{SHELL} =~ /sh(?:\.exe)?$/i ? \&CONST1 : \&CONST2) :
-    \&CONST0;
+    $N[$^O =~ /^MSWin/ ? (exists $ENV{SHELL} && $ENV{SHELL} =~ /sh(?:\.exe)?$/i ? 1 : 2) : 0];
 
   my $perl = $ENV{PERL};
   if( $perl && -x $perl ) {	# Overridden successfully.
@@ -68,36 +67,28 @@ returns ('file1.o', 'file2.o').
 
 sub pattern_substitution {
   my ($src, $dest, @words) = @_; # Name the arguments.
-  my $percent_pos = index($src, '%'); # Find the percent char.
+  my $percent_pos = index $src, '%'; # Find the percent char.
   $percent_pos < 0 and
     die "\$(patsubst ...) called with '$src' as first argument\n";
 
-  my $src_prefix = substr($src, 0, $percent_pos);
-  my $src_suffix = substr($src, $percent_pos+1);
+  chop( my $src_prefix = substr $src, 0, $percent_pos+1, '' );
 
-  my @ret_words;
-  foreach (@words) {
-    my $stem_len = length() - length($src_prefix) - length($src_suffix);
-    if ($stem_len >= 0 &&	# Make sure prefix & suffix don't overlap.
-	substr($_, 0, length($src_prefix)) eq $src_prefix &&
-	substr($_, length($_)-length($src_suffix)) eq $src_suffix) {
-      my $pattern_stem = substr $_, length($src_prefix), $stem_len;
-      my $dest_copy;
-      ($dest_copy = $dest) =~ s/%/$pattern_stem/g;
+  for my $word (@words) {
+    my $len_diff = length( $word ) - length $src;
+    if( $len_diff >= $percent_pos &&	# Make sure prefix & suffix don't overlap.
+	substr( $word, 0, $percent_pos ) eq $src_prefix &&
+	substr( $word, $len_diff ) eq $src ) {
+      my $pattern_stem = substr $word, $percent_pos, $len_diff - $percent_pos;
+      ($word = $dest) =~ s/%/$pattern_stem/g;
 				# Replace all occurences of % with the stem.
-      push @ret_words, $dest_copy;
 				# Save the resulting word(s).  There may be
 				# more than one if $dest contains spaces.
-      defined($Mpp::Subs::rule) and
-	$Mpp::Subs::rule->{PATTERN_STEM} = $pattern_stem;
-				# Set it up so $* can return the stem.
-    } else {
-      push @ret_words, $_;	# If the pattern doesn't match, then we copy
-				# it without modification to the output.
+      $Mpp::Subs::rule->{PATTERN_STEM} = $pattern_stem
+	if defined $Mpp::Subs::rule; # Set it up so $* can return the stem.
     }
   }
 
-  @ret_words;
+  @words;
 }
 
 # Rather than cascade if( /\Gx/gc ), just look up the action
@@ -143,6 +134,7 @@ Like C<index_ignoring_quotes>, except that it returns the index to the last
 instance rather than the first.
 
 =cut
+
 sub max_index_ignoring_quotes {
   use strict;
   my ($str, $sub) = @_;
@@ -152,7 +144,7 @@ sub max_index_ignoring_quotes {
     $max += $next + $len;
     substr $str, 0, $next + $len, '';
   }
-  return $max ? $max - $len : -1;
+  $max ? $max - $len : -1;
 }
 
 =head2 split_on_whitespace
@@ -179,9 +171,6 @@ sub unquote_split_on_whitespace {
   # Can't call unquote when pushing because both use \G and at least in 5.6
   # localizing $_ doesn't localize \G
   map unquote(), &split_on_whitespace;
-}
-sub split_commands {
-  split_on_whitespace( $_[0], 1 );
 }
 sub split_on_whitespace {
   my @pieces;
@@ -224,11 +213,13 @@ sub split_on_whitespace {
     }
   }
 
-  if (length() > $last_pos) {	# Anything left at the end of the string?
-    push @pieces, substr($_, $last_pos);
-  }
+  push @pieces, substr $_, $last_pos
+    if length() > $last_pos;	# Anything left at the end of the string?
 
   @pieces;
+}
+sub split_commands {
+  split_on_whitespace $_[0], 1;
 }
 
 =head2 join_with_protection
@@ -355,7 +346,7 @@ sub skip_over_make_expression {
   if( /\G(?:perl|map())\s+/gc ) { # Is there plain Perl code we must skip blindly?
     if( defined $1 ) {		  # The first arg to map is normal make stuff.
       /\G[^"'\$,]/gc or &{$skip_over{substr $_, pos()++, 1}}
-	while !/\G,/gc;
+	until /\G,/gc;
     }
     $double ? /\G.*?$endre$endre/gc : /\G.*?$endre/gc;
     return $double + 1;
@@ -582,7 +573,7 @@ sub hash_neq {
 #
   my %a_not_b = %$a;		# Make a modifiable copy of one of them.
   foreach (keys %$b) {
-    !exists($a_not_b{$_}) and return $_ || '0_'; # Must return a true value.
+    exists($a_not_b{$_}) or return $_ || '0_'; # Must return a true value.
     $a_not_b{$_} eq $b->{$_} or return $_ || '0_';
     delete $a_not_b{$_};	# Remember which things we've compared.
   }
@@ -721,5 +712,51 @@ sub _getopts_long($) {
   $str =~ tr/()?://d;
   $str;
 }
+
+#@@eliminate
+# Not installed, so grep all our sources for the checkin date.  Make a
+# composite version consisting of the three most recent dates (shown as (yy)mmdd,
+# but sorted including year) followed by the count of files checked in that
+# day.
+#
+BEGIN {
+  $Mpp::datadir ||= (grep -f( "$_/Mpp.pm" ), @INC)[0] or
+    die "Can't find our libraries in \@INC.\n";
+  open my $fh, '<', "$Mpp::datadir/VERSION" or
+    die "Can't read the file $Mpp::datadir/VERSION--$!.\nThis should be part of the standard distribution.\n";
+  chomp( $Mpp::VERSION		# Hide assignment from CPAN scanner.
+	 = <$fh> );
+  if( $Mpp::VERSION		# -"-
+      =~ s/beta\r?// ) {
+    my %VERSION = qw(0/00/00 0 00/00/00 0); # Default in case all modules change on same day.
+    for( <$Mpp::datadir/makep*[!~] $Mpp::datadir/Mpp{,/*,/*/*}.pm> ) {
+      open my( $fh ), $_;
+      while( <$fh> ) {
+	if( /\$Id: .+,v [.0-9]+ ([\/0-9]+)/ ) {
+	  $VERSION{$1}++;
+	  last;
+	}
+      }
+    }
+    my $year = '';
+    $Mpp::VERSION .= join '-', '',
+      grep { s!\d\d(\d+)/(\d+)/(\d+)!($year eq $1 ? '' : ($year = $1))."$2$3:$VERSION{$_}"!e }
+	(reverse sort keys %VERSION)[0..2];
+  }
+}
+#@@
+
+
+our @common_opts =
+  (				#  makeppbuiltin relies on help being 1st.
+    [qr/[h?]/, 'help', undef, undef, sub { local $/; print <Mpp::DATA>; exit 0 }],
+
+    [qw(V version), undef, undef, sub { $0 =~ s!.*/!!; print <<EOS; exit 0 }]);
+$0 version $Mpp::VERSION
+Makepp may be copied only under the terms of either the Artistic License or
+the GNU General Public License, either version 2, or (at your option) any
+later version.
+For more details, see the makepp homepage at http://makepp.sourceforge.net.
+EOS
 
 1;
