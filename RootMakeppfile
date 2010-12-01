@@ -3,9 +3,9 @@ $(phony all): real-all
 include common.mk
 
 ifndef USE_BINARIES
-$(phony real-all): hello/all pycorn/all
+$(phony real-all): seeds/hello/all seeds/pycorn/all
 else
-$(phony real-all): pycorn/all
+$(phony real-all): seeds/pycorn/all
 endif
 
-$(phony run): pycorn/run
+$(phony run): seeds/pycorn/run

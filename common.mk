@@ -33,14 +33,6 @@ PYTHONVERMINOR := 2.5
 # Rules
 
 ifndef USE_BINARIES
-ifdef OBJECTS
-%.bin: %.elf
-	$(OBJCOPY) -O binary $(input) $(output)
-
-$(notdir $(CURDIR)).elf: $(OBJECTS) $(LDDEPS)
-	$(CC) $(OBJECTS) $(LDFLAGS) $(SYSLIBS) -o $(output)
-endif
-
 %.o: %.c $(prebuild $( $(PYINCLUDE))/stamp-include)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $(input) -o $(output)
 

@@ -105,20 +105,20 @@ BUILDING
 
 If you are using a binary release, skip step 1.
 
-1) Run "makepp hello/hello.uimage". This is a "hello world" program which
+1) Run "makepp seeds/hello/hello.uimage". This is a "hello world" program which
 should load into u-boot and print on the default platform serial port.
 
 1a) If you have an actual Gumstix Verdex board you should be able to load this
 by serial, tftp, or MMC, and execute it with bootm.
 
-1b) If you don't, you can simulate it under QEMU by doing "makepp hello/run",
-assuming you have QEMU installed. The bootloader will be configured
-automatically so it should just run. Hit C-a x (C-a a x under screen) to kill
-QEMU.
+1b) If you don't, you can simulate it under QEMU by doing
+"makepp seeds/hello/run", assuming you have QEMU installed. The bootloader will
+ be configured automatically so it should just run. Hit C-a x (C-a a x under
+screen) to kill QEMU.
 
-2) Run "makepp pycorn/pycorn.uimage". This is the python interpreter, with the
-minimum amount of code to boot pycorn built into it.
+2) Run "makepp seeds/pycorn/pycorn.uimage". This is the python interpreter,
+with the minimum amount of code to boot pycorn built into it.
 
 3a) Again, if you have an actual Verdex board it should run from u-boot.
 
-3b) Otherwise, "makepp pycorn/run" to launch it in QEMU.
+3b) Otherwise, "makepp seeds/pycorn/run" to launch it in QEMU.
