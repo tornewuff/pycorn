@@ -1,0 +1,20 @@
+# Allow % to match down into subdirs
+makepp_percent_subdirs := 1
+
+TARGET := libembryo.a
+OBJECTS := readwrite.o sbrk.o stubs.o
+
+$(phony all): $(TARGET)
+
+include common.mk
+include arch/$(ARCH)/arch.mk
+
+CPPFLAGS += -Iarch/$(ARCH)/include -Iinclude
+
+ifdef DEBUG_EMBRYO
+CPPFLAGS += -DDEBUG_EMBRYO
+endif
+
+$(TARGET): $(OBJECTS)
+	&rm -f $(output)
+	$(AR) cr $(output) $(inputs)

@@ -1,5 +1,0 @@
-include common.mk
-
-ifdef DEBUG_EMBRYO
-CFLAGS += -DDEBUG_EMBRYO
-endif
