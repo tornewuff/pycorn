@@ -4,4 +4,4 @@ ifdef EMBRYO_GENMMSERIAL
 O += genmmserial-bs.o genmmserial.o
 endif
 
-OBJECTS += arch/arm/$( $(O))
+OBJECTS += $(ARCH)/$( $(O))

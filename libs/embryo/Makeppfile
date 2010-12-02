@@ -7,9 +7,9 @@ OBJECTS := readwrite.o sbrk.o stubs.o
 $(phony all): $(TARGET)
 
 include common.mk
-include arch/$(ARCH)/arch.mk
+include $(ARCH)/arch.mk
 
-CPPFLAGS += -Iarch/$(ARCH)/include -Iinclude
+CPPFLAGS += -I$(ARCH)/include -Iinclude
 
 ifdef DEBUG_EMBRYO
 CPPFLAGS += -DDEBUG_EMBRYO
