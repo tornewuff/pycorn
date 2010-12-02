@@ -7,6 +7,7 @@ OBJECTS := readwrite.o sbrk.o stubs.o
 $(phony all): $(TARGET)
 
 include common.mk
+include $(ARCH)/$(MACH)/mach.mk
 include $(ARCH)/arch.mk
 
 CPPFLAGS += -I$(ARCH)/include -Iinclude
