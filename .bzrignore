@@ -10,13 +10,13 @@ python/Python-*
 downloads/*.bz2
 downloads/*.gz
 python/build
-pycorn/frozen.c
-pycorn/initrd.zip
+seeds/pycorn/frozen.c
+seeds/pycorn/initrd.zip
 python/include
 python/quilt
 python/frozen
 python/initrd
-pycorn/frozen/bootstrap/version.py
+seeds/pycorn/frozen/bootstrap/version.py
 arch/arm/metal/ext/_metalcpu_coproc.S
 arch/arm/metal/ext/_metalcpu_coproc.h
 arch/arm/metal/frozen/_coprocmap.py

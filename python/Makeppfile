@@ -1,10 +1,11 @@
 include common.mk
+include $(ROOT)/libs/embryo/embryo.mk
 
 libpython$(PYTHONVERMINOR).a: stamp-target
 	cp -p build/$(output) $(output)
 
-FREEZEMODS := $(&cat freezelist)
-INITRDMODS := $(&cat initrdlist)
+FREEZEMODS := struct.py
+INITRDMODS := __future__.py
 
 stamp-initrd: stamp-sources
 	rm -rf initrd
