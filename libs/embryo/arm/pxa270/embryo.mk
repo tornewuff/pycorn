@@ -1,1 +1,2 @@
 LDDEPS += $(EMBRYODIR)/$(ARCH)/$(ARCH)-mmu-single.ld
+KERNELMKIMAGE += -a 0xa0008000 -e 0xa0008000

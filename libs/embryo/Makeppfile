@@ -10,7 +10,7 @@ include common.mk
 include $(ARCH)/$(MACH)/mach.mk
 include $(ARCH)/arch.mk
 
-CPPFLAGS += -I$(ARCH)/include -Iinclude
+CPPFLAGS += -I$( $(wildcard $(ARCH)/$(MACH)/include $(ARCH)/include include))
 
 ifdef DEBUG_EMBRYO
 CPPFLAGS += -DDEBUG_EMBRYO

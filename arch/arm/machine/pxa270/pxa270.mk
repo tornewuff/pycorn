@@ -1,6 +1,5 @@
 CFLAGS += -mcpu=xscale -mtune=xscale
 PYCFLAGS += -mcpu=xscale -mtune=xscale
-KERNELMKIMAGE += -a 0xa0008000 -e 0xa0008000
 
 ifdef OBJECTS
 $(phony run): $(notdir $(CURDIR)).flash
