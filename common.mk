@@ -17,8 +17,8 @@ MACHPATH := $(ROOT)/arch/$(ARCH)/machine/$(MACH)
 CFLAGS := -g -Wall -O2 -pipe -fomit-frame-pointer -std=gnu99 -Werror
 CPPFLAGS := -I$( $(PYINCLUDE))/include
 PYCFLAGS := -pipe -fomit-frame-pointer -fno-strict-aliasing -Werror -Wno-error=char-subscripts -Wno-error=unused-function -Wno-error=unused-variable
-LDFLAGS := -L$(absolute_filename $(MACHPATH)) -L$(absolute_filename $(ARCHPATH)) -Tembryo.ld
-LDDEPS := $(MACHPATH)/embryo.ld $(ARCHPATH)/$(ARCH).ld
+LDFLAGS :=
+LDDEPS :=
 
 # Get machine-specific stuff
 include $(ARCHPATH)/$(ARCH).mk
