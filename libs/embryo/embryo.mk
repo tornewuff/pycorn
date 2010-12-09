@@ -24,7 +24,7 @@ $(TARGET).bin: $(TARGET).elf
 	$(OBJCOPY) -O binary $(input) $(output)
 
 $(TARGET).elf: $(OBJECTS) $(LDDEPS)
-	$(CC) $(OBJECTS) $(LDFLAGS) $(SYSLIBS) -o $(output)
+	$(CC) $(OBJECTS) $(LDFLAGS) -o $(output)
 endif
 
 ifdef RAMDISK

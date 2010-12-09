@@ -1,6 +1,5 @@
 TARGET := pycorn
-OBJECTS = main.o getpath.o frozen.o $(EXTMODULES) $(ROOT)/libs/python/libpython2.5.a
-SYSLIBS := -lm
+OBJECTS = main.o getpath.o frozen.o $(EXTMODULES)
 RAMDISK := initrd.zip
 
 include seed.mk
