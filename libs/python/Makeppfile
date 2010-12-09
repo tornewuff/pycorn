@@ -1,7 +1,15 @@
 include common.mk
 include $(ROOT)/libs/embryo/embryo.mk
 
-libpython$(PYTHONVERMINOR).a: stamp-target
+TARGET := libpython$(PYTHONVERMINOR).a
+
+ifndef USE_BINARIES
+$(phony all): $(TARGET) stamp-include stamp-frozen stamp-initrd
+else
+$(phony all): stamp-frozen stamp-initrd
+endif
+
+$(TARGET): stamp-target
 	cp -p build/$(output) $(output)
 
 FREEZEMODS := struct.py
@@ -30,7 +38,7 @@ stamp-target: stamp-sources $(LDDEPS)
 	rm -rf build
 	&mkdir build
 	cd build; MACHDEP=pycorn CFLAGS="$(LDFLAGS)" ../Python-$(PYTHONVER)/configure --host=arm-eabi --without-signal-module
-	cd build; make HOSTPGEN=$(findfile hostpgen) EXTRA_CFLAGS="$(PYCFLAGS)" libpython$(PYTHONVERMINOR).a
+	cd build; make HOSTPGEN=$(findfile hostpgen) EXTRA_CFLAGS="$(PYCFLAGS)" $(TARGET)
 	&touch stamp-target
 
 stamp-quilt: $(ROOT)/downloads/Python-$(PYTHONVER).tar.bz2

@@ -1,10 +1,10 @@
 TARGET := pycorn
-OBJECTS = main.o getpath.o frozen.o $(EXTMODULES) $(ROOT)/python/libpython2.5.a
+OBJECTS = main.o getpath.o frozen.o $(EXTMODULES) $(ROOT)/libs/python/libpython2.5.a
 SYSLIBS := -lm
 RAMDISK := initrd.zip
 
-include python/pyinclude.mk
 include seed.mk
+include $(ROOT)/libs/python/python.mk
 
 ifdef DEBUG_PYSTARTUP
 CFLAGS += -DDEBUG_PYSTARTUP
@@ -21,12 +21,12 @@ stamp-version: always
 frozen/bootstrap/version.py: stamp-version : signature md5
 	bzr version-info --python > $(output)
 
-frozen.c: $( $(FREEZEDIRS))/**/*.py $(ROOT)/python/stamp-frozen freeze.py
-	$(PYTHON) freeze.py $(output) $(FREEZEDIRS) $(ROOT)/python/frozen
+frozen.c: $( $(FREEZEDIRS))/**/*.py $(ROOT)/libs/python/stamp-frozen freeze.py
+	$(PYTHON) freeze.py $(output) $(FREEZEDIRS) $(ROOT)/libs/python/frozen
 endif
 
-initrd.zip: $( $(INITRDDIRS))/** $(ROOT)/python/stamp-initrd makezip.py
-	$(PYTHON) makezip.py $(output) $(INITRDDIRS) $(ROOT)/python/initrd
+initrd.zip: $( $(INITRDDIRS))/** $(ROOT)/libs/python/stamp-initrd makezip.py
+	$(PYTHON) makezip.py $(output) $(INITRDDIRS) $(ROOT)/libs/python/initrd
 
 ifdef USE_BINARIES
 pycorn.uimage: $(MACHPATH)/$(MACH)-pycorn.uimage

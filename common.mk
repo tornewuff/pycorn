@@ -15,7 +15,8 @@ MACHPATH := $(ROOT)/arch/$(ARCH)/machine/$(MACH)
 
 # Flags
 CFLAGS := -g -Wall -O2 -pipe -fomit-frame-pointer -std=gnu99 -Werror
-CPPFLAGS := -I$( $(PYINCLUDE))/include
+CPPFLAGS :=
+CPPDEPS :=
 PYCFLAGS := -pipe -fomit-frame-pointer -fno-strict-aliasing -Werror -Wno-error=char-subscripts -Wno-error=unused-function -Wno-error=unused-variable
 LDFLAGS :=
 LDDEPS :=
@@ -36,10 +37,10 @@ PYTHONVERMINOR := 2.5
 # Rules
 
 ifndef USE_BINARIES
-%.o: %.c $(prebuild $( $(PYINCLUDE))/stamp-include)
+%.o: %.c $(prebuild $(CPPDEPS))
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $(input) -o $(output)
 
-%.o: %.S
+%.o: %.S $(prebuild $(CPPDEPS))
 	$(CC) $(ASFLAGS) $(CPPFLAGS) -c $(input) -o $(output)
 
 %.o: %.s
