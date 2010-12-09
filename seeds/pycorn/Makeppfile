@@ -25,7 +25,7 @@ frozen.c: freeze.py $(FREEZEDEPS)
 	$(PYTHON) freeze.py $(output) $(FREEZEDIRS)
 endif
 
-initrd.zip: makezip.py $(INITRDDEPS)
+$(RAMDISK): makezip.py $(INITRDDEPS)
 	$(PYTHON) makezip.py $(output) $(INITRDDIRS)
 
 ifdef USE_BINARIES
