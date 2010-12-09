@@ -10,6 +10,7 @@ CFLAGS += -DDEBUG_PYSTARTUP
 endif
 
 FREEZEDIRS += frozen
+FREEZEDEPS += frozen/**/*.py
 
 $(phony always):
 
@@ -20,12 +21,12 @@ stamp-version: always
 frozen/bootstrap/version.py: stamp-version : signature md5
 	bzr version-info --python > $(output)
 
-frozen.c: $( $(FREEZEDIRS))/**/*.py $(ROOT)/libs/python/stamp-frozen freeze.py
-	$(PYTHON) freeze.py $(output) $(FREEZEDIRS) $(ROOT)/libs/python/frozen
+frozen.c: freeze.py $(FREEZEDEPS)
+	$(PYTHON) freeze.py $(output) $(FREEZEDIRS)
 endif
 
-initrd.zip: $( $(INITRDDIRS))/** $(ROOT)/libs/python/stamp-initrd makezip.py
-	$(PYTHON) makezip.py $(output) $(INITRDDIRS) $(ROOT)/libs/python/initrd
+initrd.zip: makezip.py $(INITRDDEPS)
+	$(PYTHON) makezip.py $(output) $(INITRDDIRS)
 
 ifdef USE_BINARIES
 pycorn.uimage: $(MACHPATH)/$(MACH)-pycorn.uimage

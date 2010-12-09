@@ -1,4 +1,11 @@
-CPPFLAGS += -I$(ROOT)/libs/python/include
-CPPDEPS += $(ROOT)/libs/python/stamp-include
-LDFLAGS += -L$(ROOT)/libs/python -lpython$(PYTHONVERMINOR) -lm
-LDDEPS += $(ROOT)/libs/python/libpython$(PYTHONVERMINOR).a
+PYTHONDIR := $(ROOT)/libs/python
+
+CPPFLAGS += -I$(PYTHONDIR)/include
+CPPDEPS += $(PYTHONDIR)/stamp-include
+LDFLAGS += -L$(PYTHONDIR) -lpython$(PYTHONVERMINOR) -lm
+LDDEPS += $(PYTHONDIR)/libpython$(PYTHONVERMINOR).a
+
+FREEZEDIRS += $(PYTHONDIR)/frozen
+FREEZEDEPS += $(PYTHONDIR)/stamp-frozen
+INITRDDIRS += $(PYTHONDIR)/initrd
+INITRDDEPS += $(PYTHONDIR)/stamp-initrd
