@@ -21,11 +21,14 @@ LDFLAGS :=
 LDDEPS :=
 
 # Get machine-specific stuff
-include $(ARCHPATH)/$(ARCH).mk
-include $(MACHPATH)/$(MACH).mk
+include $(ROOT)/config/$(ARCH)/$(ARCH).mk
+include $(ROOT)/config/$(ARCH)/$(MACH).mk
 
 # Include arch-independant metal code
 include $(ROOT)/metal/metal.mk
+
+# Include arch-dependent metal code
+include $(ARCHPATH)/metal/metal.mk
 
 PYTHONVER := 2.5.5
 PYTHONVERMINOR := 2.5
