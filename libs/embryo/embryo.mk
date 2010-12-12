@@ -11,8 +11,8 @@ CPPFLAGS += -I$( $(wildcard $(EMBRYOPATHSABS)/include))
 LDFLAGS += -L$(EMBRYOPATHSABS) -specs=$(absolute_filename $(EMBRYODIR)/embryo.specs) -Tembryo.ld
 LDDEPS += $(EMBRYODIR)/embryo.specs $(EMBRYODIR)/libembryo.a $(EMBRYODIR)/$(ARCH)/$(MACH)/embryo.ld $(EMBRYODIR)/$(ARCH)/$(ARCH).ld
 
-include $(ROOT)/libs/embryo/$(ARCH)/$(MACH)/embryo.mk
-include $(ROOT)/libs/embryo/$(ARCH)/embryo.mk
+include $(EMBRYODIR)/$(ARCH)/$(MACH)/embryo.mk
+include $(EMBRYODIR)/$(ARCH)/embryo.mk
 
 ifdef MAKING_SEED
 
