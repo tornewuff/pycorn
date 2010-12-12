@@ -2,19 +2,19 @@ CFLAGS := -O2 -pipe
 LDFLAGS :=
 TOOLSTARGET := arm-eabi
 
-BINUTILSVER := 2.19.1
+BINUTILSVER := 2.21
 BINUTILSTAR := binutils-$(BINUTILSVER).tar.bz2
 BINUTILSDIR := binutils-$(BINUTILSVER)
 
-GCCVER := 4.4.1
+GCCVER := 4.5.1
 GCCTAR := gcc-core-$(GCCVER).tar.bz2
 GCCDIR := gcc-$(GCCVER)
 
-GDBVER := 6.8
+GDBVER := 7.2
 GDBTAR := gdb-$(GDBVER).tar.bz2
 GDBDIR := gdb-$(GDBVER)
 
-NEWLIBVER := 1.17.0
+NEWLIBVER := 1.18.0
 NEWLIBTAR := newlib-$(NEWLIBVER).tar.gz
 NEWLIBDIR := newlib-$(NEWLIBVER)
 
