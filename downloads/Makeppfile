@@ -22,4 +22,4 @@ gdb-%.tar.bz2: :last_chance
 
 newlib-%.tar.gz: :last_chance
 	&rm -f $(output)
-	wget ftp://sources.redhat.com/pub/newlib/$(output)
+	wget http://mirrors.kernel.org/sources.redhat.com/newlib/$(output)
