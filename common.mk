@@ -9,10 +9,6 @@ AR := $(PREFIX)ar
 OBJCOPY := $(PREFIX)objcopy
 PYTHON := hostpython
 
-# Paths
-ARCHPATH := $(ROOT)/arch/$(ARCH)
-MACHPATH := $(ROOT)/arch/$(ARCH)/machine/$(MACH)
-
 # Flags
 CFLAGS := -g -Wall -O2 -pipe -fomit-frame-pointer -std=gnu99 -Werror
 CPPFLAGS :=
@@ -24,12 +20,6 @@ LDDEPS :=
 # Get machine-specific stuff
 include $(ROOT)/config/$(ARCH)/$(ARCH).mk
 include $(ROOT)/config/$(ARCH)/$(MACH).mk
-
-# Include arch-independant metal code
-include $(ROOT)/metal/metal.mk
-
-# Include arch-dependent metal code
-include $(ARCHPATH)/metal/metal.mk
 
 PYTHONVER := 2.5.5
 PYTHONVERMINOR := 2.5

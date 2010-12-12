@@ -5,11 +5,11 @@
 *.o
 *.uimage
 .makepp
-arch/arm/metal/ext/_metalcpu_coproc.S
-arch/arm/metal/ext/_metalcpu_coproc.h
-arch/arm/metal/frozen/_coprocmap.py
 downloads/*.bz2
 downloads/*.gz
+libs/metal/arm/_metalcpu_coproc.S
+libs/metal/arm/_metalcpu_coproc.h
+libs/metal/arm/frozen/_coprocmap.py
 libs/python/Python-*
 libs/python/build
 libs/python/frozen

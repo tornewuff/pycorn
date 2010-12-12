@@ -4,6 +4,7 @@ RAMDISK := initrd.zip
 
 include seed.mk
 include $(ROOT)/libs/python/python.mk
+include $(ROOT)/libs/metal/metal.mk
 
 ifdef DEBUG_PYSTARTUP
 CFLAGS += -DDEBUG_PYSTARTUP

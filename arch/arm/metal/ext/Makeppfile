@@ -1,4 +1,0 @@
-include common.mk
-include $(ROOT)/libs/python/python.mk
-
-load_makefile ../..

@@ -1,0 +1,5 @@
+include common.mk
+include $(ROOT)/libs/python/python.mk
+
+_metalcpu_coproc.S _metalcpu_coproc.h frozen/_coprocmap.py: coprocreggen.py coprocreglist
+	$(PYTHON) $(inputs) $(outputs)
