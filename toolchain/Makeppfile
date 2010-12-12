@@ -1,5 +1,5 @@
 ifdef TOOLSPREFIX
-$(phony all): binutils/stamp-install gcc/stamp-install newlib/stamp-install gdb/stamp-install python/stamp-install
+$(phony all): binutils/stamp-install gcc/stamp-install newlib/stamp-install python/stamp-install
 else
 $(phony noprefix):
 	@&echo Please provide a TOOLSPREFIX to install the toolchain to.
