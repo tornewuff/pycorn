@@ -87,7 +87,7 @@ snapshot, and an uncommon tool.
 
 2) If you aren't using a binary release, you need an arm-eabi crosscompiler
 toolchain, and newlib 1.17. To build one automatically, install the header
-files for libgmp, libmpfr and ncurses (the dev packages for them from your
+files for libgmp, libmpfr and libmpc (the dev packages for them from your
 distro), then run:
 
 cd toolchain; makepp TOOLSPREFIX=/dir/to/install/to
