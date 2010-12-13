@@ -1,6 +1,6 @@
 /*
- * _bootstrap module. Provides the values of various constant addresses which
- * were used by the bootstrap code.
+ * _embryo module. Provides the values of various constant addresses which
+ * were used by the embryo code.
  *
  *
  * Copyright 2008 Torne Wuff
@@ -14,12 +14,7 @@
  */
 
 #include <Python.h>
-
-extern char __text_start__, __text_end__, __data_start__, __data_end__;
-extern char __bss_start__, __bss_end__, __heap_start__, __heap_end__;
-extern char __stack_start__, __stack_end__, __page_dir_virt__;
-extern char __dbg_serial_virt__, __page_tbl_start__, __page_tbl_end__;
-extern char __bootdata_virt__;
+#include <bootdata.h>
 
 #define PyModule_AddUnsignedLongConstant(module, name, value) { \
         PyObject *o = PyLong_FromUnsignedLong(value); \
@@ -30,14 +25,15 @@ extern char __bootdata_virt__;
         if (o) PyModule_AddObject(m, name, o); }
 
 PyMODINIT_FUNC
-initbootstrap(void)
+initembryo(void)
 {
     PyObject *m;
 
-    m = Py_InitModule3("_bootstrap", NULL, "Definitions of bootstrap fixed addresses");
+    m = Py_InitModule3("_embryo", NULL, "Definitions of embryo fixed addresses");
     if (!m)
         return;
 
+    // Linker-defined addresses
     PyModule_AddVoidPtrConstant(m, "text_start", &__text_start__);
     PyModule_AddVoidPtrConstant(m, "text_end", &__text_end__);
     PyModule_AddVoidPtrConstant(m, "data_start", &__data_start__);
@@ -53,9 +49,21 @@ initbootstrap(void)
     PyModule_AddVoidPtrConstant(m, "page_tbl_end", &__page_tbl_end__);
     PyModule_AddVoidPtrConstant(m, "dbg_serial_virt", &__dbg_serial_virt__);
     PyModule_AddVoidPtrConstant(m, "bootdata_virt", &__bootdata_virt__);
+
+    // Bootdata structure
+    bootdata_t *bootdata = (bootdata_t *) &__bootdata_virt__;
+    PyModule_AddUnsignedLongConstant(m, "rom_base", bootdata->rom_base);
+    PyModule_AddUnsignedLongConstant(m, "machtype", bootdata->machtype);
+    PyModule_AddUnsignedLongConstant(m, "taglist_ptr", bootdata->taglist_ptr);
+    PyModule_AddUnsignedLongConstant(m, "phys_to_virt", bootdata->phys_to_virt);
+    PyModule_AddUnsignedLongConstant(m, "next_free_page", bootdata->next_free_page);
+    PyModule_AddUnsignedLongConstant(m, "page_directory", bootdata->page_directory);
+    PyModule_AddUnsignedLongConstant(m, "initrd_size", bootdata->initrd_size);
+    PyModule_AddUnsignedLongConstant(m, "initrd_phys", bootdata->initrd_phys);
+    PyModule_AddUnsignedLongConstant(m, "initrd_virt", bootdata->initrd_virt);
 }
 
-__attribute__((constructor)) void appendbootstrap()
+__attribute__((constructor)) void appendembryo()
 {
-    PyImport_AppendInittab("_bootstrap", initbootstrap);
+    PyImport_AppendInittab("_embryo", initembryo);
 }

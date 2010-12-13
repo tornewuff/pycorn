@@ -15,8 +15,11 @@
 #
 
 import sys
+import cStringIO
 
-from bootstrap.arch import initrd_file
+from _embryo import initrd_size, initrd_virt
+from _metalmem import membuf
+
 from bootstrap.mini_zipimport import MiniZipImport
 from bootstrap.version import version_info
 
@@ -26,6 +29,14 @@ print '(built %s)' % version_info['build_date']
 
 # Clear existing path, which is useless
 del sys.path[:]
+
+# if the initrd size is nonzero, create a buffer and stringio for it
+if initrd_size > 0:
+    initrd = membuf(initrd_virt, initrd_size)
+    initrd_file = cStringIO.StringIO(initrd)
+else:
+    initrd = None
+    initrd_file = None
 
 # If an initrd was provided, add it to the path via mini_zipimport
 if initrd_file:

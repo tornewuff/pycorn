@@ -1,0 +1,3 @@
+include common.mk
+include $(ROOT)/libs/embryo/embryo.mk
+include $(ROOT)/libs/python/python.mk
