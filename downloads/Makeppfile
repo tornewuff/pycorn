@@ -10,7 +10,7 @@ Python-%.tar.bz2: :last_chance
 
 gcc-core-%.tar.bz2: :last_chance
 	&rm -f $(output)
-	wget http://mirrors.kernel.org/gnu/gcc/gcc-$(output:gcc-core-%.tar.bz2=%)/$(output)
+	wget http://ftpmirror.gnu.org/gcc/gcc-$(output:gcc-core-%.tar.bz2=%)/$(output)
 
 binutils-%.tar.bz2: :last_chance
 	&rm -f $(output)
@@ -22,4 +22,4 @@ gdb-%.tar.bz2: :last_chance
 
 newlib-%.tar.gz: :last_chance
 	&rm -f $(output)
-	wget http://mirrors.kernel.org/sources.redhat.com/newlib/$(output)
+	wget http://www.mirrorservice.org/sites/sources.redhat.com/pub/newlib/$(output)

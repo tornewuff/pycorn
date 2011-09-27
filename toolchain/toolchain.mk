@@ -2,8 +2,8 @@ CFLAGS := -O2 -pipe
 LDFLAGS :=
 TOOLSTARGET := arm-eabi
 
-BINUTILSVER := 2.21
-BINUTILSTAR := binutils-$(BINUTILSVER).tar.bz2
+BINUTILSVER := 2.21.1
+BINUTILSTAR := binutils-$(BINUTILSVER)a.tar.bz2
 BINUTILSDIR := binutils-$(BINUTILSVER)
 
 GCCVER := 4.5.1
