@@ -16,7 +16,9 @@
  */
 
 #include "bootstrap.h"
+#include "vectors.h"
 #include <string.h>
+#include <stdio.h>
 
 void boot_after_mmu(int selfmap_index, uint32_t old_pde)
   __attribute__((noreturn));
@@ -82,6 +84,10 @@ void boot_start()
   map_pages((virtaddr)&__page_dir_virt__,
       (virtaddr)(&__page_dir_virt__ + PAGEDIR_SIZE),
       bootdata->page_directory | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
+
+  DBGSTR("Map vectors\n");
+  map_pages((virtaddr)&__vectors__, (virtaddr)(&__vectors__ + PAGE_SIZE),
+      bootdata->rom_base | PTB_ROM | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
   DBGSTR("Map text section\n");
   map_pages((virtaddr)&__text_start__, (virtaddr)&__text_end__,
@@ -244,4 +250,16 @@ void map_pages(virtaddr virt_start, virtaddr virt_end, physaddr phys_start)
     page_index = 0;
     section_index++;
   }
+}
+
+// Handle fatal exceptions
+void unexpected_exception(struct register_set* r)
+{
+  printf("\n\nFatal exception\n");
+  printf("0  %08x 1  %08x 2  %08x 3  %08x\n", r->r0, r->r1, r->r2, r->r3);
+  printf("4  %08x 5  %08x 6  %08x 7  %08x\n", r->r4, r->r5, r->r6, r->r7);
+  printf("8  %08x 9  %08x 10 %08x 11 %08x\n", r->r8, r->r9, r->r10, r->r11);
+  printf("12 %08x 13 %08x 14 %08x 15 %08x\n", r->r12, r->r13, r->r14, r->r15);
+  printf("CPSR %08x Exception PSR %08x\n", r->cpsr, r->exc_cpsr);
+  for(;;);
 }

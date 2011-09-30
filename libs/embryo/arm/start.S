@@ -41,8 +41,19 @@
 
     FUNC_START  _start
 
+    // Exception vectors
+    b       _real_start
+    ldr     pc, =_handle_undef
+    ldr     pc, =_handle_swi
+    ldr     pc, =_handle_prefetch_abort
+    ldr     pc, =_handle_data_abort
+    nop
+    ldr     pc, =_handle_irq
+    ldr     pc, =_handle_fiq
+
+_real_start:
     // Get the physical address of this instruction (the base of the rom)
-    sub     r3, pc, #8
+    sub     r3, pc, #(_real_start - _start + 8)
 
     // Set up r9 as the struct bootdata_t pointer (start of the 16kb block)
     sub     r9, r3, #0x4000
@@ -83,6 +94,7 @@
     mrc     p15, 0, ip, c1, c0, 0       // get control register
     orr     ip, #0x1                    // mmu enable bit
     orr     ip, #0x200                  // ROM permission bit
+    orr     ip, #0x2000                 // high vectors
     mcr     p15, 0, ip, c1, c0, 0       // set control register
     CPWAIT  ip                          // after this the MMU is on
     ldr     r9, =__bootdata_virt__      // switch bootdata pointer

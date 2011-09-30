@@ -1,4 +1,4 @@
-O := start.o bootstrap.o atag.o crt0.o
+O := start.o vectors.o bootstrap.o atag.o crt0.o
 
 ifdef EMBRYO_GENMMSERIAL
 O += genmmserial-bs.o genmmserial.o
