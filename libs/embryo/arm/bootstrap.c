@@ -45,9 +45,9 @@ void boot_start()
   uint32_t bss_size = &__bss_end__ - &__bss_start__;
   uint32_t heap_size = &__heap_end__ - &__heap_start__;
   uint32_t stack_size = &__stack_end__ - &__stack_start__;
+  uint32_t exc_stack_size = &__exc_stack_end__ - &__exc_stack_start__;
   uint32_t img_size = text_size + data_size;
 
-  // Parse atags
   int r = parse_atags();
   DBGINT("parse_atags returned ", r);
   (void)r;
@@ -59,16 +59,13 @@ void boot_start()
   bootdata->next_free_page = bootdata->rom_base + img_size;
   DBGINT("first free page: ", bootdata->next_free_page);
 
-  // Allocate page directory
   DBGSTR("Allocate page directory\n");
   bootdata->page_directory = alloc_pages_zero(PAGEDIR_SIZE, PAGEDIR_SIZE);
   DBGINT("page directory: ", bootdata->page_directory);
   
-  // Set MMU base address
   DBGSTR("Set MMU base address\n");
   mmu_set_base(bootdata->page_directory);
 
-  // Allocate and map page table mappings
   // Page tables are placed linearly at a fixed location to make
   // it possible to find them again later without having to remember
   // where they are.
@@ -81,54 +78,51 @@ void boot_start()
   map_pages(ptbl_address, ptbl_address + (PAGE_SIZE * PTBLS_PER_PAGE),
       ptbl_map | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
-  // Map page directory
   DBGSTR("Map page directory\n");
   map_pages((virtaddr)&__page_dir_virt__,
       (virtaddr)(&__page_dir_virt__ + PAGEDIR_SIZE),
       bootdata->page_directory | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
-  // Map text section of image
   DBGSTR("Map text section\n");
   map_pages((virtaddr)&__text_start__, (virtaddr)&__text_end__,
       bootdata->rom_base | PTB_ROM | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
-  // Map data section of image
   DBGSTR("Map data section\n");
   physaddr data_phys = bootdata->rom_base + text_size;
   map_pages((virtaddr)&__data_start__, (virtaddr)&__data_end__,
       data_phys | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
-  // Allocate and map bss section
   DBGSTR("Allocate and map bss\n");
   physaddr bss_phys = alloc_pages_zero(bss_size, PAGE_SIZE);
   map_pages((virtaddr)&__bss_start__, (virtaddr)&__bss_end__,
       bss_phys | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
-  // Allocate and map heap section
   DBGSTR("Allocate and map heap\n");
   physaddr heap_phys = alloc_pages_zero(heap_size, PAGE_SIZE);
   map_pages((virtaddr)&__heap_start__, (virtaddr)&__heap_end__,
       heap_phys | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
-  // Allocate and map stack section
   DBGSTR("Allocate and map stack\n");
   physaddr stack_phys = alloc_pages_zero(stack_size, PAGE_SIZE);
   map_pages((virtaddr)&__stack_start__, (virtaddr)&__stack_end__,
       stack_phys | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
-  // Map debug UART - we assume no more than a page is needed
+  DBGSTR("Allocate and map exception stack\n");
+  physaddr exc_stack_phys = alloc_pages_zero(exc_stack_size, PAGE_SIZE);
+  map_pages((virtaddr)&__exc_stack_start__, (virtaddr)&__exc_stack_end__,
+      exc_stack_phys | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
+
+  // we assume no more than a page is needed
   DBGSTR("Mapping debug UART\n");
   map_pages((virtaddr)&__dbg_serial_virt__, 
       (virtaddr)(&__dbg_serial_virt__ + PAGE_SIZE),
       (physaddr)&__dbg_serial_phys__ | PTB_RW | PTB_EXT);
 
-  // Map boot data page
   DBGSTR("Mapping boot data\n");
   map_pages((virtaddr)&__bootdata_virt__,
       (virtaddr)(&__bootdata_virt__ + PAGE_SIZE),
       (physaddr)bootdata | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
-  // Map the initrd if there was one
   if (bootdata->initrd_size)
   {
     // The initrd address may not be a page multiple as u-boot has
@@ -147,7 +141,6 @@ void boot_start()
         map_start | PTB_ROM | PTB_CACHE | PTB_BUFF | PTB_EXT);
   }
 
-  // Self-map MMU enabling code
   // The page which contains the MMU enable function must be mapped
   // with phys==virt address, otherwise bad stuff happens. We do this
   // by stuffing in a 1MB section mapping for this address, which may

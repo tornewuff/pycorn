@@ -50,7 +50,7 @@
     // Set bootdata->rom_base
     str     r3, [r9]
 
-    // If the botloader really did give us r0=0 as we expect, it's *hopefully*
+    // If the bootloader really did give us r0=0 as we expect, it's *hopefully*
     // following the linux boot protocol and we can set bootdata->machtype and
     // bootdata->taglist_ptr
     cmp     r0, #0
@@ -86,6 +86,24 @@
     mcr     p15, 0, ip, c1, c0, 0       // set control register
     CPWAIT  ip                          // after this the MMU is on
     ldr     r9, =__bootdata_virt__      // switch bootdata pointer
+    ldr     r3, =__exc_stack_end__      // load exception stack address
+    mov     ip, #0xd1
+    msr     cpsr_c, ip
+    mov     sp, r3                      // set fiq stack
+    mov     ip, #0xd2
+    msr     cpsr_c, ip
+    mov     sp, r3                      // set irq stack
+    mov     ip, #0xd3
+    msr     cpsr_c, ip
+    mov     sp, r3                      // set svc stack
+    mov     ip, #0xd7
+    msr     cpsr_c, ip
+    mov     sp, r3                      // set abt stack
+    mov     ip, #0xdb
+    msr     cpsr_c, ip
+    mov     sp, r3                      // set und stack
+    mov     ip, #0xdf
+    msr     cpsr_c, ip                  // enter system mode for execution
     ldr     sp, =__stack_end__          // load virtual address for stack
     mov     pc, r2                      // branch to next func, virtual
     

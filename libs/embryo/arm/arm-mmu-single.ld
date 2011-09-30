@@ -14,3 +14,6 @@ __page_tbl_end__        = 0xfff00000;
 __page_dir_virt__       = 0xfff00000; /* 16kb */
 __dbg_serial_virt__     = 0xfff10000; /* 4kb */
 __bootdata_virt__       = 0xfff20000; /* 4kb */
+__exc_stack_start__     = 0xfff30000; /* 4kb, shared for all modes */
+__exc_stack_end__       = 0xfff31000;
+__vectors__             = 0xffff0000; /* 4kb */
