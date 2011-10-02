@@ -95,4 +95,18 @@ class SystemControlCoprocessor(object):
 
     main_id = MainIDRegister()
 
+    class CacheTypeRegister(CoprocRegister, bits.Bitfield):
+
+        def __init__(self):
+            CoprocRegister.__init__(self, 15, 0, 0, 0, 1)
+            bits.Bitfield.__init__(self)
+
+        ctype = Field(Bits[28:25], "Cache type")
+        separate = Field(Bits[24], "Separate caches")
+        data_size = Field(Bits[23:12], "Data cache size")
+        ins_size = Field(Bits[11:0], "Instruction cache size")
+
+    cache_type = CacheTypeRegister()
+
+
 system_control = SystemControlCoprocessor()
