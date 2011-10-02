@@ -92,6 +92,11 @@ class Bitfield(object):
     def save(self):
         self._write(self._cachedvalue)
 
+    def dump(self):
+        self.load()
+        return '\n'.join('%s (%s): %s' %
+                (f.shortname, f.name, f.__get__(self)) for f in self.fields)
+
     def __enter__(self):
         self.load()
         return self
