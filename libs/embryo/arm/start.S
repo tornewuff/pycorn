@@ -99,23 +99,17 @@ _real_start:
     CPWAIT  ip                          // after this the MMU is on
     ldr     r9, =__bootdata_virt__      // switch bootdata pointer
     ldr     r3, =__exc_stack_end__      // load exception stack address
-    mov     ip, #0xd1
-    msr     cpsr_c, ip
+    msr     cpsr_c, #0xd1
     mov     sp, r3                      // set fiq stack
-    mov     ip, #0xd2
-    msr     cpsr_c, ip
+    msr     cpsr_c, #0xd2
     mov     sp, r3                      // set irq stack
-    mov     ip, #0xd3
-    msr     cpsr_c, ip
+    msr     cpsr_c, #0xd3
     mov     sp, r3                      // set svc stack
-    mov     ip, #0xd7
-    msr     cpsr_c, ip
+    msr     cpsr_c, #0xd7
     mov     sp, r3                      // set abt stack
-    mov     ip, #0xdb
-    msr     cpsr_c, ip
+    msr     cpsr_c, #0xdb
     mov     sp, r3                      // set und stack
-    mov     ip, #0xdf
-    msr     cpsr_c, ip                  // enter system mode for execution
+    msr     cpsr_c, #0xdf               // enter system mode for execution
     ldr     sp, =__stack_end__          // load virtual address for stack
     mov     pc, r2                      // branch to next func, virtual
     
