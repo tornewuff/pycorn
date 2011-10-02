@@ -97,5 +97,5 @@ class Bitfield(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type is None:
+        if self.writable and exc_type is None:
             self.save()
