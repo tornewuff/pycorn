@@ -30,10 +30,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ---------------------------------------------------------------------
 
-The directory 'makepp' is a verbatim copy of the original makepp source,
-distributed here for convenience. makepp has its own licensing terms in
-makepp/LICENSE.
-
 HOW IT ALL FITS TOGETHER
 ========================
 
@@ -79,11 +75,11 @@ REQUIREMENTS
 Pycorn requires several things in order to build, even if you are using a
 binary release:
 
-1) Add the makepp directory in the pycorn source tree to your PATH. makepp is a
-nice make replacement with lots of nifty features; used primarily because I
-hate make's handling of subdirectories. See http://makepp.sourceforge.net/ for
-their project page. I've included a version in the tree because it's a CVS
-snapshot, and an uncommon tool.
+1) makepp 2.0. makepp is a nice make replacement with lots of nifty features;
+used primarily because I hate make's handling of subdirectories. See
+http://makepp.sourceforge.net/ for their project page. deb and rpm packages are
+available there. There used to be a makepp snapshot in the pycorn tree but this
+has been removed now the 2.0 release is out.
 
 2) If you aren't using a binary release, you need an arm-eabi crosscompiler
 toolchain, and newlib 1.17. To build one automatically, install the header
