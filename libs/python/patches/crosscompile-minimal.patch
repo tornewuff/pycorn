@@ -1,11 +1,11 @@
 This patch is based on openembedded's crosscompilation patch. Original is
 (C) by Michael 'Mickey' Lauer <mlauer@vanille-media.de>
 
-Index: Python-2.5.5/Makefile.pre.in
+Index: Python-2.7.2/Makefile.pre.in
 ===================================================================
---- Python-2.5.5.orig/Makefile.pre.in	2010-04-26 23:36:54.078679150 +0100
-+++ Python-2.5.5/Makefile.pre.in	2010-04-26 23:37:08.671589936 +0100
-@@ -199,7 +199,7 @@
+--- Python-2.7.2.orig/Makefile.pre.in	2011-06-11 16:46:26.000000000 +0100
++++ Python-2.7.2/Makefile.pre.in	2012-03-24 17:35:44.953430355 +0000
+@@ -214,7 +214,7 @@
  ##########################################################################
  # Parser
  PGEN=		Parser/pgen$(EXE)
@@ -14,65 +14,34 @@ Index: Python-2.5.5/Makefile.pre.in
  POBJS=		\
  		Parser/acceler.o \
  		Parser/grammar1.o \
-@@ -472,9 +472,9 @@
- 	$(MAINCC) -c $(PY_CFLAGS) -o $@ $(srcdir)/Modules/python.c
+@@ -540,9 +540,9 @@
  
- 
--$(GRAMMAR_H) $(GRAMMAR_C): $(PGEN) $(GRAMMAR_INPUT)
-+$(GRAMMAR_H) $(GRAMMAR_C): $(HOSTPGEN) $(GRAMMAR_INPUT)
- 		-@ mkdir Include
--		-$(PGEN) $(GRAMMAR_INPUT) $(GRAMMAR_H) $(GRAMMAR_C)
-+		-$(HOSTPGEN) $(GRAMMAR_INPUT) $(GRAMMAR_H) $(GRAMMAR_C)
+ # Use a stamp file to prevent make -j invoking pgen twice
+ $(GRAMMAR_H) $(GRAMMAR_C): Parser/pgen.stamp
+-Parser/pgen.stamp: $(PGEN) $(GRAMMAR_INPUT)
++Parser/pgen.stamp: $(HOSTPGEN) $(GRAMMAR_INPUT)
+ 		-@$(INSTALL) -d Include
+-		$(PGEN) $(GRAMMAR_INPUT) $(GRAMMAR_H) $(GRAMMAR_C)
++		$(HOSTPGEN) $(GRAMMAR_INPUT) $(GRAMMAR_H) $(GRAMMAR_C)
+ 		-touch Parser/pgen.stamp
  
  $(PGEN):	$(PGENOBJS)
- 		$(CC) $(OPT) $(LDFLAGS) $(PGENOBJS) $(LIBS) -o $(PGEN)
-Index: Python-2.5.5/configure.in
+Index: Python-2.7.2/configure.in
 ===================================================================
---- Python-2.5.5.orig/configure.in	2010-04-26 23:36:54.062676753 +0100
-+++ Python-2.5.5/configure.in	2010-04-26 23:37:08.679587711 +0100
-@@ -3430,45 +3430,6 @@
- 					   
+--- Python-2.7.2.orig/configure.in	2011-06-11 16:46:28.000000000 +0100
++++ Python-2.7.2/configure.in	2012-03-24 17:41:52.300426587 +0000
+@@ -4208,12 +4208,12 @@
+   ]]])],
+   [ac_cv_have_long_long_format=yes],
+   [ac_cv_have_long_long_format=no],
+-  [ac_cv_have_long_long_format=no])
++  [ac_cv_have_long_long_format="cross -- assuming yes"])
+   )
+   AC_MSG_RESULT($ac_cv_have_long_long_format)
+ fi
  
- 
--AC_MSG_CHECKING(for %zd printf() format support)
--AC_TRY_RUN([#include <stdio.h>
--#include <stddef.h>
--#include <string.h>
--
--#ifdef HAVE_SYS_TYPES_H
--#include <sys/types.h>
--#endif
--
--#ifdef HAVE_SSIZE_T
--typedef ssize_t Py_ssize_t;
--#elif SIZEOF_VOID_P == SIZEOF_LONG
--typedef long Py_ssize_t;
--#else
--typedef int Py_ssize_t;
--#endif
--
--int main()
--{
--    char buffer[256];
--
--    if(sprintf(buffer, "%zd", (size_t)123) < 0)
--       	return 1;
--
--    if (strcmp(buffer, "123"))
--	return 1;
--
--    if (sprintf(buffer, "%zd", (Py_ssize_t)-123) < 0)
--       	return 1;
--
--    if (strcmp(buffer, "-123"))
--	return 1;
--
--    return 0;
--}],
--[AC_MSG_RESULT(yes)
-- AC_DEFINE(PY_FORMAT_SIZE_T, "z", [Define to printf format modifier for Py_ssize_t])],
-- AC_MSG_RESULT(no))
--
- AC_CHECK_TYPE(socklen_t,,
-   AC_DEFINE(socklen_t,int,
-             Define to `int' if <sys/socket.h> does not define.),[
+-if test "$ac_cv_have_long_long_format" = yes
++if test "$ac_cv_have_long_long_format" != no
+ then
+   AC_DEFINE(PY_FORMAT_LONG_LONG, "ll",
+   [Define to printf format modifier for long long type])

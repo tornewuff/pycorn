@@ -1,7 +1,7 @@
 include toolchain.mk
 
 stamp-install: stamp-build
-	cd build; make libinstall sharedinstall oldsharedinstall
+	cd build; make libinstall inclinstall libainstall sharedinstall oldsharedinstall
 	cp -p build/python $(TOOLSPREFIX)/bin/hostpython
 	cp -p build/Parser/pgen $(TOOLSPREFIX)/bin/hostpgen
 	&touch $(output)

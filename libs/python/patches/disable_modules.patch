@@ -1,8 +1,8 @@
-Index: Python-2.5.5/Modules/Setup.dist
+Index: Python-2.7.2/Modules/Setup.dist
 ===================================================================
---- Python-2.5.5.orig/Modules/Setup.dist	2010-04-26 23:36:54.006673789 +0100
-+++ Python-2.5.5/Modules/Setup.dist	2010-04-26 23:37:09.119618388 +0100
-@@ -109,16 +109,16 @@
+--- Python-2.7.2.orig/Modules/Setup.dist	2011-06-11 16:46:26.000000000 +0100
++++ Python-2.7.2/Modules/Setup.dist	2012-03-24 17:45:15.093265797 +0000
+@@ -112,17 +112,17 @@
  # This only contains the minimal set of modules required to run the 
  # setup.py script in the root of the Python source tree.
  
@@ -15,8 +15,10 @@ Index: Python-2.5.5/Modules/Setup.dist
  				# if $HOME is not set
 -_sre _sre.c			# Fredrik Lundh's new regular expressions
 -_codecs _codecsmodule.c		# access to the builtin codecs and codec registry
+-_weakref _weakref.c             # weak references
 +#_sre _sre.c			# Fredrik Lundh's new regular expressions
 +#_codecs _codecsmodule.c		# access to the builtin codecs and codec registry
++#_weakref _weakref.c             # weak references
  
  # The zipimport module is always imported at startup. Having it as a
  # builtin module avoids some bootstrapping problems and reduces overhead.
@@ -25,7 +27,7 @@ Index: Python-2.5.5/Modules/Setup.dist
  
  # The rest of the modules listed in this file are all commented out by
  # default.  Usually they can be detected and built as dynamically
-@@ -131,7 +131,7 @@
+@@ -135,7 +135,7 @@
  # ======================================================================
  
  # The Python symtable module depends on .h files that setup.py doesn't track
@@ -34,7 +36,7 @@ Index: Python-2.5.5/Modules/Setup.dist
  
  # The SGI specific GL module:
  
-@@ -484,4 +484,4 @@
+@@ -492,4 +492,4 @@
  # xx xxmodule.c
  
  # Another example -- the 'xxsubtype' module shows C-level subtyping in action

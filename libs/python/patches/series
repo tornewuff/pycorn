@@ -1,9 +1,3 @@
 crosscompile-minimal.patch
 disable_modules.patch
-const-copyright.patch
-const-docstrings.patch
-const-longdigits.patch
-const-tokens.patch
-const-methods.patch
-const-modulemethods.patch
 enable_modules.patch

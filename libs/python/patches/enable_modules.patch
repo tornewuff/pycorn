@@ -1,17 +1,17 @@
-Index: Python-2.5.5/Modules/Setup.dist
+Index: Python-2.7.2/Modules/Setup.dist
 ===================================================================
---- Python-2.5.5.orig/Modules/Setup.dist	2010-04-28 19:19:27.008622737 +0100
-+++ Python-2.5.5/Modules/Setup.dist	2010-04-28 20:03:56.895476634 +0100
-@@ -167,7 +167,7 @@
+--- Python-2.7.2.orig/Modules/Setup.dist	2012-03-24 17:45:15.000000000 +0000
++++ Python-2.7.2/Modules/Setup.dist	2012-03-24 18:00:09.585305115 +0000
+@@ -171,7 +171,7 @@
  #array arraymodule.c	# array objects
- #cmath cmathmodule.c # -lm # complex math library functions
- #math mathmodule.c # -lm # math library functions, e.g. sin()
+ #cmath cmathmodule.c _math.c # -lm # complex math library functions
+ #math mathmodule.c _math.c # -lm # math library functions, e.g. sin()
 -#_struct _struct.c	# binary structure packing/unpacking
 +_struct _struct.c	# binary structure packing/unpacking
  #time timemodule.c # -lm # time operations and variables
  #operator operator.c	# operator.add() and similar goodies
- #_weakref _weakref.c	# basic weak reference support
-@@ -427,7 +427,7 @@
+ #_testcapi _testcapimodule.c    # Python C API test module
+@@ -436,7 +436,7 @@
  #parser parsermodule.c
  
  # cStringIO and cPickle

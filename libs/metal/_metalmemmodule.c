@@ -105,7 +105,7 @@ metalmem_membuf(PyObject *self, PyObject *args)
         return PyBuffer_FromMemory((void*)addr, len);
 }
 
-static const PyMethodDef MetalMemMethods[] = {
+static PyMethodDef MetalMemMethods[] = {
     {"peek32", metalmem_peek32, METH_VARARGS, "Read a 32-bit word at the given address."},
     {"poke32", metalmem_poke32, METH_VARARGS, "Write a 32-bit word at the given address."},
     {"peek16", metalmem_peek16, METH_VARARGS, "Read a 16-bit halfword at the given address."},

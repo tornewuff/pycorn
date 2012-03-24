@@ -21,8 +21,8 @@ LDDEPS :=
 include $(ROOT)/config/$(ARCH)/$(ARCH).mk
 include $(ROOT)/config/$(ARCH)/$(MACH).mk
 
-PYTHONVER := 2.5.5
-PYTHONVERMINOR := 2.5
+PYTHONVER := 2.7.2
+PYTHONVERMINOR := 2.7
 
 # Rules
 

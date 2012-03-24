@@ -55,7 +55,7 @@ metalcpu_coprocwrite(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-static const PyMethodDef MetalCpuMethods[] = {
+static PyMethodDef MetalCpuMethods[] = {
     {"coproc_read", metalcpu_coprocread, METH_VARARGS, "Read a 32-bit word from a coprocessor register, by index into the coprocessor register list."},
     {"coproc_write", metalcpu_coprocwrite, METH_VARARGS, "Write a 32-bit word to a coprocessor register, by index into the coprocessor register list."},
     {NULL, NULL, 0, NULL}
