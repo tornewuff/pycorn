@@ -20,6 +20,35 @@
 #include <string.h>
 #include <stdio.h>
 
+// MMU constants for ARM. No tiny pages or similar legacy weirdness please.
+#define SECTION_SHIFT 20
+#define SECTION_SIZE (1 << SECTION_SHIFT)
+#define SECTION_MASK (SECTION_SIZE - 1)
+#define PAGE_SHIFT 12
+#define PAGE_SIZE (1 << PAGE_SHIFT)
+#define PAGE_MASK (PAGE_SIZE - 1)
+#define PTBLS_PER_PAGE 4
+#define PAGEDIR_SIZE (PAGE_SIZE * PTBLS_PER_PAGE)
+#define PAGETABLE_SIZE (PAGE_SIZE / PTBLS_PER_PAGE)
+
+#define PAGEALIGN_DOWN(x) ((x>>PAGE_SHIFT)<<PAGE_SHIFT)
+#define PAGEALIGN_UP(x) (((x+PAGE_MASK)>>PAGE_SHIFT)<<PAGE_SHIFT)
+
+#define PGD_ROM (0<<10)
+#define PGD_RW  (3<<10)
+#define PGD_CACHE   8
+#define PGD_BUFF    4
+#define PGD_COARSE  1
+#define PGD_SECTION 2
+
+#define PTB_ROM (0<<4)
+#define PTB_RW  (3<<4)
+#define PTB_CACHE 8
+#define PTB_BUFF  4
+#define PTB_EXT   3
+
+bootdata_t *embryo_bootdata = (bootdata_t *)&__bootdata_virt__;
+
 void boot_after_mmu(int selfmap_index, uint32_t old_pde)
   __attribute__((noreturn));
 

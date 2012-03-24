@@ -55,7 +55,7 @@ _real_start:
     // Get the physical address of this instruction (the base of the rom)
     sub     r3, pc, #(_real_start - _start + 8)
 
-    // Set up r9 as the struct bootdata_t pointer (start of the 16kb block)
+    // Set up r9 as the bootdata pointer (start of the 16kb block)
     sub     r9, r3, #0x4000
 
     // Set bootdata->rom_base

@@ -19,7 +19,7 @@
 #define __BOOTSTRAP_H__
 
 #include <stdint.h>
-#include <bootdata.h>
+#include <embryo.h>
 
 // Bootdata structure pointer lives in a register
 register bootdata_t *bootdata asm ("r9");
@@ -61,5 +61,14 @@ void map_pages(virtaddr virt_start, virtaddr virt_end, physaddr phys_start);
 
 // atag parsing
 extern int parse_atags(void);
+
+// Linker-defined section symbols
+extern char __text_start__, __text_end__, __data_start__, __data_end__;
+extern char __bss_start__, __bss_end__, __heap_start__, __heap_end__;
+extern char __stack_start__, __stack_end__, __page_dir_virt__;
+extern char __dbg_serial_virt__, __dbg_serial_phys__;
+extern char __page_tbl_start__, __page_tbl_end__;
+extern char __bootdata_virt__, __initrd_map_start__;
+extern char __exc_stack_start__, __exc_stack_end__, __vectors__;
 
 #endif

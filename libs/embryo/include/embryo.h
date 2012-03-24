@@ -40,40 +40,6 @@ typedef struct
   virtaddr initrd_virt;     // Virtual address of initrd (invalid if size=0)
 } bootdata_t;
 
-// Linker-defined section symbols
-extern char __text_start__, __text_end__, __data_start__, __data_end__;
-extern char __bss_start__, __bss_end__, __heap_start__, __heap_end__;
-extern char __stack_start__, __stack_end__, __page_dir_virt__;
-extern char __dbg_serial_virt__, __dbg_serial_phys__;
-extern char __page_tbl_start__, __page_tbl_end__;
-extern char __bootdata_virt__, __initrd_map_start__;
-extern char __exc_stack_start__, __exc_stack_end__, __vectors__;
-
-// MMU constants for ARM. No tiny pages or similar legacy weirdness please.
-#define SECTION_SHIFT 20
-#define SECTION_SIZE (1 << SECTION_SHIFT)
-#define SECTION_MASK (SECTION_SIZE - 1)
-#define PAGE_SHIFT 12
-#define PAGE_SIZE (1 << PAGE_SHIFT)
-#define PAGE_MASK (PAGE_SIZE - 1)
-#define PTBLS_PER_PAGE 4
-#define PAGEDIR_SIZE (PAGE_SIZE * PTBLS_PER_PAGE)
-#define PAGETABLE_SIZE (PAGE_SIZE / PTBLS_PER_PAGE)
-
-#define PAGEALIGN_DOWN(x) ((x>>PAGE_SHIFT)<<PAGE_SHIFT)
-#define PAGEALIGN_UP(x) (((x+PAGE_MASK)>>PAGE_SHIFT)<<PAGE_SHIFT)
-
-#define PGD_ROM (0<<10)
-#define PGD_RW  (3<<10)
-#define PGD_CACHE   8
-#define PGD_BUFF    4
-#define PGD_COARSE  1
-#define PGD_SECTION 2
-
-#define PTB_ROM (0<<4)
-#define PTB_RW  (3<<4)
-#define PTB_CACHE 8
-#define PTB_BUFF  4
-#define PTB_EXT   3
+extern bootdata_t *embryo_bootdata;
 
 #endif
