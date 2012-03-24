@@ -47,7 +47,7 @@
 #define PTB_BUFF  4
 #define PTB_EXT   3
 
-bootdata_t *embryo_bootdata = (bootdata_t *)&__bootdata_virt__;
+embryo_bootdata_t *embryo_bootdata = (embryo_bootdata_t *)&__bootdata_virt__;
 
 void boot_after_mmu(int selfmap_index, uint32_t old_pde)
   __attribute__((noreturn));

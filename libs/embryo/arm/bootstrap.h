@@ -21,6 +21,13 @@
 #include <stdint.h>
 #include <embryo.h>
 
+// The private bootdata structure
+typedef struct {
+    // include from macro with public version
+  _BOOTDATA_STRUCT
+  
+} bootdata_t;
+
 // Bootdata structure pointer lives in a register
 register bootdata_t *bootdata asm ("r9");
 

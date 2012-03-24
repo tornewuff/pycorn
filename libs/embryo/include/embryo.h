@@ -26,20 +26,24 @@
 typedef uint32_t physaddr;
 typedef uint32_t virtaddr;
 
+#define _BOOTDATA_STRUCT \
+  physaddr rom_base;       /* Physical address where the rom was loaded     */\
+  uint32_t machtype;       /* Machine type, as per linux boot protocol      */\
+  physaddr taglist_ptr;    /* Taglist pointer, as per linux boot protocol   */\
+  uint32_t phys_to_virt;   /* Offset for phys->virt address of .text section*/\
+  physaddr next_free_page; /* Next unallocated physical page address        */\
+  physaddr page_directory; /* Physical address of page directory            */\
+  uint32_t initrd_size;    /* Size of initrd in bytes, 0 for no initrd      */\
+  physaddr initrd_phys;    /* Physical address of initrd (invalid if size=0)*/\
+  virtaddr initrd_virt;    /* Virtual address of initrd (invalid if size=0) */\
+
 // The bootdata structure
 typedef struct
 {
-  physaddr rom_base;        // Physical address where the rom was loaded
-  uint32_t machtype;        // Machine type, as per linux boot protocol
-  physaddr taglist_ptr;     // Taglist pointer, as per linux boot protocol
-  uint32_t phys_to_virt;    // Offset for phys->virt address of .text section
-  physaddr next_free_page;  // Next unallocated physical page address
-  physaddr page_directory;  // Physical address of page directory
-  uint32_t initrd_size;     // Size of initrd in bytes, 0 for no initrd
-  physaddr initrd_phys;     // Physical address of initrd (invalid if size=0)
-  virtaddr initrd_virt;     // Virtual address of initrd (invalid if size=0)
-} bootdata_t;
+  // include from macro; this is the public version
+  _BOOTDATA_STRUCT
+} embryo_bootdata_t;
 
-extern bootdata_t *embryo_bootdata;
+extern embryo_bootdata_t *embryo_bootdata;
 
 #endif
