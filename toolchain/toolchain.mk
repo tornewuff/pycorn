@@ -14,7 +14,7 @@ GDBVER := 7.4
 GDBTAR := gdb-$(GDBVER).tar.bz2
 GDBDIR := gdb-$(GDBVER)
 
-NEWLIBVER := 1.18.0
+NEWLIBVER := 1.20.0
 NEWLIBTAR := newlib-$(NEWLIBVER).tar.gz
 NEWLIBDIR := newlib-$(NEWLIBVER)
 
