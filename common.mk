@@ -13,7 +13,7 @@ PYTHON := hostpython
 CFLAGS := -g -Wall -O2 -pipe -fomit-frame-pointer -std=gnu99 -Werror
 CPPFLAGS :=
 CPPDEPS :=
-PYCFLAGS := -pipe -fomit-frame-pointer -fno-strict-aliasing -Werror -Wno-error=char-subscripts -Wno-error=unused-function -Wno-error=unused-variable
+PYCFLAGS := -pipe -fomit-frame-pointer -fno-strict-aliasing -Werror -Wno-error=char-subscripts -Wno-error=unused-function -Wno-error=unused-variable -Wno-error=unused-but-set-variable
 LDFLAGS :=
 LDDEPS :=
 
