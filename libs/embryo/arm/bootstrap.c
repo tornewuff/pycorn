@@ -102,60 +102,56 @@ void boot_start()
   // where they are.
   // This is kinda scary as we are bootstrapping :)
   DBGSTR("Allocate and map page table mappings\n");
-  int ptbl_section = (virtaddr)(&__page_tbl_start__) >> SECTION_SHIFT;
+  int ptbl_section = (uint32_t)(&__page_tbl_start__) >> SECTION_SHIFT;
   physaddr ptbl_map = get_page_table(ptbl_section, 1);
-  virtaddr ptbl_address = (virtaddr)(&__page_tbl_start__)
-      + (ptbl_section * PAGETABLE_SIZE);
+  virtaddr ptbl_address = &__page_tbl_start__ + (ptbl_section * PAGETABLE_SIZE);
   map_pages(ptbl_address, ptbl_address + (PAGE_SIZE * PTBLS_PER_PAGE),
       ptbl_map | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
   DBGSTR("Map page directory\n");
-  map_pages((virtaddr)&__page_dir_virt__,
-      (virtaddr)(&__page_dir_virt__ + PAGEDIR_SIZE),
+  map_pages(&__page_dir_virt__, &__page_dir_virt__ + PAGEDIR_SIZE,
       bootdata->page_directory | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
   DBGSTR("Map vectors\n");
-  map_pages((virtaddr)&__vectors__, (virtaddr)(&__vectors__ + PAGE_SIZE),
+  map_pages(&__vectors__, &__vectors__ + PAGE_SIZE,
       bootdata->rom_base | PTB_ROM | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
   DBGSTR("Map text section\n");
-  map_pages((virtaddr)&__text_start__, (virtaddr)&__text_end__,
+  map_pages(&__text_start__, &__text_end__,
       bootdata->rom_base | PTB_ROM | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
   DBGSTR("Map data section\n");
   physaddr data_phys = bootdata->rom_base + text_size;
-  map_pages((virtaddr)&__data_start__, (virtaddr)&__data_end__,
+  map_pages(&__data_start__, &__data_end__,
       data_phys | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
   DBGSTR("Allocate and map bss\n");
   physaddr bss_phys = alloc_pages_zero(bss_size, PAGE_SIZE);
-  map_pages((virtaddr)&__bss_start__, (virtaddr)&__bss_end__,
+  map_pages(&__bss_start__, &__bss_end__,
       bss_phys | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
   DBGSTR("Allocate and map heap\n");
   physaddr heap_phys = alloc_pages_zero(heap_size, PAGE_SIZE);
-  map_pages((virtaddr)&__heap_start__, (virtaddr)&__heap_end__,
+  map_pages(&__heap_start__, &__heap_end__,
       heap_phys | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
   DBGSTR("Allocate and map stack\n");
   physaddr stack_phys = alloc_pages_zero(stack_size, PAGE_SIZE);
-  map_pages((virtaddr)&__stack_start__, (virtaddr)&__stack_end__,
+  map_pages(&__stack_start__, &__stack_end__,
       stack_phys | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
   DBGSTR("Allocate and map exception stack\n");
   physaddr exc_stack_phys = alloc_pages_zero(exc_stack_size, PAGE_SIZE);
-  map_pages((virtaddr)&__exc_stack_start__, (virtaddr)&__exc_stack_end__,
+  map_pages(&__exc_stack_start__, &__exc_stack_end__,
       exc_stack_phys | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
   // we assume no more than a page is needed
   DBGSTR("Mapping debug UART\n");
-  map_pages((virtaddr)&__dbg_serial_virt__, 
-      (virtaddr)(&__dbg_serial_virt__ + PAGE_SIZE),
+  map_pages(&__dbg_serial_virt__, &__dbg_serial_virt__ + PAGE_SIZE,
       (physaddr)&__dbg_serial_phys__ | PTB_RW | PTB_EXT);
 
   DBGSTR("Mapping boot data\n");
-  map_pages((virtaddr)&__bootdata_virt__,
-      (virtaddr)(&__bootdata_virt__ + PAGE_SIZE),
+  map_pages(&__bootdata_virt__, &__bootdata_virt__ + PAGE_SIZE,
       (physaddr)bootdata | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
 
   if (bootdata->initrd_size)
@@ -168,11 +164,10 @@ void boot_start()
     // We also need to calculate the offset and offset the virtual
     // address by the matching amount.
     uint32_t offset = bootdata->initrd_phys - map_start;
-    bootdata->initrd_virt = (virtaddr)&__initrd_map_start__ + offset;
+    bootdata->initrd_virt = &__initrd_map_start__ + offset;
 
     DBGSTR("Map initrd\n");
-    map_pages((virtaddr)&__initrd_map_start__,
-        (virtaddr)(&__initrd_map_start__ + map_len),
+    map_pages(&__initrd_map_start__, &__initrd_map_start__ + map_len,
         map_start | PTB_ROM | PTB_CACHE | PTB_BUFF | PTB_EXT);
   }
 
@@ -242,8 +237,7 @@ physaddr get_page_table(int section_index, int skip_map)
       pgd[start_sec + i] = (ptbl + (i * PAGETABLE_SIZE)) | PGD_COARSE;
 
     int pagetable_index = section_index / PTBLS_PER_PAGE;
-    virtaddr pgt_virt = (virtaddr)(&__page_tbl_start__)
-        + (pagetable_index << PAGE_SHIFT);
+    virtaddr pgt_virt = &__page_tbl_start__ + (pagetable_index << PAGE_SHIFT);
     if (!skip_map)
       map_pages(pgt_virt, pgt_virt + PAGE_SIZE,
           ptbl | PTB_RW | PTB_CACHE | PTB_BUFF | PTB_EXT);
@@ -260,8 +254,8 @@ physaddr get_page_table(int section_index, int skip_map)
 void map_pages(virtaddr virt_start, virtaddr virt_end, physaddr phys_start)
 {
   int bytes = virt_end - virt_start;
-  int section_index = virt_start >> 20;
-  int page_index = (virt_start << 12) >> 24;
+  int section_index = (uint32_t)virt_start >> 20;
+  int page_index = ((uint32_t)virt_start << 12) >> 24;
   uint32_t pte = phys_start;
 
   for(;;)

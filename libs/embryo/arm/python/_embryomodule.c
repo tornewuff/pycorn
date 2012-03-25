@@ -42,7 +42,7 @@ initembryo(void)
     PyModule_AddUnsignedLongConstant(m, "page_directory", embryo_bootdata->page_directory);
     PyModule_AddUnsignedLongConstant(m, "initrd_size", embryo_bootdata->initrd_size);
     PyModule_AddUnsignedLongConstant(m, "initrd_phys", embryo_bootdata->initrd_phys);
-    PyModule_AddUnsignedLongConstant(m, "initrd_virt", embryo_bootdata->initrd_virt);
+    PyModule_AddVoidPtrConstant(m, "initrd_virt", embryo_bootdata->initrd_virt);
 }
 
 __attribute__((constructor)) void appendembryo()

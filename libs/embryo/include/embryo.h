@@ -24,7 +24,7 @@
 
 // Conveniences to make code clearer
 typedef uint32_t physaddr;
-typedef uint32_t virtaddr;
+typedef void *virtaddr;
 
 #define _BOOTDATA_STRUCT \
   physaddr rom_base;       /* Physical address where the rom was loaded     */\
