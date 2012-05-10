@@ -81,17 +81,16 @@ http://makepp.sourceforge.net/ for their project page. deb and rpm packages are
 available there. There used to be a makepp snapshot in the pycorn tree but this
 has been removed now the 2.0 release is out.
 
-2) If you aren't using a binary release, you need an arm-eabi crosscompiler
-toolchain, and newlib 1.20. To build one automatically, install the header
-files for libgmp, libmpfr and libmpc (the dev packages for them from your
-distro), then run:
+2) If you aren't using a binary release, you need to build the arm-eabi
+crosscompiler toolchain. It needs to be built specifically for Pycorn; a binary
+package won't work. To build it, you will need the normal host toolchain for
+your system (on debian-alikes, install build-essential), the header files for
+libgmp, libmpfr and libmpc (the dev packages for them from your distro), and
+texinfo. Then, run:
 
 cd toolchain; makepp TOOLSPREFIX=/dir/to/install/to
 
-Once it's built, add the bin directory inside TOOLSPREFIX to your path. If you
-install one from somewhere else, newlib must be built to expect reentrant
-syscalls and without its own embedded syscalls or it will not work; better to
-use this one.
+Once it's built, add the bin directory inside TOOLSPREFIX to your path.
 
 3) If you aren't using a binary release, install autoconf. Python's configure
 script needs regeneration after patching for cross-compilability.
