@@ -126,4 +126,14 @@ class SystemControlCoprocessor(object):
 
     control = ControlRegister()
 
+    class TranslationTableBaseRegister(CoprocRegister, bits.Bitfield):
+
+        def __init__(self):
+            CoprocRegister.__init__(self, 15, 0, 2, 0, 0)
+            bits.Bitfield.__init__(self)
+
+        base_addr = Field(Bits[31:14], "Translation table base")
+
+    ttbr = TranslationTableBaseRegister()
+
 system_control = SystemControlCoprocessor()
