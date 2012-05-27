@@ -108,5 +108,22 @@ class SystemControlCoprocessor(object):
 
     cache_type = CacheTypeRegister()
 
+    class ControlRegister(CoprocRegister, bits.Bitfield):
+
+        def __init__(self):
+            CoprocRegister.__init__(self, 15, 0, 1, 0, 0)
+            bits.Bitfield.__init__(self)
+
+        hi_vectors = Field(Bits[13], "Exception vector relocation")
+        icache = Field(Bits[12], "Instruction cache enable/disable")
+        btb = Field(Bits[11], "Branch target buffer enable")
+        rom_prot = Field(Bits[9], "ROM protection")
+        sys_prot = Field(Bits[8], "System protection")
+        endian = Field(Bits[7], "Big/little endian")
+        dcache = Field(Bits[1], "Data cache enable/disable")
+        align = Field(Bits[1], "Alignment fault check enable/disable")
+        mmu = Field(Bits[0], "MMU enable/disable")
+
+    control = ControlRegister()
 
 system_control = SystemControlCoprocessor()
