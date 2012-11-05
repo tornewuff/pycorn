@@ -8,9 +8,9 @@ Python-%.tar.bz2: :last_chance
 	&rm -f $(output)
 	wget http://www.python.org/ftp/python/$(output:Python-%.tar.bz2=%)/$(output)
 
-gcc-core-%.tar.bz2: :last_chance
+gcc-%.tar.bz2: :last_chance
 	&rm -f $(output)
-	wget http://ftpmirror.gnu.org/gcc/gcc-$(output:gcc-core-%.tar.bz2=%)/$(output)
+	wget http://ftpmirror.gnu.org/gcc/gcc-$(output:gcc-%.tar.bz2=%)/$(output)
 
 binutils-%.tar.bz2: :last_chance
 	&rm -f $(output)

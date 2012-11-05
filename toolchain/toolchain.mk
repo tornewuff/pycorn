@@ -6,8 +6,8 @@ BINUTILSVER := 2.22
 BINUTILSTAR := binutils-$(BINUTILSVER).tar.bz2
 BINUTILSDIR := binutils-$(BINUTILSVER)
 
-GCCVER := 4.6.3
-GCCTAR := gcc-core-$(GCCVER).tar.bz2
+GCCVER := 4.7.1
+GCCTAR := gcc-$(GCCVER).tar.bz2
 GCCDIR := gcc-$(GCCVER)
 
 GDBVER := 7.4
@@ -18,7 +18,7 @@ NEWLIBVER := 1.20.0
 NEWLIBTAR := newlib-$(NEWLIBVER).tar.gz
 NEWLIBDIR := newlib-$(NEWLIBVER)
 
-PYTHONVER := 2.7.2
+PYTHONVER := 2.7.3
 PYTHONTAR := Python-$(PYTHONVER).tar.bz2
 PYTHONDIR := Python-$(PYTHONVER)
 
