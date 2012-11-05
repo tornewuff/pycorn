@@ -3,6 +3,8 @@ KERNELMKIMAGE += -a 0xa0008000 -e 0xa0008000
 
 ifdef MAKING_SEED
 
+$(phony all): $(TARGET).flash
+
 $(phony run): $(TARGET).flash
 	@&echo You can exit qemu with C-a x (C-a a x under screen)
 	qemu-system-arm -M verdex -pflash $(input) -nographic -m 289

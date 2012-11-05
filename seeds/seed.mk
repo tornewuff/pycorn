@@ -1,4 +1,4 @@
-$(phony all): $(TARGET).flash
+$(phony all):
 
 MAKING_SEED := 1
 
