@@ -17,10 +17,10 @@ $(phony always):
 
 ifndef USE_BINARIES
 stamp-version: always
-	bzr version-info --custom --template "{date} {revno} {revision_id} {branch_nick}" > stamp-version
+	git rev-parse HEAD > $(output)
 
 frozen/bootstrap/version.py: stamp-version : signature md5
-	bzr version-info --python > $(output)
+	&printf -f -o $(output) "GIT_VERSION = '%s'\\n" $(shell git describe --tags)
 
 frozen.c: freeze.py $(FREEZEDEPS)
 	$(PYTHON) freeze.py $(output) $(FREEZEDIRS)

@@ -21,11 +21,10 @@ from _embryo import initrd_size, initrd_virt
 from _metalmem import membuf
 
 from bootstrap.mini_zipimport import MiniZipImport
-from bootstrap.version import version_info
+from bootstrap.version import GIT_VERSION
 
 # Print version info/banner
-print 'Pycorn r%s' % version_info['revno'], '(Python %s.%s.%s)' % sys.version_info[0:3],
-print '(built %s)' % version_info['build_date']
+print 'Pycorn %s' % GIT_VERSION, '(Python %s.%s.%s)' % sys.version_info[0:3]
 
 # Clear existing path, which is useless
 del sys.path[:]
