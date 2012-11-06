@@ -1,5 +1,5 @@
 /*
- * 'Real' system access to generic 16550-style UART
+ * 'Real' system access to generic 8250-style UART
  *
  * Should work for many ARM serial UARTs. This is to be used after the MMU is
  * enabled, and thus uses virtual addressing. It doesn't provide any fancy
@@ -8,7 +8,7 @@
  * inefficient.
  *
  *
- * Copyright 2008 Torne Wuff
+ * Copyright 2012 Torne Wuff
  *
  * This file is part of Pycorn.
  *
@@ -25,7 +25,7 @@ extern char __dbg_serial_virt__;
 
 // This assumes that the UART has 8-bit registers which are mapped 4 bytes
 // apart, which is common on ARM. The actual register definitions are
-// 16550-compatible. Read a book.
+// 8250-compatible. Read a book.
 #define REGISTER(addr) (*(volatile uint8_t *)(addr))
 #define REG_RBR REGISTER(&__dbg_serial_virt__)
 #define REG_THR REG_RBR

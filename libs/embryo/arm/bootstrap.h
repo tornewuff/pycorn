@@ -37,11 +37,9 @@ extern void boot_putstr(const char *s);
 extern void boot_putint(const char *label, uint32_t i);
 
 #ifdef DEBUG_EMBRYO
-#define DBGCHAR(c) boot_putchar(c)
 #define DBGSTR(s) boot_putstr(s)
 #define DBGINT(l, i) boot_putint(l, i)
 #else
-#define DBGCHAR(c)
 #define DBGSTR(s)
 #define DBGINT(l, i)
 #endif
