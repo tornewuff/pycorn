@@ -120,7 +120,7 @@ class SystemControlCoprocessor(object):
         rom_prot = Field(Bits[9], "ROM protection")
         sys_prot = Field(Bits[8], "System protection")
         endian = Field(Bits[7], "Big/little endian")
-        dcache = Field(Bits[1], "Data cache enable/disable")
+        dcache = Field(Bits[2], "Data cache enable/disable")
         align = Field(Bits[1], "Alignment fault check enable/disable")
         mmu = Field(Bits[0], "MMU enable/disable")
 
