@@ -77,6 +77,7 @@ class _BitfieldType(type):
             if isinstance(field, Field):
                 cls.fields.append(field)
                 field.shortname = name
+        cls.fields.sort(key=lambda x: x.bits.ranges[0][0], reverse=True)
 
 
 class Bitfield(object):
