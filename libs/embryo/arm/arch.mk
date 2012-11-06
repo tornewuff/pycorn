@@ -4,4 +4,8 @@ ifdef EMBRYO_UART8250
 O += uart8250-bs.o uart8250.o
 endif
 
+ifdef EMBRYO_UARTPL011
+O += uartpl011-bs.o uartpl011.o
+endif
+
 OBJECTS += $(ARCH)/$( $(O))
