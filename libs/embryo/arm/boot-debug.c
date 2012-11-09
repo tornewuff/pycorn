@@ -30,6 +30,9 @@ void boot_putstr(const char *s)
   s -= bootdata->phys_to_virt;
   while (*s)
   {
+    // Convert C-style \n into \r\n to work with the widest range of terminals
+    if (*s == '\n')
+      boot_putchar('\r');
     boot_putchar(*s++);
   }
 }
@@ -47,5 +50,8 @@ void boot_putint(const char *label, uint32_t i)
     boot_putchar(nibble);
   }
   if (label)
+  {
+    boot_putchar('\r');
     boot_putchar('\n');
+  }
 }

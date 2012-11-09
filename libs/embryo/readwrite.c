@@ -19,14 +19,32 @@
 #include <reent.h>
 
 // provided by platform specific code somewhere.
-extern int serial_read(void *ptr, int len);
-extern int serial_write(const void *ptr, int len);
+extern char serial_read(void);
+extern void serial_write(char c);
 
 // read from the serial debug port, only stdin exists.
+// Never actually returns more than one byte. It assumes incoming serial uses
+// CR for line terminators but will also work with CR/NL (it throws away NL).
+// It also echos the read character.
 _ssize_t _read_r(struct _reent *r, int file, void *ptr, size_t len)
 {
+  char *buf = ptr;
   if (file == 0)
-    return serial_read(ptr, len);
+  {
+    if (len == 0)
+      return 0;
+
+    do
+    {
+      buf[0] = serial_read();
+    } while (buf[0] == '\n');
+
+    if (buf[0] == '\r')
+      buf[0] = '\n';
+
+    _write_r(r, 1, buf, 1);
+    return 1;
+  }
   else
   {
     r->_errno = EBADF;
@@ -37,8 +55,19 @@ _ssize_t _read_r(struct _reent *r, int file, void *ptr, size_t len)
 // write to the serial debug port, stdout/err handled identically.
 _ssize_t _write_r(struct _reent *r, int file, const void *ptr, size_t len)
 {
+  int i;
+  const char *buf = ptr;
   if (file >= 1 && file <= 2)
-    return serial_write(ptr, len);
+  {
+    for (i = 0; i < len; ++i)
+    {
+      // Convert C-style \n into \r\n to work with the widest range of terminals
+      if (buf[i] == '\n')
+        serial_write('\r');
+      serial_write(buf[i]);
+    }
+    return len;
+  }
   else
   {
     r->_errno = EBADF;

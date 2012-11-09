@@ -33,30 +33,16 @@ extern char __dbg_serial_virt__;
 #define LSR_TDRQ (1<<5)
 #define LSR_DR   (1<<0)
 
-// spins waiting for transmit data request between each byte
-int serial_write(const char* ptr, int len)
+// spins waiting for transmit data request before writing the byte
+void serial_write(char c)
 {
-  int i;
-  for (i = 0; i < len; ++i)
-  {
-    while((REG_LSR & LSR_TDRQ) == 0);
-    REG_THR = ptr[i];
-  }
-  return len;
+  while((REG_LSR & LSR_TDRQ) == 0);
+  REG_THR = c;
 }
 
-// spins waiting for a byte, then returns it. Never actually returns more than
-// one byte. It assumes incoming serial uses CR for line terminators and
-// converts this to NL for C. It also echos the read character.
-int serial_read(char* ptr, int len)
+// spins waiting for a byte, then returns it.
+char serial_read()
 {
-  if (len == 0)
-    return 0;
-
   while((REG_LSR & LSR_DR) == 0);
-  ptr[0] = REG_RBR;
-  if (ptr[0] == '\r')
-    ptr[0] = '\n';
-  serial_write(ptr, 1);
-  return 1;
+  return REG_RBR;
 }
