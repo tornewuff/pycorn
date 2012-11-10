@@ -55,6 +55,9 @@ _real_start:
     // Get the physical address of this instruction (the base of the rom)
     sub     r3, pc, #(_real_start - _start + 8)
 
+    // Enable alignment faults as early as possible
+    bl      align_fault_enable
+
     // Set up r9 as the bootdata pointer (start of the 16kb block)
     sub     r9, r3, #0x4000
 
@@ -75,6 +78,14 @@ _real_start:
 
     // Branch to C bootstrap function
     b       boot_start
+
+
+    // Enable alignment faults
+    FUNC_START  align_fault_enable
+    mrc     p15, 0, ip, c1, c0, 0       // get control register
+    orr     ip, #0x2                    // alignment fault bit
+    mcr     p15, 0, ip, c1, c0, 0       // set control register
+    mov     pc, lr
 
 
     // Set the page directory physaddr to r0
